@@ -1,0 +1,35 @@
+SECRET_KEY = '{{ secret_key.json.data.value }}'
+
+DATABASES = {
+    'default': {
+        'ENGINE': '{{ database_engine }}',
+        'NAME': '{{ database_name }}',
+        'USER': '{{ database_user }}',
+        'PASSWORD': '{{ database_password.json.data.value }}',
+        'HOST': '{{ database_host }}',
+        'PORT': '{{ database_port }}',
+    }
+}
+
+DEBUG = {{ django_debug|string }}
+
+ALLOWED_HOSTS = [
+    '{{ apache_server_names|join("','") }}',
+    '{{ ansible_default_ipv4.address }}',
+]
+
+STATIC_ROOT = '{{ django_project_static_dir }}'
+MEDIA_ROOT = '{{ django_project_media_dir }}'
+
+# A list of all the people who get code error notifications:
+# https://docs.djangoproject.com/en/1.10/ref/settings/#std:setting-ADMINS
+ADMINS = [
+    {% for admin in admins %}
+    ('{{ admin.name }}', '{{ admin.email }}'),
+    {% endfor %}
+]
+
+EMAIL_HOST_USER = '{{ email_user }}'
+EMAIL_HOST_PASSWORD = '{{ email_password.json.data.value }}'
+SERVER_EMAIL = '{{ email_user }}'
+DEFAULT_FROM_EMAIL = 'Visit TTIE <{{ email_user }}>'

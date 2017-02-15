@@ -1,0 +1,22 @@
+syntax: glob
+
+docs/index.html
+docs/1-initial-requirements.{html,xml,pdf}
+docs/2-detailed-requirements.{html,xml,pdf}
+docs/3-charter.{html,xml,pdf}
+docs/4-srs.{html,xml,pdf}
+docs/5-design.{html,xml,pdf}
+docs/6-approvals.{html,xml,pdf}
+
+deploy/*.retry
+deploy/roles/*
+
+darajati/db.sqlite3
+darajati/uploads
+darajati/darajati/local_settings.py
+darajati/darajati/settings/local.py
+
+*.pyc
+*.mo
+.idea
+.DS_Store

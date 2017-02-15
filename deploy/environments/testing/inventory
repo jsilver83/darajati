@@ -1,0 +1,5 @@
+[application-servers]
+apps-2.test.kfupm.edu.sa
+
+[database-servers]
+postgres.test.kfupm.edu.sa

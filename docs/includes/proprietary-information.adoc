@@ -1,0 +1,10 @@
+[discrete]
+== Proprietary Information
+
+This document is the property of Information & Communications Technology Center (ICTC),
+King Fahd University of Petroleum and Minerals, Kingdom of Saudi
+Arabia, and is assigned the classification rating of Internal.
+
+The contents of this document are proprietary information and may not
+be distributed or disclosed, published or copied without the ICTC's
+written permission.

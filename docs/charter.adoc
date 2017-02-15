@@ -1,0 +1,203 @@
+= Project Charter for Darajati
+Information & Communications Technology Center (ICTC), KFUPM
+Version 1.0, 15 February 2017: First version
+
+
+include::includes/proprietary-information.adoc[]
+
+[discrete]
+== Document Classification
+Internal
+
+[discrete]
+== Version History
+
+[cols="1,3,1,4",options="header",small]
+|==================================================
+| Version | Author(s) | Date      | Change
+| 1.0     | Abdullah Joud  <joud@kfupm.edu.sa> |  2017-02-15 | First version
+|==================================================
+
+[discrete]
+== Approvals
+
+[cols="1h,3,1h,1",frame=none,grid=none]
+|==================================================
+| Name        |                     | Role    | Sponsor
+| Designation |                     | Version | 1.0
+| Department  | ICTC                 | Date    |
+|==================================================
+
+[cols="1h,3,1h,1",frame=none,grid=none]
+|==================================================
+| Name        |                     | Role    | Client
+| Designation |                     | Version | 1.0
+| Department  |                     | Date    |
+|==================================================
+
+<<<
+
+== Project Title
+
+<Select a suitable name for the project reflecting the objectives of
+the project>.
+
+NOTE: It's strongly recommended to use a short codename, as opposed to
+initials of a long name such as RMS, HMS, and so on.
+
+
+== Project Justifications
+
+<Mention the justification (need) for which the project is being executed>
+
+
+== Project Objectives
+
+<The project objective consists of the business benefits that the
+organization expects to achieve as a result of spending time and
+exerting effort to complete project. Mention quantifiable objectives
+(reason for doing) of the project.>
+
+
+
+
+== Project Scope
+
+<Provide a high-level, brief, measurable/quantifiable statement of
+what the project will accomplish, and, where appropriate, what it will
+not try to accomplish.>
+
+== Project Considerations
+
+. Risks: <Events that will have an adverse impact on your project if they occur. Risk refers to the combined likelihood the event will occur and the impact on the project if it does occur.>
+
+. Assumptions:
+<Any factors that you are assuming to be in place that will contribute to the successful result of your project.>
+
+. Issues:
+<Something that is going wrong  and needs managing.>
+
+. Dependencies (on any other project(s) or activities): <Any event, project or work that are either dependent on the result of your project, or on which your project will be dependent.>
+
+
+
+== Historical Information and Related Knowledge Base
+
+This is a list of similar, completed projects along with their
+documentation repositories.
+
+. Project: <project name> +
+  Documentation Repository: <location, e.g. URL, of the project documentation>
+
+. Project: <project name> +
+  Documentation Repository: <location, e.g. URL, of the project documentation>
+
+
+== Relevance to KFUPM Strategic Plan
+
+Is this project a part of the KFUPM Strategic Plan?
+
+- [x] No
+- [ ] Yes. Program name: <name of the program>
+
+
+== Estimated Project Duration
+
+<Mention the estimated number of months in which the project will be
+completed i.e. from the time of approval of Project Charter till
+closure. Estimated Start Date and Estimated End Date of the project.>
+
+[cols="3,3,3",options="header"]
+|==================================================
+| Duration | Estimated Start Date | Estimated End Date
+|  YYYY-MM-DD        |       YYYY-MM-DD               | YYYY-MM-DD
+|==================================================
+
+
+== Project Team
+
+[cols="1,3*5"]
+|===============================
+| No. | Role | Name | Department
+
+| 1   | Project sponsor | <name> | <department>
+| 2   | Project manager / Project Owner | <name> | <department>
+| 3   | Functional analyst (business & systems analyst) | <name> | <department>
+| 4   | UI/UX designer | <name> | <department>
+| 5   | Solution architect | <name> | <department>
+| 6   | Lead developer | <name> | <department>
+| 7   | Lead tester | <name> | <department>
+| 8   | Release manager | <name> | <department>
+| 9   | Trainer | <name> | <department>
+| 10  | Documentation manager | <name> | <department>
+| 11  | Subject matter expert (SME) | <name> | <department>
+|===============================
+
+
+== Project Stakeholders
+
+=== Client
+
+[cols="1,7"]
+|==================================================
+| Name        |
+| Designation |
+| Department  |
+| Phone       |
+| Email       |
+| Influence   | (H/M/L)
+|==================================================
+
+
+=== User
+
+[cols="1,7"]
+|==================================================
+| Name        |
+| Designation |
+| Department  |
+| Phone       |
+| Email       |
+| Influence   | (H/M/L)
+|==================================================
+
+
+=== PMO
+
+[cols="1,7"]
+|==================================================
+| Name        | Asim Jameel
+| Designation | Manager, ICTC PMO
+| Department  | ICTC, PMO
+| Phone       | 013-860 7046
+| Email       | ajameel@kfupm.edu.sa
+| Influence   | (H/M/L)
+|==================================================
+
+
+=== Data Owner
+
+[cols="1,7"]
+|==================================================
+| Name        |
+| Designation |
+| Department  |
+| Phone       |
+| Email       |
+| Influence   | (H/M/L)
+| Data        |
+| System      | <the system hosting the data>
+|==================================================
+
+
+=== Other (specify)
+
+[cols="1,7"]
+|==================================================
+| Name        |
+| Designation |
+| Department  |
+| Phone       |
+| Email       |
+| Influence   | (H/M/L)
+|==================================================

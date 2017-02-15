@@ -1,0 +1,130 @@
+= Approval Registry for Darajati
+Information & Communications Technology Center (ICTC), KFUPM
+Version 1.0, 15 February 2017: Charter approvals
+
+
+include::includes/proprietary-information.adoc[]
+
+[discrete]
+== Document Classification
+Internal
+
+[discrete]
+== Version History
+
+[cols="1,3,1,4",options="header",small]
+|==================================================
+| Version | Author(s) | Date      | Change
+| 1.0     | Abdullah Joud  <joud@kfupm.edu.sa> |  2017-02-15 | Charter approvals
+|==================================================
+
+<<<
+
+== Charter Approvals
+
+=== Sponsor
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                     | Version   |
+| Designation |                     | Date      |
+| Department  | ICTC                 | Signature |
+|==================================================
+
+
+[cols="6*3", options="header"]
+|==================================================
+|Version  |Role   |Name | Designation|Department|Date
+|1.0      |Sponsor|     |            |          |
+|1.0      |Client |     |            |          |
+|==================================================
+
+
+
+
+=== Client
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                                 | Version   |
+| Designation |                                 | Date      |
+| Department  |                                 | Signature |
+|==================================================
+
+== SRS Approvals
+
+=== Sponsor
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                     | Version   |
+| Designation |                     | Date      |
+| Department  | ICTC                 | Signature |
+|==================================================
+
+=== Client
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                                 | Version   |
+| Designation |                                 | Date      |
+| Department  |                                 | Signature |
+|==================================================
+
+== Data Owner
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                     | Version   |
+| Designation |                     | Date      |
+| Department  | ICTC                 | Signature |
+|==================================================
+
+<<<
+
+== Internal ITC Approvals
+
+=== Security
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                    | SRS Version |
+| Designation |                    | Date        |
+| Department  |                    | Signature   |
+|==================================================
+
+=== System Administrator
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                    | SRS Version |
+| Designation |                    | Date        |
+| Department  |                    | Signature   |
+|==================================================
+
+=== Database
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                    | SRS Version |
+| Designation |                    | Date        |
+| Department  |                    | Signature   |
+|==================================================
+
+=== UI/UX
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                    | SRS Version |
+| Designation |                    | Date        |
+| Department  |                    | Signature   |
+|==================================================
+
+=== Storage
+
+[cols="1h,3,1h,1"]
+|==================================================
+| Name        |                    | SRS Version |
+| Designation |                    | Date        |
+| Department  |                    | Signature   |
+|==================================================

@@ -1,0 +1,55 @@
+- name: Deploy Darajati database
+  hosts: database-servers
+
+  vars_prompt:
+    - name: ad_username
+      prompt: Your Active Directory username
+      private: no
+
+    - name: ad_password
+      prompt: Your Active Directory password
+      private: yes
+
+  tasks:
+
+    ##################################################################
+    ##  Vault
+    ##################################################################
+
+    - name: Vault authentication
+      uri:
+        url: https://vault-1.test.kfupm.edu.sa:8200/v1/auth/ldap/login/{{ ad_username }}
+        method: POST
+        body: {"password": "{{ ad_password }}"}
+        body_format: json
+        validate_certs: no
+      connection: local
+      register: auth
+
+    - name: Retrieve database password from Vault
+      uri:
+        url: https://vault-1.test.kfupm.edu.sa:8200/v1/secret/{{ env }}/apps/darajati/database_password
+        HEADER_X-Vault-Token: "{{ auth.json.auth.client_token }}"
+        validate_certs: no
+      connection: local
+      register: database_password
+
+    ##################################################################
+    ##  Database
+    ##################################################################
+
+    - name: Create postgresql user
+      postgresql_user:
+        name: "{{ database_user }}"
+        password: "{{ database_password.json.data.value }}"
+        encrypted: yes
+        role_attr_flags: LOGIN
+      become: yes
+      become_user: postgres
+
+    - name: Create postgresql database
+      postgresql_db:
+        name: "{{ database_name }}"
+        owner: "{{ database_user }}"
+      become: yes
+      become_user: postgres

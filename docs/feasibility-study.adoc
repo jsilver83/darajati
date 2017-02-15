@@ -1,0 +1,153 @@
+= Feasibility Study for Darajati
+Information & Communications Technology Center (ICTC), KFUPM
+Version 1.0, 15 February 2017: First version
+
+include::includes/proprietary-information.adoc[]
+
+[discrete]
+== Document Classification
+Internal
+
+[discrete]
+== Version History
+
+[cols="1,3,1,4",options="header",small]
+|==================================================
+| Version | Author(s) | Date      | Change
+| 1.0     | Abdullah Joud  <joud@kfupm.edu.sa> |  2017-02-15 | First version
+|==================================================
+
+<<<
+
+== Client Information
+
+. Who are the client representatives that were contacted to fill-in this
+document?
++
+|==================================================
+| Name | Title | Department | Email | Phone(s)
+| | | | |
+| | | | |
+| | | | |
+|==================================================
+
+. Who will actually sign-off the requirements and overall request?
++
+|==================================================
+| Name | Title | Department | Email | Phone(s)
+| | | | |
+|==================================================
+
+. Who is the Subject Matter Expert (SME)?
++
+|==================================================
+| Name | Title | Department | Email | Phone(s)
+| | | | |
+|==================================================
+
+. Who will be the end users?
++
+|==================================================
+| Name | Title | Department | Email | Phone(s)
+| | | | |
+| | | | |
+| | | | |
+|==================================================
+
+
+== Client Needs
+
+TIP: What is the actual need of the client? What problem the application will
+solve)?
+
+
+== Client Requirements
+
+TIP: What are the high-level functional requirements as per the listed areas
+below.
+
+=== Data requirements
+
+=== Access requirements
+
+. User categories that can access the application
+
+. Off-campus access
+
+=== Is the business process already defined and documented?
+- [ ] Yes
+- [ ] No
+
+=== Security requirements
+
+=== Storage requirements
+
+=== Frequency of usage
+
+=== Expected number of concurrent users
+
+=== Any other requirements
+
+
+== Client Expectations
+
+TIP: What are the client's expectations?
+
+
+== Related Systems and Integrations
+
+. Is the request related to any existing system(s)?
+
+. Is there any specific preference of the client regarding the application to be
+used? e.g. E-Business, Banner, or any other existing system.
+
+. Will the solution involve integration or data exchange with other
+applications?
+
+
+== Constraints
+
+. When does the client need the solution to be delivered?
++
+Expected date:
+
+. Is there any _binding_ deadline for request completion, such as
+already scheduled launch event?
+
+- [ ] Yes. Event name: ......... . Event date:
+- [ ] No.
+
+. Are there any limitations regarding the environment in which the application
+will be deployed?
+
+. Any other constraints.
+
+
+== Recommendations and Justifications
+
+=== Existing vs. New System
+
+TIP: Can the request be satisfied using an existing system or is a new system
+required?
+
+.Recommendation
+
+- [x] Use an existing satellite system
+- [ ] Use an existing enterprise system
+- [ ] Develop a new solution
+
+.Justification
+
+Justify the above recommendation here.
+
+=== System Recommendations
+
+Would you like to recommend any system at this stage?
+
+.Recommendation
+
+List recommendations here.
+
+.Justification
+
+Justify the recommendations here.

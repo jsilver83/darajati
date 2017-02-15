@@ -1,0 +1,24 @@
+env: testing
+django_project_branch: default
+apache_server_names:
+  - darajati.test.kfupm.edu.sa
+
+database_engine: django.db.backends.postgresql
+database_name: darajati
+database_user: darajati
+# database_password: set from Vault in playbook
+database_host: postgres.test.kfupm.edu.sa
+database_port: 5432
+
+django_debug: no
+apache_debug: yes
+
+email_user: darajati@kfupm.edu.sa
+
+# pick a unique port that is not used by any other application on the target
+# application server
+uwsgi_http_port: 8002
+
+cas_login_url: "{{ test_cas_login_url }}"
+cas_validate_url: "{{ test_cas_validate_url }}"
+cas_logout_url: "{{ test_cas_logout_url }}"

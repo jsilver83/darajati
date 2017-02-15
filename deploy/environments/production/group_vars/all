@@ -1,0 +1,19 @@
+env: production
+django_project_branch: stable
+apache_server_names:
+  - darajati.kfupm.edu.sa
+  - "{{ inventory_hostname }}"
+# required for proper SSL termination on load-balancer while using CAS
+apache_public_url: https://darajati.kfupm.edu.sa
+
+database_engine: django.db.backends.postgresql
+database_name: darajati
+database_user: darajati
+# database_password: set from Vault in playbook
+database_host: postgres-1.kfupm.edu.sa
+database_port: 5432
+
+django_debug: no
+apache_debug: no
+
+email_user: darajati@kfupm.edu.sa

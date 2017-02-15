@@ -1,0 +1,18 @@
+= Darajati Documentation
+Information and Communication Technology Center (ICTC), KFUPM
+
+A short description of the project
+
+. link:feasibility-study.html[Feasibility Study] — link:feasibility-study.pdf[[PDF]]
+
+. link:charter.html[Project Charter] — link:charter.pdf[[PDF]]
+
+. link:capabilities.html[Capabilities Document] — link:capabilities.pdf[[PDF]]
+
+. link:srs.html[Software Requirements Specification (SRS)] — link:srs.pdf[[PDF]]
+
+. link:design.html[Software Design Document] — link:design.pdf[[PDF]]
+
+. link:approvals.html[Approval Registry] — link:approvals.pdf[[PDF]]
+
+. link:user-manual.html[User Manual] — link:user-manual.pdf[[PDF]]
