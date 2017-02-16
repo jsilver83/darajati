@@ -39,45 +39,66 @@ Internal
 
 == Project Title
 
-<Select a suitable name for the project reflecting the objectives of
-the project>.
-
-NOTE: It's strongly recommended to use a short codename, as opposed to
-initials of a long name such as RMS, HMS, and so on.
+Darajati
 
 
 == Project Justifications
 
-<Mention the justification (need) for which the project is being executed>
+* This system is a mission critical system since it handles attendance and grading for the biggest academic department
+in KFUPM.
+* This system holds sensitive data and no security testing was done sufficiently on it.
+* This system currently doesn't have a proper testing environment.
+* There were some reported issues with availability and performance of the current This system.
+* There is crucial pending requests by the client but the current This system is hard to extend (lack of extensibility).
+* There are requests to use the system in other departments with similar requirements. However, the current system might
+not be able to handle more load (lack of scalability).
+* The current system has a weak link with banner. A proper synchronization mechanism should be implemented in the new
+system.
 
 
 == Project Objectives
 
-<The project objective consists of the business benefits that the
-organization expects to achieve as a result of spending time and
-exerting effort to complete project. Mention quantifiable objectives
-(reason for doing) of the project.>
+There are five main objectives of this project:
 
-
+* Load scalability and performance
+* Extensibility
+* Reducing manual work and improving automation
+* Improving synchronization with Banner
 
 
 == Project Scope
 
-<Provide a high-level, brief, measurable/quantifiable statement of
-what the project will accomplish, and, where appropriate, what it will
-not try to accomplish.>
+* Allow teachers to take students' attendance to classes
+* Allow coordinators and teachers to enter students' grades
+* Allow coordinators, teachers, and students to view attendances and grades reports through BI
+* Synchronize data between this system and banner
+
 
 == Project Considerations
 
-. Risks: <Events that will have an adverse impact on your project if they occur. Risk refers to the combined likelihood the event will occur and the impact on the project if it does occur.>
+. Risks:
+
+* It will require a relatively big team with members who have good technical grasp over Django.
+* Since his system is dealing with several academic departments, we might run into conflicting requirements that will
+be difficult to accommodate into one system.
 
 . Assumptions:
-<Any factors that you are assuming to be in place that will contribute to the successful result of your project.>
+
+* Flexibility from the departments' side  with special grading policies.
+* Enough support from department heads during the development and piloting this system.
 
 . Issues:
-<Something that is going wrong  and needs managing.>
 
-. Dependencies (on any other project(s) or activities): <Any event, project or work that are either dependent on the result of your project, or on which your project will be dependent.>
+* The reports done on the old system will become obsolete with the new system. New reports have to be implemented by
+the BI team.
+* Data migration from current system to the new one will be tricky and time consuming.
+* Banner XE/9 (the newer Banner) might overlap with this system in terms of functionality.
+
+. Dependencies (on any other project(s) or activities):
+
+* Banner
+* OSIS
+* CAS
 
 
 
@@ -86,32 +107,53 @@ not try to accomplish.>
 This is a list of similar, completed projects along with their
 documentation repositories.
 
-. Project: <project name> +
-  Documentation Repository: <location, e.g. URL, of the project documentation>
+. Project: The New Orientation Students Information System OSIS +
+  Documentation Repository: N/A
 
-. Project: <project name> +
-  Documentation Repository: <location, e.g. URL, of the project documentation>
+. Project: The Old OSIS +
+  Documentation Repository: N/A
 
 
 == Relevance to KFUPM Strategic Plan
 
 Is this project a part of the KFUPM Strategic Plan?
 
-- [x] No
-- [ ] Yes. Program name: <name of the program>
+- [ ] No
+- [x] Yes.
 
 
 == Estimated Project Duration
 
-<Mention the estimated number of months in which the project will be
-completed i.e. from the time of approval of Project Charter till
-closure. Estimated Start Date and Estimated End Date of the project.>
+.Project High-Level Plan
+|===
+|S. No. |Activity |Estimated Start Date |Estimated End Date
 
-[cols="3,3,3",options="header"]
-|==================================================
-| Duration | Estimated Start Date | Estimated End Date
-|  YYYY-MM-DD        |       YYYY-MM-DD               | YYYY-MM-DD
-|==================================================
+| 1
+| Analysis
+| Feb 12 2017
+| Apr 12 2017
+
+| 2
+| Development
+| Jan 10 2017
+| Apr 10 2017
+
+| 3
+| Testing
+| Mar 10 2017
+| Apr 10 2017
+
+| 4
+| Testing
+| Mar 10 2017
+| Apr 10 2017
+
+| 5
+| Testing
+| Mar 10 2017
+| Apr 10 2017
+|===
+
 
 
 == Project Team
@@ -120,32 +162,42 @@ closure. Estimated Start Date and Estimated End Date of the project.>
 |===============================
 | No. | Role | Name | Department
 
-| 1   | Project sponsor | <name> | <department>
-| 2   | Project manager / Project Owner | <name> | <department>
-| 3   | Functional analyst (business & systems analyst) | <name> | <department>
-| 4   | UI/UX designer | <name> | <department>
-| 5   | Solution architect | <name> | <department>
-| 6   | Lead developer | <name> | <department>
-| 7   | Lead tester | <name> | <department>
-| 8   | Release manager | <name> | <department>
-| 9   | Trainer | <name> | <department>
-| 10  | Documentation manager | <name> | <department>
-| 11  | Subject matter expert (SME) | <name> | <department>
+| 1   | Project sponsor | Dr. Ahmad Khayyat | ICTC
+| 2   | Project manager / Project Owner | Abdullah Joud | ICTC - Solution Delivery
+| 3   | Functional analyst (business & systems analyst) | Saeed Swail | ICTC - Solution Delivery
+| 4   | UI/UX designer | Ghaffar Sethar | ICTC - Solution Delivery
+| 5   | Solution architect | Abdullah Joud | ICTC - Solution Delivery
+| 6   | Lead developer | Abdullah Joud | ICTC - Solution Delivery
+| 7   | Lead tester | Abdullah Joud | ICTC - Solution Delivery
+| 8   | Release manager | TBD | ICTC
+| 9   | Trainer | TBD | TBD
+| 10  | Documentation manager | Saeed Swail | ICTC - Solution Delivery
+| 11  | Subject matter expert (SME) | Ahmed Abdellatif | PYP
 |===============================
 
 
 == Project Stakeholders
 
-=== Client
+=== Clients
 
 [cols="1,7"]
 |==================================================
-| Name        |
-| Designation |
-| Department  |
-| Phone       |
-| Email       |
-| Influence   | (H/M/L)
+| Name        | Dr. Abdulaziz Al-Assaf
+| Designation | Asst. Dean
+| Department  | College of Applied and Supporting Sciences
+| Phone       | +96638602810
+| Email       | alassaf@kfupm.edu.sa
+| Influence   | High
+|==================================================
+
+[cols="1,7"]
+|==================================================
+| Name        | Dr. Suliman Saleh Al-Homidan
+| Designation | Dean
+| Department  | College of Sciences
+| Phone       | +96638602193
+| Email       | homidan@kfupm.edu.sa
+| Influence   | High
 |==================================================
 
 
@@ -153,12 +205,32 @@ closure. Estimated Start Date and Estimated End Date of the project.>
 
 [cols="1,7"]
 |==================================================
-| Name        |
-| Designation |
-| Department  |
-| Phone       |
-| Email       |
-| Influence   | (H/M/L)
+| Name        | Ahmad Hazzaa Khader Abdellatif
+| Designation | PYP Admin
+| Department  | Preparatory Year Program - ENGLISH
+| Phone       | +966138607103
+| Email       | aabdellatif@kfupm.edu.sa
+| Influence   | High
+|==================================================
+
+[cols="1,7"]
+|==================================================
+| Name        | Dr. Husam Khaled Khalil Sharqawi
+| Designation | PYP Admin
+| Department  | Preparatory Year Program - MATH
+| Phone       | +96638603541
+| Email       | sharqawi@kfupm.edu.sa
+| Influence   | High
+|==================================================
+
+[cols="1,7"]
+|==================================================
+| Name        | Shamsuddin Khan
+| Designation | Math Admin
+| Department  | Mathematics and Statistics
+| Phone       | +96638603796
+| Email       | sdkhan@kfupm.edu.sa
+| Influence   | High
 |==================================================
 
 
@@ -179,25 +251,17 @@ closure. Estimated Start Date and Estimated End Date of the project.>
 
 [cols="1,7"]
 |==================================================
-| Name        |
-| Designation |
-| Department  |
-| Phone       |
-| Email       |
-| Influence   | (H/M/L)
-| Data        |
-| System      | <the system hosting the data>
+| Name        | Dr. Ahmad Abdulaziz Al-Dharrab
+| Designation | Registrar
+| Department  | Deanship, Admission and Registration
+| Phone       | +966138602590
+| Email       | adharrab@kfupm.edu.sa
+| Influence   | High
+| Data        | Students/Teachers Data
+| System      | Banner
 |==================================================
 
 
 === Other (specify)
 
-[cols="1,7"]
-|==================================================
-| Name        |
-| Designation |
-| Department  |
-| Phone       |
-| Email       |
-| Influence   | (H/M/L)
-|==================================================
+N/A
