@@ -70,10 +70,12 @@ class Section(models.Model):
     def __str__(self):
         return self.semester, self.course, self.code
 
-
-class Enrolment(models.Model):
-    student = models.ForeignKey(Student, related_name='enrolments', on_delete=models.CASCADE)
-    section = models.ForeignKey(Section, related_name='enrolments', on_delete=models.CASCADE)
+'''
+# TODO: What's the mechanism to get the letter grade of a student who have taken the course more than once. 
+'''
+class enrolllment(models.Model):
+    student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     letter_grade = models.CharField(max_length=10, null=True, blank=False, default='UD')
 
     def __str__(self):
@@ -128,7 +130,7 @@ class AttendanceInstant(models.Model):
 
 class Attendance(models.Model):
     attendance_instant = models.ForeignKey(AttendanceInstant, related_name='attendances', editable=False)
-    enrolment = models.ForeignKey(Enrolment, related_name='attendances', editable=False)
+    enrollment = models.ForeignKey(enrollment, related_name='attendances', editable=False)
 
     def __str__(self):
-        return self.period_attendance_date, self.enrolment
+        return self.period_attendance_date, self.enrollment
