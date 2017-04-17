@@ -1,0 +1,239 @@
+body{
+	overflow-x: hidden;
+}
+.en-font{
+	font-family: 'Open Sans', Arial !important;
+}
+.ar-font{
+	font-family: 'KacstOffice', Open Sans, Arial !important;
+}
+.land-search{
+	display:block;
+	margin:30px auto;
+	max-width:720px;
+
+	.main-titile{
+		font-weight: 300;
+	}
+	
+	.frm-feild{
+		position: relative;
+
+		span{
+			padding: 0 5px;
+		}
+	}
+}
+
+.mob-quick-access {
+    bottom: 0;
+	display: none;
+	font-size: 18px;
+	left: 50%;
+	margin-left: -86px;
+	position: fixed;
+	z-index: 1;
+
+    > span.icon{
+	    background-color: #F2F2F2;
+	    border: 1px solid #c3c3c3;
+	    border-bottom: none;
+	    border-radius: 20px 20px 0 0;
+	    color: #838383;
+	    cursor: pointer;
+	    display: inline-block;
+	    font-size: 14px;
+	    line-height: 16px;
+	    opacity: 0.85;
+	    padding: 10px 40px !important;
+	    position: relative;
+	    text-transform: uppercase;
+    }
+    > span.icon:hover{
+    	@include Opacity(1);
+    }
+    .icon:after,.icon:before{
+    	background-image: url("../images/right-arrow-icon.png");
+	    background-position: center center;
+	    background-repeat: no-repeat;
+	    background-size: 8px auto;
+	    content: "";
+	    display: block;
+	    height: 30px;
+	    position: absolute;
+	    right: -2px;
+	    top: 4px;
+	    @include rotate(-90);
+	    @include Opacity(0.3);
+	    width: 40px;
+    }
+    .icon::before {
+	    left: -1px;
+	    right: auto;
+	}
+}
+
+.quick-access{
+	border-left: solid 1px #f2f2f2;
+	padding: 0 10px 0 0;
+	background-color: #fafafa;
+	min-height: 100%;
+	right: 0;
+	float: right;
+
+	.cntnt-sec {
+	    position: relative;
+	    z-index: 1;
+	}
+
+	.quick-access-close {
+	    border: 1px solid #808080;
+	    border-radius: 50%;
+	    color: #707070;
+	    cursor: pointer;
+	    display: none;
+	    font-size: 18px;
+	    font-weight: bold;
+	    height: 35px;
+	    line-height: 33px;
+	    position: absolute;
+	    right: -5px;
+	    top: -10px;
+	    width: 35px;
+	}
+	.quick-access-close:focus,.quick-access-close:active {
+		background-color: #d4d4d4;
+		@include scale(.9);
+	}
+
+	ul.quick-acess-list {
+	    font-size: 13px;
+	    list-style-type: none;
+	    margin: auto;
+	    padding: 0;
+	
+		li {
+		    border-bottom: 1px solid #efefef;
+		    border-top: 1px solid #ffffff;
+		    padding: 15px 0;
+
+		    h6 {
+			    font-size: 16px;
+			    font-weight: 700;
+			    line-height: 24px;
+			    margin: 0 0 10px;
+			}
+			.dept-gen-details{
+				display:block;				
+			}
+		}
+		
+		li:first-child {
+			border-top:none;
+		}
+		li:last-child {
+			border-bottom:none;
+		}
+
+	}
+}
+
+.quick-access:before {
+    content: "";
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	display: block;
+	background-color: #fafafa;
+	z-index: 1;
+    right: -100%;
+    margin-right: calc(25% + 5px);
+	border-left: solid 1px #f2f2f2;
+}
+
+.icon {
+	background-position:left center;
+	background-size: 16px auto;
+	background-repeat: no-repeat;
+    display: block;
+    line-height: 24px;
+    padding-left: 25px !important;
+}
+.icon.phone {
+	background-image:url("../images/phone-icon.png");
+}
+.icon.email {
+	background-image:url("../images/mail-icon.png");
+}
+
+.blanket{
+	display: block !important;
+	z-index: 99;
+	.cntnt-sec{
+		background-color: #f2f2f2;
+		box-shadow: 0 -20px 15px rgba(0, 0, 0, 0.45);
+		position: relative;
+		z-index: 99;
+		height: 100%;
+		position: fixed;
+		bottom: 0;
+		overflow-y: auto;
+		width: 100%;
+	}
+
+	.quick-access-close{
+		display: block;
+	}
+
+}
+/*.blanket:before{
+	background-color: rgba(0, 0, 0, 0.85);
+	content: "";
+	height: 100%;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	left: 0;
+	right: 0;
+	max-width: unset;
+	margin: 0;
+}*/
+
+
+.errorlist {
+    position: absolute;
+    list-style: none;
+    padding: 5px 15px;
+    margin: 0;
+    font-size: 13px;
+    border-radius: 4px;
+    border: 1px solid #E52B2B;
+    top: calc(100% + 10px);
+    box-shadow: 0 0 10px rgba(229, 43, 43, 0.2);
+    text-align: initial;
+    line-height: 24px;
+    background-color: #fff;
+    z-index: 1;
+    color: #D51B1B;
+}
+.errorlist:before {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #D51B1B;
+    position: absolute;
+    top: -8px;
+}
+.errorlist:after {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #ffffff;
+    position: absolute;
+    top: -7px;
+    left: 15px;
+}

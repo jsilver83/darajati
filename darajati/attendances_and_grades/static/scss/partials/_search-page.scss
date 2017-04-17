@@ -1,0 +1,146 @@
+.search-result{
+	padding: 0 0 0 10px;
+}
+.num-peop-found{
+	font-size:12px;
+	color:#555555;
+}
+.no-result {
+    text-align: center;
+    font-size: 14px;
+    line-height: 22px;
+    margin: 25px 0 0 0;
+    color: #E52B2B;
+}
+.result-list {
+    display: table;
+    font-size: 14px;
+    line-height: 20px;
+    list-style-type: none;
+    margin: 25px 0 0;
+    padding: 20px 0;
+    width: 100%;
+
+    .result-row {
+	    display: table-row;
+	    text-decoration:none;
+	}
+
+	.result-col {
+		border-bottom: solid 1px #f2f2f2;
+	    display: table-cell;
+    	padding: 10px 5px 10px 5px;
+
+	    .dept{
+	    	color:#9a9a9a;
+	    	font-size: 13px;
+	    	font-weight: 500;
+	    }
+	}
+	.result-col.name {
+		font-weight: 700;
+	}
+	.result-row:hover{
+	
+		.result-col{
+			background-color:#f8f8f8;
+		}
+	}
+}
+
+
+/* Search Detail */
+
+.back-btn {
+    display: inline-block;
+    vertical-align: middle;
+
+    a {
+	    background-image: url("../images/back-arrow-icon.png");
+	    background-position: left center;
+	    background-repeat: no-repeat;
+	    background-size: 12px auto;
+	    display: inline-block;
+	    padding: 15px 0 15px 20px;
+	    text-decoration: none;
+	}
+}
+
+.title-name {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 20px 0 10px;
+    position: relative;
+
+    > span {
+	    display: inline-block;
+	    padding: 2px 15px 2px 0;
+	    vertical-align: middle;
+	}
+	
+	> span:last-child{
+		border-right: none;
+	    padding: 2px 0 2px 15px;
+	}
+
+}
+.splitter{
+    border-right: 1px solid #333333;
+	display: inline-block;
+	vertical-align: middle;
+	height: 20px;
+	width: 0;
+	background-color: #ccc;
+	position: absolute;
+	top: 5px;
+}
+
+.detail-info {
+    clear: both;
+    display: inline-block;
+    margin: 0 0 30px;
+    font-size: 14px;
+
+    table{
+    	border:0;
+    	border-spacing: 0;
+
+    	td{
+    		padding: 5px 25px 5px 0;
+    		position: relative;
+    	}
+    	.dept td > span {
+		    display: inline-block;
+		    padding: 0 10px 0 0;
+		    vertical-align:middle;
+		}
+		.dept td > span:last-child {
+		    border-right: medium none;
+		    padding: 0 0 0 10px;
+		}
+    }
+}
+
+.note{
+	font-size:13px;
+	color: #555555;
+
+	a{
+		font-size: 13px;
+		color: #555555;
+	}
+}
+
+.load-more {
+    text-align: center;
+    margin: 15px 0 10px 0;
+
+    > span {
+	    font-size: 13px;
+		border: solid 1px #333333;
+		padding: 5px 20px;
+		border-radius: 4px;
+		display: inline-block;
+		cursor: pointer;
+	}
+}

@@ -1,0 +1,16 @@
+.adv-srch{
+	max-width:630px;
+
+	.frm-feild {
+	    margin: 5px 0 15px;
+	    padding: 0 10px;
+	}
+
+	.no-result {
+	    position: absolute;
+	    width: 100%;
+	    left: 0;
+	    top: -30px;
+	    margin: 0;
+	}
+}

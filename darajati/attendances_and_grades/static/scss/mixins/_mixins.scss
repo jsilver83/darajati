@@ -1,0 +1,66 @@
+@mixin border-radius($radius){	
+	-moz-border-radius: $radius;
+    -webkit-border-radius: $radius;
+    border-radius: $radius;
+}
+/*@include border-radius(4px);*/
+
+@mixin transition($transition-property, $transition-time, $method) {
+    -webkit-transition: $transition-property $transition-time $method;
+    -moz-transition: $transition-property $transition-time $method;
+    -ms-transition: $transition-property $transition-time $method;
+    -o-transition: $transition-property $transition-time $method;
+    transition: $transition-property $transition-time $method;
+}
+/*@include transition(all, .2s, ease-in);*/
+
+@mixin box-shadow($left, $top, $blur, $color, $inset:"") {
+      -webkit-box-shadow:$left $top $blur $color #{$inset};
+      -moz-box-shadow:$left $top $blur $color #{$inset};
+      box-shadow:$left $top $blur $color #{$inset};
+}
+/*@include box-shadow(0, 1px, 1px, rgba(0, 0, 0, 0.075), inset);*/
+
+@mixin rotate($rotate: 0) {
+  -webkit-transform: rotate($rotate +deg);
+  -moz-transform:    rotate($rotate +deg);
+  -ms-transform:     rotate($rotate +deg);
+  -o-transform:      rotate($rotate +deg);
+  transform:         rotate($rotate +deg);
+}
+/*@include rotate(15);          rotates object 15 degrees*/
+
+@mixin scale($scale: 1) {
+  -webkit-transform: scale($scale);
+  -moz-transform:    scale($scale);
+  -ms-transform:     scale($scale);
+  -o-transform:      scale($scale);
+  transform:         scale($scale);
+}
+/*@include scale(1.5);          scales object 50% up*/
+
+@mixin skew($skew: 0) {
+  -webkit-transform: skew($skew +deg);
+  -moz-transform:    skew($skew +deg);
+  -ms-transform:     skew($skew +deg);
+  -o-transform:      skew($skew +deg);
+  transform:         skew($skew +deg);
+}
+/*@include skew(12);            skews object 12 degrees*/
+
+@mixin translate($left: 0px, $top: 0px) {
+  -webkit-transform: translate($left, $top);
+  -moz-transform:    translate($left, $top);
+  -ms-transform:     translate($left, $top);
+  -o-transform:      translate($left, $top);
+  transform:         translate($left, $top);
+}
+/*@include translate(10px, -20px);  moves object 10px left, -20px top*/
+
+@mixin Opacity($value){
+  $IEValue: $value*100;
+  opacity: $value;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity="+$IEValue+")";
+  filter: alpha(opacity=$IEValue);
+}
+/*@include Opacity(1);  moves object 10px left, -20px top*/
