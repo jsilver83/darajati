@@ -12,10 +12,20 @@ Class-based views
 Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
-"""
-from django.conf.urls import url
-from django.contrib import admin
+    """
 
-urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-]
+from django.conf.urls import url, include
+from django.conf.urls.i18n import i18n_patterns
+from django.contrib import admin
+from django.contrib.auth import views
+
+urlpatterns = i18n_patterns(
+    url(r'^login/$', views.login, {'template_name': 'login.html', 'redirect_authenticated_user': True}, name='login'),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^logout/$', views.logout, {'template_name': 'logout.html'}, name='logout'),
+)
+
+urlpatterns += i18n_patterns(
+    url(r'', include('attendances_and_grades.urls', namespace='attendances_and_grades',
+                     app_name='attendances_and_grades')),
+)
