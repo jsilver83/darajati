@@ -1,0 +1,94 @@
+{% load static i18n %}
+<!DOCTYPE html>
+{% if LANGUAGE_CODE == 'ar' %}
+<html lang="en" dir="rtl">
+{% else %}
+<html lang="en" dir="ltr">
+{% endif %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mohamed Faraj">
+    <title>{% trans 'Darajati - King Fahd University of Petroleum and Minerals' %}</title>
+    <link rel="icon" href="{% static 'images/favicon.png' %}">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+          integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"
+            integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+            integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
+            integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+            crossorigin="anonymous"></script>
+    <!-- Main CSS -->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    <!-- Js Files -->
+    <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+
+    <!-- Custom Files -->
+    <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/load_more.js' %}"></script>
+
+</head>
+{% if LANGUAGE_CODE == 'ar' %}
+<body class="arabic">
+{% else %}
+<body>
+{% endif %}
+<div class="preloader">
+    <div class="loading"><img src="{% static 'images/kfupm-loading.gif' %}"/><h6>{% trans 'Loading...' %}</h6></div>
+</div>
+
+<!--Header-->
+<div class="header text-center">
+    <div class="max-container">
+        <div class="lft-head">
+            <a href="{% url 'attendances_and_grades:home' %}">
+                <div class="kfupm-logo"><img src="{% static 'images/logo.png' %}"/></div>
+                <div class="dept-logo"><h1>{% trans 'Darajati' %}</h1></div>
+            </a>
+        </div>
+        <div class="rgt-head">
+            <!-- nav bar-->
+            {% if LANGUAGE_CODE == 'ar' %}
+            <a href="/en{{ request.get_full_path|slice:'3:' }}" class="lang en en-font">English</a>
+            {% endif %}
+            {% if LANGUAGE_CODE == 'en' %}
+            <a href="/ar{{ request.get_full_path|slice:'3:' }}" class="lang ar ar-font">عربى</a>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="login-btn">{% trans 'Logout' %}</a>
+            {% comment %}
+            {% else %}
+            <a href="{% url 'login' %}" class="login-btn">{% trans 'Login' %}</a>
+            {% endcomment %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<div class="main-cntnt text-center">
+    <div class="max-container fit-window">
+        {% block content %}
+        {% endblock %}
+    </div>
+</div>
+
+<div class="footer text-center">
+    <div class="max-container">
+        <div class="ft-left">{% trans '2017 © All rights reserved' %}</div>
+        <div class="ft-right">{% trans 'King Fahd University of Petroleum & Minerals' %}</div>
+    </div>
+</div>
+<script>
+
+</script>
+</body>
+</html>

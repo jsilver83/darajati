@@ -1,0 +1,110 @@
+.arabic {
+
+  font-family: 'KacstOffice', Open Sans, Arial;
+  
+  button, input, optgroup, select, textarea {
+    font-family: 'KacstOffice', Open Sans, Arial;
+  }
+  .studs-catgs{
+    direction: rtl;
+  }
+  .max-container{
+    text-align: right;
+  }
+
+  .rgt-head {
+    text-align: left;
+  }
+
+  .flt-right {
+    float: left;
+  }
+  .flt-left {
+    float: right;
+  }
+  .text-right{
+    text-align: left;
+  }
+  .back-btn a{
+        background-image: url("../images/back-arrow-icon-right.png");
+  }
+
+  .lft-head .dept-logo {
+    border-right: 1px solid #157235;
+    padding-right: 15px;
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .lft-head .kfupm-logo {
+    padding-left: 15px;
+    padding-right: 0;
+  }
+
+  .icon {
+    background-position: right center;
+    padding-right: 25px !important;
+    padding-left: 0;
+  }
+
+  .quick-access {
+    right: 0;
+    border-right: solid 1px #f2f2f2;
+    border-left: none;
+    float: left;
+
+    ul.quick-acess-list{
+
+      li{
+        text-align: right;
+      }
+    }
+  }
+
+  .quick-access:before {
+    border-left: none;
+    border-right: solid 1px #f2f2f2;
+    right: auto;
+    left: -100%;
+    margin-left: calc(25% + 5px);
+  }
+
+  .title-name > span {
+    padding: 2px 0 2px 15px;
+  }
+  .title-name > span:last-child {
+    padding: 2px 15px 2px 0;
+  }
+
+  .detail-info table td{
+    padding: 5px 0 5px 25px;
+  }
+  .detail-info table .dept td > span {
+    padding: 0 0 0 10px;
+  }
+
+  .detail-info table .dept td > span:last-child {
+    padding: 0 10px 0 0;
+  }
+
+  .result-list{
+    
+    .result-col.name {
+      font-weight: 500;
+      font-size: 20px;
+    }
+    .result-col.email, .result-col.phone{
+      background-position: top 7px right;
+      padding: 5px 20px 0 15px;
+    }
+    .result-col .dept{
+      font-size: 16px;
+      margin-top: 5px;
+    }
+  }
+
+  .phone {
+    direction: ltr;
+  }
+}
+

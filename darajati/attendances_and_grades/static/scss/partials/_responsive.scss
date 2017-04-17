@@ -1,0 +1,310 @@
+@media screen and (max-width: 980px) { 
+
+	.max-container{
+		padding: 0;
+	}
+
+	.quick-access{
+		background-color: #f2f2f2;
+	}
+
+}
+
+@media screen and (max-width: 850px) {
+	
+	.max-container{
+		overflow: hidden;
+	}
+
+	.cntnt-sec{
+		padding-bottom: 40px;
+	}
+
+	.lft-head{
+
+		.kfupm-logo{
+			width: 59%;
+		}
+		.dept-logo{
+			width: 40%;
+			text-align: initial;
+
+			h1{
+				font-size: 24px;
+				line-height: 30px;
+			}
+		}
+	}
+
+	.mob-quick-access {
+    	display: block;
+    }
+	.quick-access{
+		display:none;
+		border-top: 1px solid #f2f2f2;
+		border-right: none;
+		bottom: 54px;
+	    height: auto !important;
+	    left: 0;
+	    min-height: unset !important;
+	    padding: 0;
+	    position: absolute;
+	    width: 100%;
+
+	    .thm-titile{
+	    	text-align: center;
+	    	position: relative;
+	    }
+
+	    ul.quick-acess-list{
+	    	text-align: center;
+
+	    	li{
+	    		text-align: left;
+		    	border-top: solid 1px #e0e0e0 !important;
+		    	padding:15px 10px;
+		    	display: inline-block;
+		    	height: 145px;
+		    	vertical-align: top;
+		    	width: 33.33%;
+		    }
+		}
+	}
+
+	.content-panel{
+		width:100%;
+	}
+
+	.land-search{
+		margin: 25px auto 45px auto;
+	}
+
+	
+  .title-name > span.ltr {
+    font-size: 16px;
+    font-family: Open Sans;
+  }
+
+}
+
+@media screen and (max-width: 650px) {
+	
+	.max-container{
+		position: relative;
+	}
+	.thm-btn{
+		padding: 8px 15px;
+	}
+
+	.header{
+
+		margin-bottom: 65px;
+	
+		.max-container{
+			overflow: unset;
+		}
+	}
+
+	.lft-head{
+		text-align: center;
+		width: 100%;
+
+		.kfupm-logo{
+			width: 50%;
+		}
+		.dept-logo{
+			width: 49%;
+		}
+	}
+	.rgt-head {
+	    position: absolute;
+		bottom: -63px;
+		right: -15px;
+		z-index: 1;
+		width: calc(100% + 30px);
+		padding: 10px 15px;
+		background-color: #f6f6f6;
+		border-bottom: 3px solid #ebebeb;
+	}
+
+	.lang{
+		color: #333333;
+	}
+
+	.land-search{
+		margin-top: 0;
+
+		.thm-field.large-field{
+			max-width: 520px;
+		}
+	}
+
+	.navbar{
+		padding: 0;
+		float: left;
+
+		a{
+			color: #333333;
+		}
+	}
+
+	.arabic {
+	  .navbar{
+	    float: right;
+	  }
+	}	  
+
+	.main-titile{
+		font-size: 22px;
+		line-height: 32px;
+		margin: 15px 0;
+	}
+
+	.thm-titile {
+	    font-size: 18px;
+	    line-height: 28px;
+    }
+
+	.large-field {
+	    line-height: 22px;
+	    padding: 8px 15px;
+	}
+
+
+	.quick-access{
+
+	    ul.quick-acess-list li{
+	    	width: 49%;
+	    }
+	}
+
+}
+
+
+@media screen and (max-width: 500px) {
+	
+	.seventyfive-p, .fifty-p, .twentyfive-p{
+		padding: 0;
+		width:100%;
+	}
+
+	.lft-head{
+		
+		.kfupm-logo, .dept-logo{
+			padding: 5px 0;
+			max-width: 320px;
+			text-align: center;
+			width: 100%;
+		}
+		.dept-logo{
+			border: none !important;
+			border-top: 1px solid #157235 !important;
+
+			h1{
+				font-size: 28px;
+				line-height: 34px;
+			}
+		}
+	}
+
+	.heading {
+	    display: inline-block;
+	    margin-bottom: 0;
+	    padding-top: 25px;
+	    position: relative;
+	    width: 100%;
+
+	    .outline-btn-dgrey {
+		    font-size: 13px;
+		    font-weight: normal;
+		    position: absolute;
+		    left: 0;
+		    top: -20px;
+		}
+	}
+
+	.arabic{
+		
+		.heading {
+
+		    .outline-btn-dgrey {
+		    	right:0;
+		    	left:auto;
+		    }
+		}
+	}
+
+	.result-list{
+		display: block;
+		margin-top: 0;
+		padding: 0;
+
+		.result-row{
+			background-color: #ffffff;
+		    border-bottom: 1px solid #e4e4e4;
+		    display: inline-block;
+		    padding: 20px 0;
+		    width: 100%;
+
+			.result-col{
+				background-color: transparent !important;
+				background-repeat: no-repeat;
+				background-size: 14px auto;
+				background-position: top 7px left;
+				border: none;
+				display: inline-block;
+				padding:0;
+				width: 100%;
+			}
+			.email, .phone{
+				padding: 5px 15px 0 20px;
+				width: auto;
+			}
+			.phone {
+				background-image:url("../images/phone-icon.png");
+			}
+			.email {
+				background-image:url("../images/mail-icon.png");
+			}
+		}
+		.result-row:first-child{
+			padding-top:0;
+		}
+	}
+
+
+	.footer{
+
+		.max-container{
+			text-align: center;
+		}
+
+		.ft-left,.ft-right{
+			width: auto;
+			clear: both;
+			float: none;
+			display: inline-block;
+		}
+
+	}
+
+
+}
+
+
+@media screen and (max-width: 420px) {
+	
+	.quick-access{
+
+	    ul.quick-acess-list li{
+	    	width: 100%;
+	    }
+	}
+
+	.result-list{
+		.email, .phone{
+			width: 100%;
+		}
+	}
+
+}
