@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<form method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+  <table>
+    <tr>
+      {{ form.username.label_tag }}
+      {{ form.username }}
+    </tr>
+    <tr>
+      {{ form.password.label_tag }}
+      {{ form.password }}
+    </tr>
+  </table>
+
+  <input class="btn btn-custom1" type="submit" value="{% trans 'Login' %}" />
+  <input type="hidden" name="next" value="{{ next }}"/>
+</form>
+
+{% endblock %}
