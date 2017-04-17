@@ -80,7 +80,7 @@ class Section(models.Model):
         return self.semester.code + ' - ' + self.course.code + ' - ' + self.code
 
 
-class Enrolment(models.Model):
+class Enrollment(models.Model):
     student = models.ForeignKey(Student, related_name='enrolments', on_delete=models.CASCADE)
     section = models.ForeignKey(Section, related_name='enrolments', on_delete=models.CASCADE)
     letter_grade = models.CharField(max_length=10, null=True, blank=False, default='UD')
@@ -138,7 +138,7 @@ class AttendanceInstant(models.Model):
 
 class Attendance(models.Model):
     attendance_instant = models.ForeignKey(AttendanceInstant, related_name='attendances')
-    enrolment = models.ForeignKey(Enrolment, related_name='attendances')
+    enrolment = models.ForeignKey(Enrollment, related_name='attendances')
 
     def __str__(self):
         return str(self.attendance_instant.period) + ' - ' + self.enrolment.student.english_name
