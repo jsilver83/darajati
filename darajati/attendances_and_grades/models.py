@@ -5,6 +5,36 @@ from django.conf import settings
 User = settings.AUTH_USER_MODEL
 
 
+class UserProfile(models.Model):
+    class Language:
+        ARABIC = 'ar'
+        ENGLISH = 'en'
+
+        @classmethod
+        def choices(cls):
+            return (
+                (cls.ARABIC, _('Arabic')),
+                (cls.ENGLISH, _('English')),
+            )
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='profile')
+    preferred_language = models.CharField(
+        _('preferred language'), max_length=2, choices=Language.choices(),
+        default=Language.ARABIC)
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+
+    @property
+    def in_student(self):
+        pass
+
+    @property
+    def is_instructor(self):
+        return Instructor.get_instructor(user=self)
+
+
 class Person(models.Model):
     university_id = models.CharField(max_length=20, null=True, blank=True)
     government_id = models.CharField(max_length=20, null=True, blank=True)
@@ -22,24 +52,28 @@ class Person(models.Model):
 
 
 class Student(Person):
-    user = models.OneToOneField(User, related_name='student', null=True, blank=True)
+    user_profile = models.OneToOneField(UserProfile, related_name='student', null=True, blank=True)
 
     def __str__(self):
         return self.arabic_name + ' ' + self.university_id
 
         # :TODO Function to get the student ID from the USER_AUTH_MODEL.
 
-    def is_student(self):
+    def get_student(self):
         pass
 
 
 class Instructor(Person):
-    user = models.OneToOneField(User, related_name='instructor', null=True, blank=True)
+    user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
         return self.arabic_name + ' - ' + self.university_id
 
         # :TODO Function to get the email ID from the USER_AUTH_MODEL.
+
+    @staticmethod
+    def get_instructor(user=None):
+        return True if Instructor.objects.filter(user_profile=user) else False
 
 
 class Semester(models.Model):
@@ -74,6 +108,7 @@ class Course(models.Model):
 class Section(models.Model):
     semester = models.ForeignKey(Semester, related_name='sections', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='sections', on_delete=models.CASCADE)
+    # Add attendance_window which specifise the period the instructor is allowed to add/edit daily attendance
     code = models.CharField(max_length=20, null=True, blank=False)
 
     def __str__(self):
