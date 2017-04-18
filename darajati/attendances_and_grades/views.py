@@ -9,17 +9,15 @@ from .models import *
 
 class HomeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        try:
-            if request.user.instructor:
-                return redirect('attendances_and_grades:instructor')
-        except ObjectDoesNotExist:
+        if request.user.profile.is_instructor or request.user.is_superuser:
+            return redirect('attendances_and_grades:instructor')
+        else:
             return redirect('attendances_and_grades:unauthorized')
 
 
 class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
-
     def test_func(self):
-        return self.request.user.instructor
+        return self.request.user.profile.is_instructor or self.request.user.is_superuser
 
 
 class InstructorView(InstructorBaseView, ListView):
@@ -27,9 +25,21 @@ class InstructorView(InstructorBaseView, ListView):
     template_name = 'attendances_and_grades/current_sections.html'
 
     def get_queryset(self):
-        return ScheduledPeriod.objects.filter(instructor_assigned=
-                                              self.request.user.instructor)
 
+        if self.request.user.is_superuser:
+            query = ScheduledPeriod.objects.all()
+            return query
+        if self.request.user.profile.is_instructor:
+            query = ScheduledPeriod.objects.filter(instructor_assigned=self.request.user.profile.instructor)
+            return query
+
+
+class SectionView(InstructorBaseView, ListView):
+    pass
+
+
+class SectionStudentView(InstructorBaseView, ListView):
+    pass
 
 # Formset factory
 # class HomeView(ModelFormSetView):
