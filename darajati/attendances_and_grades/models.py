@@ -114,6 +114,14 @@ class Section(models.Model):
     def __str__(self):
         return self.semester.code + ' - ' + self.course.code + ' - ' + self.code
 
+    @staticmethod
+    def get_a_section(section_id=None):
+        return Section.objects.filter(id=section_id)
+
+    @staticmethod
+    def get_all_section():
+        return Section.objects.all()
+
 
 class Enrollment(models.Model):
     student = models.ForeignKey(Student, related_name='enrolments', on_delete=models.CASCADE)
@@ -160,6 +168,18 @@ class ScheduledPeriod(models.Model):
     def __str__(self):
         return self.section.code + ' - ' + self.instructor_assigned.english_name + ' - ' + str(self.day) + ' - ' + \
                str(self.start_time) + ' - ' + str(self.end_time)
+
+    @staticmethod
+    def get_a_period(period_id=None):
+        return ScheduledPeriod.objects.filter(id=period_id).first
+
+    @staticmethod
+    def get_all_period():
+        return ScheduledPeriod.objects.all()
+
+    @staticmethod
+    def get_instructor_period(instructor=None):
+        return ScheduledPeriod.objects.filter(instructor_assigned=instructor)
 
 
 class AttendanceInstant(models.Model):
