@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content-panel">
+    <div class="cntnt-sec">
+    <h3>{% trans 'Welcome, You will find your current enrolled sections' %}</h3>
+        <br>
+        <table class="table table-condensed">
+            <thead>
+            <tr>
+                <th>{% trans 'Semester Code' %}</th>
+                <th>{% trans 'Course Code' %}</th>
+                <th>{% trans 'Course Name' %}</th>
+                <th>{% trans 'Section Code' %}</th>
+                <th>{% trans 'Class Times' %}</th>
+                <th>{% trans 'Attendances' %}</th>
+                <th>{% trans 'Students' %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for scheduled_period in scheduled_periods %}
+                <tr>
+                    <td>{{ scheduled_period.section.semester.code }}</td>
+                    <td>{{ scheduled_period.section.course.code }}</td>
+                    <td>{{ scheduled_period.section.course.name }}</td>
+                    <td>{{ scheduled_period.section.code }}</td>
+                    <td>{{ scheduled_period.day }} - {{ scheduled_period.start_time }} - {{ scheduled_period.end_time }}</td>
+                    <td><a href="{% url 'attendances_and_grades:scheduled_period' period_id=scheduled_period.section.id %}">{% trans 'View/Edit' %}</a></td>
+                    <td><a href="{% url 'attendances_and_grades:student_section' period_id=scheduled_period.section.id %}">{% trans 'View' %}</a></td>
+                    <td></td>
+                </tr>
+             {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
