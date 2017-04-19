@@ -131,6 +131,9 @@ class Enrollment(models.Model):
     def __str__(self):
         return self.student.arabic_name + ' - ' + self.section.code
 
+    def get_students(section_id):
+        return Enrollment.objects.filter(section=section_id)
+
 
 class ScheduledPeriod(models.Model):
     class Days:

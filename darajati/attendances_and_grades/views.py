@@ -45,7 +45,13 @@ class ScheduledPeriodView(InstructorBaseView, ListView):
 
 
 class SectionStudentView(InstructorBaseView, ListView):
-    pass
+    context_object_name = 'enrollments'
+    template_name = 'section_students.html'
+
+    def get_queryset(self, *args, **kwargs):
+        section_id = self.kwargs['section_id']
+        query = Enrollment.get_students(section_id)
+        return query
 
 # Formset factory
 # class HomeView(ModelFormSetView):

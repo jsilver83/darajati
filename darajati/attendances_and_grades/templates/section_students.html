@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content-panel">
+    <div class="cntnt-sec">
+    <h3>{% trans 'Welcome' %}</h3>
+        <br>
+        <table class="table table-condensed">
+            <thead>
+            <tr>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'ID' %}</th>
+                <th>{% trans 'Active' %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{ students }}
+            {% for enrollment in enrollments %}
+            <tr>
+                <td>{{ enrollment.student.english_name }}</td>
+                <td>{{ enrollment.student.university_id }}</td>
+                <td>{{ enrollment.student.active }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

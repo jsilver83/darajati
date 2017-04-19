@@ -26,7 +26,7 @@
                     <td>{{ scheduled_period.section.code }}</td>
                     <td>{{ scheduled_period.day }} - {{ scheduled_period.start_time }} - {{ scheduled_period.end_time }}</td>
                     <td><a href="{% url 'attendances_and_grades:scheduled_period' period_id=scheduled_period.section.id %}">{% trans 'View/Edit' %}</a></td>
-                    <td><a href="{% url 'attendances_and_grades:student_section' period_id=scheduled_period.section.id %}">{% trans 'View' %}</a></td>
+                    <td><a href="{% url 'attendances_and_grades:student_section' section_id=scheduled_period.section.id %}">{% trans 'View' %}</a></td>
                     <td></td>
                 </tr>
              {% endfor %}
