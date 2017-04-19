@@ -115,11 +115,11 @@ class Section(models.Model):
         return self.semester.code + ' - ' + self.course.code + ' - ' + self.code
 
     @staticmethod
-    def get_a_section(section_id=None):
+    def get_section(section_id=None):
         return Section.objects.filter(id=section_id)
 
     @staticmethod
-    def get_all_section():
+    def get_sections():
         return Section.objects.all()
 
 
@@ -170,11 +170,11 @@ class ScheduledPeriod(models.Model):
                str(self.start_time) + ' - ' + str(self.end_time)
 
     @staticmethod
-    def get_a_period(period_id=None):
+    def get_period(period_id=None):
         return ScheduledPeriod.objects.filter(id=period_id).first
 
     @staticmethod
-    def get_all_period():
+    def get_periods():
         return ScheduledPeriod.objects.all()
 
     @staticmethod

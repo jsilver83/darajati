@@ -27,7 +27,7 @@ class InstructorView(InstructorBaseView, ListView):
     def get_queryset(self):
 
         if self.request.user.is_superuser:
-            query = ScheduledPeriod.get_all_period()
+            query = ScheduledPeriod.get_periods()
             return query
         if self.request.user.profile.is_instructor:
             query = ScheduledPeriod.get_instructor_period(self.request.user.profile.instructor)
@@ -40,7 +40,7 @@ class ScheduledPeriodView(InstructorBaseView, ListView):
 
     def get_queryset(self, *args, **kwargs):
         period_id = self.kwargs['period_id']
-        query = ScheduledPeriod.get_a_period(period_id)
+        query = ScheduledPeriod.get_period(period_id)
         return query
 
 
