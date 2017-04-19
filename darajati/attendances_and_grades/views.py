@@ -22,20 +22,26 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 
 class InstructorView(InstructorBaseView, ListView):
     context_object_name = 'scheduled_periods'
-    template_name = 'attendances_and_grades/current_sections.html'
+    template_name = 'attendances_and_grades/instructor_sections.html'
 
     def get_queryset(self):
 
         if self.request.user.is_superuser:
-            query = ScheduledPeriod.objects.all()
+            query = ScheduledPeriod.get_all_period()
             return query
         if self.request.user.profile.is_instructor:
-            query = ScheduledPeriod.objects.filter(instructor_assigned=self.request.user.profile.instructor)
+            query = ScheduledPeriod.get_instructor_period(self.request.user.profile.instructor)
             return query
 
 
-class SectionView(InstructorBaseView, ListView):
-    pass
+class ScheduledPeriodView(InstructorBaseView, ListView):
+    context_object_name = 'period'
+    template_name = 'attendances_and_grades/period_details.html'
+
+    def get_queryset(self, *args, **kwargs):
+        period_id = self.kwargs['period_id']
+        query = ScheduledPeriod.get_a_period(period_id)
+        return query
 
 
 class SectionStudentView(InstructorBaseView, ListView):
