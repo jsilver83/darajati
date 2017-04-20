@@ -1,1 +1,0 @@
-default_app_config = 'attendances_and_grades.apps.AttendancesAndGradesConfig'

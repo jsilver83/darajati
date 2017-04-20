@@ -29,7 +29,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'attendances_and_grades',
+    'enrollment',
+    'attendance',
+    'grade',
     'floppyforms',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -2,7 +2,7 @@ from . import views
 from django.views.generic import TemplateView
 from django.conf.urls import url
 
-app_name = 'attendances_and_grades'
+app_name = 'enrollment'
 
 urlpatterns = [
     url(r'^$', views.HomeView.as_view(), name='home'),

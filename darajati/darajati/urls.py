@@ -26,6 +26,6 @@ urlpatterns = i18n_patterns(
 )
 
 urlpatterns += i18n_patterns(
-    url(r'', include('attendances_and_grades.urls', namespace='attendances_and_grades',
-                     app_name='attendances_and_grades')),
+    url(r'', include('enrollment.urls', namespace='enrollment',
+                     app_name='enrollment')),
 )
