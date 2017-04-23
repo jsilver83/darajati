@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 from django.utils.translation import ugettext_lazy as _
+from django.urls import reverse_lazy
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -136,8 +137,8 @@ STATIC_URL = '/static/'
 
 # Override settings using environment-specific settings, if any
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = reverse_lazy('login')
+LOGIN_REDIRECT_URL = reverse_lazy('enrollment:home')
 
 try:
     from darajati.local_settings import *
