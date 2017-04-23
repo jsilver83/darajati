@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 
 
 class ScheduledPeriod(models.Model):
@@ -31,11 +30,11 @@ class ScheduledPeriod(models.Model):
     instructor_assigned = models.ForeignKey('enrollment.Instructor', related_name='assigned_periods')
     day = models.CharField(max_length=3, null=True, blank=False, choices=Days.choices())
     title = models.CharField(max_length=20, null=True, blank=False)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(_('start time'))
+    end_time = models.TimeField(_('end time'))
     location = models.CharField(max_length=50, null=True, blank=False)
-    late_deduction = models.FloatField(null=True, blank=False, default=0.0)
-    absence_deduction = models.FloatField(null=True, blank=False, default=0.0)
+    late_deduction = models.FloatField(_('late deduction'), null=True, blank=False, default=0.0)
+    absence_deduction = models.FloatField(_('absence deduction'), null=True, blank=False, default=0.0)
 
     def __str__(self):
         return self.section.code + ' - ' + self.instructor_assigned.english_name + ' - ' + str(self.day) + ' - ' + \
@@ -43,14 +42,23 @@ class ScheduledPeriod(models.Model):
 
     @staticmethod
     def get_period(period_id=None):
+        """
+        This function will get a specific period for a giving id.
+        """
         return ScheduledPeriod.objects.filter(id=period_id).first
 
     @staticmethod
     def get_periods():
+        """
+        This function will get all periods, Usually it's used for superuser.
+        """
         return ScheduledPeriod.objects.all()
 
     @staticmethod
     def get_instructor_period(instructor=None):
+        """
+        This function will give back a list of periods that are associated to an instructor.
+        """
         return ScheduledPeriod.objects.filter(instructor_assigned=instructor)
 
 
