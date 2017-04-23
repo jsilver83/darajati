@@ -12,21 +12,19 @@
                 <th>{% trans 'Course Code' %}</th>
                 <th>{% trans 'Course Name' %}</th>
                 <th>{% trans 'Section Code' %}</th>
-                <th>{% trans 'Class Times' %}</th>
                 <th>{% trans 'Attendances' %}</th>
                 <th>{% trans 'Students' %}</th>
             </tr>
             </thead>
             <tbody>
-            {% for scheduled_period in scheduled_periods %}
+            {% for section in sections %}
                 <tr>
-                    <td>{{ scheduled_period.section.semester.code }}</td>
-                    <td>{{ scheduled_period.section.course.code }}</td>
-                    <td>{{ scheduled_period.section.course.name }}</td>
-                    <td>{{ scheduled_period.section.code }}</td>
-                    <td>{{ scheduled_period.day }} - {{ scheduled_period.start_time }} - {{ scheduled_period.end_time }}</td>
-                    <td><a href="{% url 'attendances_and_grades:scheduled_period' period_id=scheduled_period.section.id %}">{% trans 'View/Edit' %}</a></td>
-                    <td><a href="{% url 'attendances_and_grades:student_section' section_id=scheduled_period.section.id %}">{% trans 'View' %}</a></td>
+                    <td>{{ section.semester.code }}</td>
+                    <td>{{ section.course.code }}</td>
+                    <td>{{ section.course.name }}</td>
+                    <td>{{ section.code }}</td>
+                    <td><a href="{% url 'enrollment:section_attendance' section_id=section.id %}">{% trans 'View/Edit' %}</a></td>
+                    <td><a href="{% url 'enrollment:section_students' section_id=section.id %}">{% trans 'View' %}</a></td>
                     <td></td>
                 </tr>
              {% endfor %}
