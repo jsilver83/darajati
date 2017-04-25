@@ -1,9 +1,6 @@
-from django.forms import modelformset_factory, BaseFormSet
 from django.shortcuts import redirect
-from extra_views import ModelFormSetView
 from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from attendance.models import ScheduledPeriod
 from .models import Section, Enrollment
 from django.urls import reverse_lazy
 
@@ -56,26 +53,3 @@ class SectionStudentView(InstructorBaseView, ListView):
         query = Enrollment.get_students(section_id)
         return query
 
-
-class AttendanceView(InstructorBaseView, ListView):
-    context_object_name = 'period'
-    template_name = 'enrollment/period_details.html'
-
-    def get_queryset(self, *args, **kwargs):
-        period_id = self.kwargs['section_id']
-        query = ScheduledPeriod.get_period(period_id)
-        return query
-
-
-# Formset factory
-# class HomeView(ModelFormSetView):
-#     template_name = 'enrollment/attendance.html'
-#     model = Attendance
-#     form_class = AttendanceForm
-#     success_url = '/'
-#     can_delete = True
-#     queryset = Attendance.objects.filter(id=5)
-#     extra = 1
-#
-#     def formset_valid(self, formset):
-#         return super(HomeView, self).formset_valid(formset)
