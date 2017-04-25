@@ -7,8 +7,9 @@ from enrollment.models import Course
 from enrollment.models import Enrollment
 from enrollment.models import Section
 
+
 class GradesPlan(models.Model):
-    semester = models.ForeignKey( Semester, _('Semester'), related_name="grades_plan", null=True, blank=False)
+    semester = models.ForeignKey(Semester, related_name="grades_plan", null=True, blank=False)
     grade_category = models.CharField(_('Grade Category'), max_length=100, null=True, blank=False)
     grade_description = models.CharField(_('Grade Description'), max_length=100, null=True, blank=False)
     grade_quantity = models.FloatField(_('Grade Quantity'), null=True, blank=False, default=0.0)
@@ -25,20 +26,20 @@ class GradesPlan(models.Model):
 
 
 class LetterGrade(models.Model):
-    semester = models.ForeignKey(Semester, _('Semester'), related_name="letter_grade", null=True, blank=False)
-    course = models.ForeignKey(Course, _('Course'), related_name="letter_grade", null=True, blank=False)
+    semester = models.ForeignKey(Semester, related_name="letter_grade", null=True, blank=False)
+    course = models.ForeignKey(Course, related_name="letter_grade", null=True, blank=False)
     letter_grade = models.CharField(_('Letter Grade'), max_length=2)
     cut_off_point = models.FloatField(_('Cut off Point'), null=True, blank=False, default=0.0)
 
 
 class StudentGrade(models.Model):
-    enrollment = models.ForeignKey(Enrollment, _('Enrolled Student'), related_name="student_grade", null=True, blank=False)
-    grade_plan = models.ForeignKey(GradesPlan, _('Grade Plan'), related_name="student_grade", null=True, blank=False)
+    enrollment = models.ForeignKey(Enrollment, related_name="student_grade", null=True, blank=False)
+    grade_plan = models.ForeignKey(GradesPlan, related_name="student_grade", null=True, blank=False)
     grade = models.FloatField(_('Grade'), null=True, blank=False, default=0.0)
     instructor_remarks = models.CharField(_('Instructor Remarks'), max_length=1500)
 
 
 class SectionGradePlan(models.Model):
-    grade_plan = models.ForeignKey(GradesPlan, _('Grade Plan'), related_name="section_grade_plan", null=True, blank=False)
-    course = models.ForeignKey(Course, _('Course'), related_name="section_grade_plan", null=True, blank=False)
-    section = models.ForeignKey(Section, _('Section'), related_name="section_grade_plan")
+    grade_plan = models.ForeignKey(GradesPlan, related_name="section_grade_plan", null=True, blank=False)
+    course = models.ForeignKey(Course, related_name="section_grade_plan", null=True, blank=False)
+    section = models.ForeignKey(Section, related_name="section_grade_plan")
