@@ -3,8 +3,9 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-    <h3>{% trans 'Welcome, You will find your current enrolled sections' %}</h3>
+        <h3>{% trans 'Welcome, You will find your current enrolled sections' %}</h3>
         <br>
+        {% if sections %}
         <table class="table table-condensed">
             <thead>
             <tr>
@@ -23,13 +24,17 @@
                     <td>{{ section.course.code }}</td>
                     <td>{{ section.course.name }}</td>
                     <td>{{ section.code }}</td>
-                    <td><a href="{% url 'enrollment:section_attendance' section_id=section.id %}">{% trans 'View/Edit' %}</a></td>
+                    <td><a href="{% url 'attendance:section_attendance' section_id=section.id %}">{% trans 'View/Edit' %}</a></td>
                     <td><a href="{% url 'enrollment:section_students' section_id=section.id %}">{% trans 'View' %}</a></td>
                     <td></td>
                 </tr>
              {% endfor %}
             </tbody>
         </table>
+        {% else %}
+                {% trans 'There are no results' %}
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}
