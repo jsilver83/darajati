@@ -4,13 +4,13 @@ from django.utils.translation import ugettext_lazy as _
 
 class ScheduledPeriod(models.Model):
     class Days:
-        SUNDAY = 'sun'
-        MONDAY = 'mon'
-        TUESDAY = 'tue'
-        WEDNESDAY = 'wed'
-        THURSDAY = 'thu'
-        FRIDAY = 'fri'
-        SATURDAY = 'sat'
+        SUNDAY = 'U'
+        MONDAY = 'M'
+        TUESDAY = 'T'
+        WEDNESDAY = 'W'
+        THURSDAY = 'H'
+        FRIDAY = 'F'
+        SATURDAY = 'S'
 
         @classmethod
         def choices(cls):
@@ -61,6 +61,15 @@ class ScheduledPeriod(models.Model):
         """
         return ScheduledPeriod.objects.filter(instructor_assigned=instructor)
 
+    @staticmethod
+    def get_section_periods(section_id, instructor):
+        """
+        :param instructor: login user
+        :param section_id: passed by the url
+        :return: a list of all periods for that section ID
+        """
+        return ScheduledPeriod.objects.filter(section=section_id, instructor_assigned=instructor)
+
 
 class AttendanceInstant(models.Model):
     period = models.ForeignKey(ScheduledPeriod, related_name='attendance_dates')
@@ -72,8 +81,26 @@ class AttendanceInstant(models.Model):
 
 
 class Attendance(models.Model):
-    attendance_instant = models.ForeignKey(AttendanceInstant, related_name='attendances')
-    enrolment = models.ForeignKey('enrollment.Enrollment', related_name='attendances')
+
+    class Types:
+        ABSENT = 'abs'
+        LATE = 'lat'
+        PRESENT = 'pre'
+        EXCUSED = 'exc'
+
+        @classmethod
+        def choices(cls):
+            return (
+                (cls.PRESENT, _('Present')),
+                (cls.ABSENT, _('Absent')),
+                (cls.LATE, _('Late')),
+                (cls.EXCUSED, _('Excused')),
+
+            )
+
+    attendance_instant = models.ForeignKey(AttendanceInstant, related_name='attendance')
+    enrollment = models.ForeignKey('enrollment.Enrollment', related_name='attendance')
+    status = models.CharField(_('Student attendance'), max_length=3, default=Types.PRESENT, choices=Types.choices())
 
     def __str__(self):
-        return str(self.attendance_instant.period) + ' - ' + self.enrolment.student.english_name
+        return str(self.attendance_instant.period) + ' - ' + self.enrollment.student.english_name
