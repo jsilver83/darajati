@@ -7,17 +7,22 @@
         <h3>{% trans 'Welcome' %}</h3>
         <br>
         {% for period in periods %}
-            {{ period.day }} - {{ period.start_time }} --> {{ period.end_time }}
-            <br>
-            {% for form in forms %}
-                {{ form }}
-                <br>
-                {% empty %}
-                {% trans 'There are no results' %}
-            {% endfor %}
-            {% empty %}
-                {% trans 'There are no results' %}
+            {{period}}
+        <br>
         {% endfor %}
+        {% if formset.forms %}
+            <form method="post">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    {{form}}
+                    <br>
+                {% endfor %}
+                <input class="btn btn-default" type="submit" value="submit">
+            </form>
+        {% else %}
+            {% trans 'There are no students' %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}
