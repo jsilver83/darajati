@@ -2,11 +2,11 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from attendance.models import ScheduledPeriod
+
 User = settings.AUTH_USER_MODEL
 
 
 class UserProfile(models.Model):
-
     class Language:
         ARABIC = 'ar'
         ENGLISH = 'en'
@@ -170,8 +170,8 @@ class Section(models.Model):
 
 
 class Enrollment(models.Model):
-    student = models.ForeignKey(Student, related_name='enrolments', on_delete=models.CASCADE)
-    section = models.ForeignKey(Section, related_name='enrolments', on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     letter_grade = models.CharField(_('letter grade'), max_length=10, null=True, blank=False, default='UD')
 
     def __str__(self):
@@ -181,6 +181,19 @@ class Enrollment(models.Model):
     def get_students(section_id):
         """
         :param section_id:
-        :return: list of all students in a giving section ID
+        :return: list of all students for a giving section ID
         """
         return Enrollment.objects.filter(section=section_id)
+
+    @staticmethod
+    def get_students_enrollment(section_id):
+        """
+        :param section_id: 
+        :return: flat list of all students values for a giving section ID   
+        """
+        # TODO: implement it in a better way
+        enrollment_list = Enrollment.objects.filter(section=section_id)
+        enrollments = []
+        for enrollment in enrollment_list:
+            enrollments.append(dict(enrollment=enrollment.student.english_name, enrollment_id=enrollment.id))
+        return enrollments
