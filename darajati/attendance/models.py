@@ -4,13 +4,13 @@ from django.utils.translation import ugettext_lazy as _
 
 class ScheduledPeriod(models.Model):
     class Days:
-        SUNDAY = 'U'
-        MONDAY = 'M'
-        TUESDAY = 'T'
-        WEDNESDAY = 'W'
-        THURSDAY = 'H'
-        FRIDAY = 'F'
-        SATURDAY = 'S'
+        SUNDAY = 'SUNDAY'
+        MONDAY = 'MONDAY'
+        TUESDAY = 'TUESDAY'
+        WEDNESDAY = 'WEDNESDAY'
+        THURSDAY = 'THURSDAY'
+        FRIDAY = 'FRIDAY'
+        SATURDAY = 'SATURDAY'
 
         @classmethod
         def choices(cls):
@@ -28,7 +28,7 @@ class ScheduledPeriod(models.Model):
                                 on_delete=models.CASCADE)
 
     instructor_assigned = models.ForeignKey('enrollment.Instructor', related_name='assigned_periods')
-    day = models.CharField(max_length=3, null=True, blank=False, choices=Days.choices())
+    day = models.CharField(max_length=9, null=True, blank=False, choices=Days.choices())
     title = models.CharField(max_length=20, null=True, blank=False)
     start_time = models.TimeField(_('start time'))
     end_time = models.TimeField(_('end time'))
@@ -66,7 +66,7 @@ class ScheduledPeriod(models.Model):
         """
         :param instructor: login user
         :param section_id: passed by the url
-        :return: a list of all periods for that section ID
+        :return: a list of all periods for that section ID for that instructor
         """
         return ScheduledPeriod.objects.filter(section=section_id, instructor_assigned=instructor)
 
