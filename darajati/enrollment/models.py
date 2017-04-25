@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from attendance.models import ScheduledPeriod
 
 User = settings.AUTH_USER_MODEL
 
@@ -195,5 +194,6 @@ class Enrollment(models.Model):
         enrollment_list = Enrollment.objects.filter(section=section_id)
         enrollments = []
         for enrollment in enrollment_list:
-            enrollments.append(dict(enrollment=enrollment.student.english_name, enrollment_id=enrollment.id))
+            # TODO: add the registered attendance to be get as well
+            enrollments.append(dict(enrollment=enrollment.id, student_name=enrollment.student.english_name))
         return enrollments
