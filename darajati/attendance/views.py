@@ -1,14 +1,12 @@
 import calendar
 
-from extra_views import ModelFormSetView
-from django.forms import formset_factory
-from django.views.generic import ListView, FormView
+from extra_views import FormSetView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from .forms import AttendanceForm
-from .models import Attendance, ScheduledPeriod
+from .models import Attendance, ScheduledPeriod, AttendanceInstant
+from enrollment.utils import *
 from enrollment.models import Section, Enrollment
-from datetime import datetime
 
 
 class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
@@ -27,22 +25,33 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
             return reverse_lazy('enrollment:home')
 
 
-class AttendanceView(InstructorBaseView, ListView):
+class AttendanceView(InstructorBaseView, FormSetView):
     template_name = 'attendance/attendance.html'
-    context_object_name = 'periods'
+    form_class = AttendanceForm
+    extra = 0
+
+    def get_initial(self, **kwargs):
+        section_id = self.kwargs['section_id']
+        return Enrollment.get_students_enrollment(section_id)
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
         section_id = self.kwargs['section_id']
-        # enrollments = Enrollment.get_students(section_id)
-        # current_date = datetime.today()
-        # cd_weekday = calendar.day_name[current_date.weekday()]
-        # print(cd_weekday)
-        attendance_form_set = formset_factory(AttendanceForm, extra=0)
-        context['forms'] = attendance_form_set(initial=Enrollment.get_students_enrollment(section_id))
+        context['periods'] = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
         return context
 
-    def get_queryset(self, *args, **kwargs):
+    def formset_invalid(self, formset):
+        print(formset.errors)
+        print("Invalid")
+        exit()
+
+    def formset_valid(self, formset):
+        print(formset)
+        print("Valid")
+        exit()
+
+    def get(self, request, *args, **kwargs):
         section_id = self.kwargs['section_id']
-        query = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
-        return query
+        ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
+        return super(AttendanceView, self).get(request, *args, **kwargs)
+
