@@ -9,7 +9,7 @@ class HomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         # TODO: redirect the new users to fill their information
-        if request.user.profile.is_instructor:
+        if request.user.profile.is_instructor & request.user.profile.has_access:
             return redirect('enrollment:instructor')
         else:
             return redirect('enrollment:unauthorized')
@@ -52,4 +52,3 @@ class SectionStudentView(InstructorBaseView, ListView):
         section_id = self.kwargs['section_id']
         query = Enrollment.get_students(section_id)
         return query
-
