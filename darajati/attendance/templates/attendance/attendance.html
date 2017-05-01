@@ -3,6 +3,15 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li
+            {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <br>
         <h3>{% trans 'Available Attendance Days - Select one to show the attendance' %}</h3>
         <div class="btn-group">
             {% for period in periods %}
@@ -15,11 +24,11 @@
             {% csrf_token %}
             {{ formset.management_form }}
             {% for form in formset %}
-                {% ifchanged form.period.value %}
-                    <br>
-                    <div>{{form.period}}</div>
-                    <!--<div>{{form.period.value.section}}</div>-->
-                {% endifchanged %}
+            {% ifchanged form.period.value %}
+            <br>
+            <div>{{form.period}}</div>
+            <!--<div>{{form.period.value.section}}</div>-->
+            {% endifchanged %}
             <br>
             <div class="row">
                 <div class="col-6">
