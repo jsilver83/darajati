@@ -3,25 +3,40 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <a href="{{request.META.HTTP_REFERER}}">Go back</a>
-        <h3>{% trans 'Welcome' %}</h3>
-        <br>
-        {% for period in periods %}
-            {{period}}
-        <br>
-        {% endfor %}
+        <h3>{% trans 'Available Attendance Days - Select one to show the attendance' %}</h3>
+        <div class="btn-group">
+            {% for period in periods %}
+            <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
+               class="btn green" role="button"> {{ period.day }} </a>
+            {% endfor %}
+        </div>
         {% if formset.forms %}
-            <form method="post">
-                {% csrf_token %}
-                {{ formset.management_form }}
-                {% for form in formset %}
-                    {{form}}
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            {% for form in formset %}
+                {% ifchanged form.period.value %}
                     <br>
-                {% endfor %}
-                <input class="btn btn-default" type="submit" value="submit">
-            </form>
+                    <div>{{form.period}}</div>
+                    <!--<div>{{form.period.value.section}}</div>-->
+                {% endifchanged %}
+            <br>
+            <div class="row">
+                <div class="col-6">
+                    {{form.student_name}}
+                </div>
+                <div class="col-6">
+                    {{form.status}}
+                </div>
+                {{form.enrollment}}
+                {{form.id}}
+                {{form.attendance_instance}}
+            </div>
+            {% endfor %}
+            <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
+        </form>
         {% else %}
-            {% trans 'There are no students' %}
+        {% trans 'There are no students' %}
         {% endif %}
     </div>
 </div>
