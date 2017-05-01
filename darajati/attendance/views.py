@@ -1,10 +1,15 @@
 import calendar
 
-from extra_views import FormSetView
+from extra_views import FormSetView, ModelFormSetView
+from django.views.generic import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from .forms import AttendanceForm
-from .models import Attendance, ScheduledPeriod, AttendanceInstant
+from django.forms.formsets import BaseFormSet
+from django.forms import formset_factory, modelformset_factory
+from django.shortcuts import render
+
+from .forms import AttendanceForm, Attendance1Form
+from .models import Attendance, ScheduledPeriod, AttendanceInstance
 from enrollment.utils import *
 from enrollment.models import Section, Enrollment
 
@@ -32,7 +37,10 @@ class AttendanceView(InstructorBaseView, FormSetView):
 
     def get_initial(self, **kwargs):
         section_id = self.kwargs['section_id']
-        return Enrollment.get_students_enrollment(section_id)
+        day = None
+        if self.kwargs['day']:
+            day = self.kwargs['day']
+        return Enrollment.get_students_enrollment(section_id, today(), self.request.user.profile.instructor, day)
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
@@ -40,18 +48,18 @@ class AttendanceView(InstructorBaseView, FormSetView):
         context['periods'] = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
         return context
 
-    def formset_invalid(self, formset):
-        print(formset.errors)
-        print("Invalid")
-        exit()
-
     def formset_valid(self, formset):
-        print(formset)
-        print("Valid")
-        exit()
+        for form in formset:
+            form.user = self.request.user
+            form.save()
+        return super(AttendanceView, self).formset_valid(formset)
 
     def get(self, request, *args, **kwargs):
         section_id = self.kwargs['section_id']
         ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
         return super(AttendanceView, self).get(request, *args, **kwargs)
 
+    def get_success_url(self, **kwargs):
+        section_id = self.kwargs['section_id']
+        return reverse_lazy('attendance:section_attendance',
+                            kwargs={'section_id': section_id})
