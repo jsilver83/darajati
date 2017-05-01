@@ -191,6 +191,9 @@ class Section(models.Model):
 
 
 class Enrollment(models.Model):
+    class Meta:
+        unique_together = ('student', 'section')
+
     student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     letter_grade = models.CharField(_('letter grade'), max_length=10, null=True, blank=False, default='UD')
@@ -252,10 +255,10 @@ class Enrollment(models.Model):
                 except Attendance.DoesNotExist:
                     status = Attendance.Types.PRESENT
 
-                enrollments.append(dict(enrollment=enrollment.id,
+                enrollments.append(dict(enrollment=enrollment,
                                         student_name=enrollment.student.english_name,
                                         period=period,
-                                        attendance_instance=attendance_instance.id,
+                                        attendance_instance=attendance_instance,
                                         status=status,
                                         id=id))
         return enrollments
