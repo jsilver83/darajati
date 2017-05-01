@@ -1014,6 +1014,29 @@ select.thm-field {
   color: #fff;
 }
 
+.kfupm-navbar {
+  background-color: #d4d4d4;
+  border-bottom: 3px solid #868686;
+  clear: both;
+  float: left;
+  padding: 10px 15px;
+  position: relative;
+  width: 100%;
+}
+
+.nav-list {
+  list-style-type: none;
+}
+.nav-list .nav-item {
+  float: left;
+  padding: 5px 5px 0px 0px;
+}
+
+.green {
+  background-color: #007d40;
+  color: white;
+}
+
 body {
   overflow-x: hidden;
 }

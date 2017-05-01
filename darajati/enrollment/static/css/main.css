@@ -1032,6 +1032,16 @@ select.thm-field {
   padding: 5px 5px 0px 0px;
 }
 
+.green {
+  background-color: #007d40;
+  color: white;
+  border-color: #007d40;
+}
+.green:hover {
+  background-color: white;
+  color: #007d40;
+}
+
 body {
   overflow-x: hidden;
 }
