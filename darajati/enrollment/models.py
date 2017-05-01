@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
+from .utils import get_offset_day, number_of_days, day_string
 
 User = settings.AUTH_USER_MODEL
 
@@ -40,6 +43,13 @@ class UserProfile(models.Model):
         """
         return Instructor.get_instructor(user=self)
 
+    @property
+    def is_active(self):
+        """
+        :return: True if the user is active else is False
+        """
+        pass
+
 
 class Person(models.Model):
     """
@@ -56,13 +66,6 @@ class Person(models.Model):
 
     class Meta:
         abstract = True
-
-    @staticmethod
-    def is_active(self):
-        """
-        :return: True if the user is active else is False
-        """
-        pass
 
 
 class Student(Person):
@@ -185,15 +188,55 @@ class Enrollment(models.Model):
         return Enrollment.objects.filter(section=section_id)
 
     @staticmethod
-    def get_students_enrollment(section_id):
+    def get_students_enrollment(section_id, date, instructor, given_day=None):
         """
         :param section_id: 
-        :return: flat list of all students values for a giving section ID   
+        :param date:
+        :param instructor:
+        :param given_day
+        :return: list of enrollments for a giving section_id and a day and instructor
+           If the giving day is not exist get the nearest one
         """
-        # TODO: implement it in a better way
-        enrollment_list = Enrollment.objects.filter(section=section_id)
+
         enrollments = []
-        for enrollment in enrollment_list:
-            # TODO: add the registered attendance to be get as well
-            enrollments.append(dict(enrollment=enrollment.id, student_name=enrollment.student.english_name))
+        days_offset = 0
+        periods = None
+        period_date = None
+
+        if given_day:
+            periods = ScheduledPeriod.get_section_periods_of_date(section_id, given_day, instructor)
+            while days_offset <= 7:
+                period_date, day = get_offset_day(date, -days_offset)
+                if str(day).lower() == str(given_day).lower():
+                    days_offset = 8
+                days_offset += 1
+            """
+            When a day is not giving, we provide the attendance of the nearest day.
+            """
+        else:
+            while days_offset <= 7:
+                period_date, day = get_offset_day(date, -days_offset)
+                periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
+                if periods:
+                    days_offset = 8
+                days_offset += 1
+
+        for period in periods:
+            attendance_instance, created = AttendanceInstance.objects.get_or_create(period=period, date=period_date)
+            enrollment_list = Enrollment.objects.filter(section=section_id)
+            for enrollment in enrollment_list:
+                id = 0
+                try:
+                    attendance = Attendance.objects.get(enrollment=enrollment, attendance_instance=attendance_instance)
+                    status = attendance.status
+                    id = attendance.id
+                except Attendance.DoesNotExist:
+                    status = Attendance.Types.PRESENT
+
+                enrollments.append(dict(enrollment=enrollment.id,
+                                        student_name=enrollment.student.english_name,
+                                        period=period,
+                                        attendance_instance=attendance_instance.id,
+                                        status=status,
+                                        id=id))
         return enrollments
