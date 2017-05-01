@@ -61,5 +61,11 @@ class AttendanceView(InstructorBaseView, FormSetView):
 
     def get_success_url(self, **kwargs):
         section_id = self.kwargs['section_id']
+        day = None
+        if self.kwargs['day']:
+            day = self.kwargs['day']
+            return reverse_lazy('attendance:section_day_attendance',
+                                kwargs={'section_id': section_id, 'day': day})
+
         return reverse_lazy('attendance:section_attendance',
                             kwargs={'section_id': section_id})
