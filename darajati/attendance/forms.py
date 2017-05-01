@@ -1,5 +1,6 @@
 from django import forms
 from .models import Attendance
+from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -43,9 +44,9 @@ class AttendanceForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        self.instance.id = self.cleaned_data['id']
-        self.instance.status = self.cleaned_data['status']
-        if self.cleaned_data['status'] == 'pre':
-            print("ignore")
-        else:
-            super(AttendanceForm, self).save()
+        if self.cleaned_data['id']:
+            self.instance.id = self.cleaned_data['id']
+
+        if 'status' in self.changed_data:
+            self.instance.updated_by = self.user
+            return super(AttendanceForm, self).save()
