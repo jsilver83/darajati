@@ -66,12 +66,24 @@ class ScheduledPeriod(models.Model):
         """
         :param instructor: login user
         :param section_id: passed by the url
+        :param current_day: current day string
         :return: a list of all periods for that section ID for that instructor
         """
-        return ScheduledPeriod.objects.filter(section=section_id, instructor_assigned=instructor)
+        return ScheduledPeriod.objects.filter(section=section_id, instructor_assigned=instructor).values(
+            'section_id', 'day').distinct()
+
+    @staticmethod
+    def get_section_periods_of_date(section_id, day, instructor):
+        """
+        :param section_id: giving section 
+        :param day:
+        :param instructor
+        :return: all periods for a giving section and date and instructor
+        """
+        return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
 
 
-class AttendanceInstant(models.Model):
+class AttendanceInstance(models.Model):
     period = models.ForeignKey(ScheduledPeriod, related_name='attendance_dates')
     date = models.DateField()
     comment = models.CharField(max_length=150, null=True, blank=True)
@@ -79,9 +91,26 @@ class AttendanceInstant(models.Model):
     def __str__(self):
         return str(self.period) + ' - ' + str(self.date)
 
+    @staticmethod
+    def is_created(period, date):
+        """
+        :param period: 
+        :param date
+        :return: 
+        """
+        return True if AttendanceInstance.objects.filter(period=period, date=date) else False
+
+    @staticmethod
+    def get_attendance_instance_of_period(period, date):
+        """
+        :param period: 
+        :param date
+        :return: 
+        """
+        return AttendanceInstance.objects.filter(period=period, date=date)
+
 
 class Attendance(models.Model):
-
     class Types:
         ABSENT = 'abs'
         LATE = 'lat'
@@ -98,9 +127,9 @@ class Attendance(models.Model):
 
             )
 
-    attendance_instant = models.ForeignKey(AttendanceInstant, related_name='attendance')
+    attendance_instance = models.ForeignKey(AttendanceInstance, related_name='attendance')
     enrollment = models.ForeignKey('enrollment.Enrollment', related_name='attendance')
     status = models.CharField(_('Student attendance'), max_length=3, default=Types.PRESENT, choices=Types.choices())
 
     def __str__(self):
-        return str(self.attendance_instant.period) + ' - ' + self.enrollment.student.english_name
+        return str(self.attendance_instance.period) + ' - ' + self.enrollment.student.english_name
