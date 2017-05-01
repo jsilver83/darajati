@@ -1,5 +1,8 @@
 from django.db import models
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+
+User = settings.AUTH_USER_MODEL
 
 
 class ScheduledPeriod(models.Model):
@@ -130,6 +133,8 @@ class Attendance(models.Model):
     attendance_instance = models.ForeignKey(AttendanceInstance, related_name='attendance')
     enrollment = models.ForeignKey('enrollment.Enrollment', related_name='attendance')
     status = models.CharField(_('Student attendance'), max_length=3, default=Types.PRESENT, choices=Types.choices())
+    updated_on = models.DateTimeField(auto_now=True, null=True, blank=False)
+    updated_by = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.attendance_instance.period) + ' - ' + self.enrollment.student.english_name
