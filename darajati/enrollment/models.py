@@ -37,6 +37,10 @@ class UserProfile(models.Model):
         pass
 
     @property
+    def has_access(self):
+        return Instructor.is_active(user=self) or Student.is_active(user=self)
+
+    @property
     def is_instructor(self):
         """
         :return: True if the current user profile is an instructor else False
@@ -64,6 +68,7 @@ class Person(models.Model):
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
 
+
     class Meta:
         abstract = True
 
@@ -75,12 +80,19 @@ class Student(Person):
         return self.arabic_name + ' ' + self.university_id
 
     @staticmethod
+    def is_active(user=None):
+        """
+        :return: True if the user is active else is False
+        """
+        return Student.objects.get(user_profile=user).active
+
+    @staticmethod
     def get_student(user=None):
         """
         :param user: current login user
         :return: True if student else False
         """
-        return True if Student.objects.filter(user_profile=user) else False
+        return True if Student.objects.get(user_profile=user) else False
 
 
 class Instructor(Person):
@@ -92,12 +104,19 @@ class Instructor(Person):
         # :TODO Function to get the email ID from the USER_AUTH_MODEL.
 
     @staticmethod
+    def is_active(user=None):
+        """
+        :return: True if the user is active else is False
+        """
+        return Instructor.objects.get(user_profile=user).active
+
+    @staticmethod
     def get_instructor(user=None):
         """
         :param user: current login user
         :return: True if instructor else False
         """
-        return True if Instructor.objects.filter(user_profile=user) else False
+        return True if Instructor.objects.get(user_profile=user) else False
 
 
 class Semester(models.Model):
