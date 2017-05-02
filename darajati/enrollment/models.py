@@ -190,12 +190,15 @@ class Section(models.Model):
         return Section.objects.all()
 
     @staticmethod
-    def get_instructor_sections(instructor):
+    def get_instructor_sections(instructor, today):
         """
         :param instructor: current login user
-        :return: a unique ist of section objects for the login user
+        :param today: current date
+        :return: a unique ist of section objects for the login user and for the current semester
         """
-        return Section.objects.filter(scheduled_periods__instructor_assigned=instructor).distinct()
+        return Section.objects.filter(scheduled_periods__instructor_assigned=instructor,
+                                      scheduled_periods__section__semester__start_date__lte=today,
+                                      scheduled_periods__section__semester__end_date__gte=today).distinct()
 
 
 class Enrollment(models.Model):
