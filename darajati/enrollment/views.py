@@ -39,10 +39,7 @@ class InstructorView(InstructorBaseView, ListView):
     template_name = 'enrollment/instructor_sections.html'
 
     def get_queryset(self):
-
-        # TODO: should be get all the currently in rolled section (For this year)
-        query = Section.get_instructor_sections(self.request.user.profile.instructor)
-
+        query = Section.get_instructor_sections(self.request.user.profile.instructor, today())
         return query
 
 
