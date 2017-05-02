@@ -68,7 +68,6 @@ class Person(models.Model):
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
 
-
     class Meta:
         abstract = True
 
@@ -84,7 +83,10 @@ class Student(Person):
         """
         :return: True if the user is active else is False
         """
-        return Student.objects.get(user_profile=user).active
+        try:
+            return Student.objects.get(user_profile=user).active
+        except:
+            return False
 
     @staticmethod
     def get_student(user=None):
@@ -92,7 +94,10 @@ class Student(Person):
         :param user: current login user
         :return: True if student else False
         """
-        return True if Student.objects.get(user_profile=user) else False
+        try:
+            return Student.objects.get(user_profile=user)
+        except:
+            return False
 
 
 class Instructor(Person):
@@ -108,7 +113,10 @@ class Instructor(Person):
         """
         :return: True if the user is active else is False
         """
-        return Instructor.objects.get(user_profile=user).active
+        try:
+            return Instructor.objects.get(user_profile=user).active
+        except:
+            return False
 
     @staticmethod
     def get_instructor(user=None):
@@ -116,7 +124,7 @@ class Instructor(Person):
         :param user: current login user
         :return: True if instructor else False
         """
-        return True if Instructor.objects.get(user_profile=user) else False
+        return True if Instructor.objects.filter(user_profile=user) else False
 
 
 class Semester(models.Model):
