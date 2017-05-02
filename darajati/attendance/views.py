@@ -1,15 +1,11 @@
-import calendar
-
-from extra_views import FormSetView, ModelFormSetView
-from django.views.generic import FormView
+from extra_views import FormSetView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.forms.formsets import BaseFormSet
-from django.forms import formset_factory, modelformset_factory
-from django.shortcuts import render
+from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
 
-from .forms import AttendanceForm, Attendance1Form
-from .models import Attendance, ScheduledPeriod, AttendanceInstance
+from .forms import AttendanceForm
+from .models import ScheduledPeriod
 from enrollment.utils import *
 from enrollment.models import Section, Enrollment
 
