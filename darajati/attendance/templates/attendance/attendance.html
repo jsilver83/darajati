@@ -35,7 +35,7 @@
             </thead>
             <tbody>
                 {% csrf_token %}
-                {{ formset_management_form }}
+                {{ formset.management_form }}
                 {% for form in formset %}
                     {% ifchanged form.enrollment.value %}
                         <tr>
