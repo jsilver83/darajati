@@ -1,6 +1,5 @@
 from django import forms
 from .models import Attendance
-from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -29,6 +28,7 @@ class AttendanceForm(forms.ModelForm):
         self.fields['id'] = forms.IntegerField(widget=forms.HiddenInput())
         self.fields['period'] = forms.CharField(
             widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+        self.fields['index'] = forms.IntegerField(widget=forms.HiddenInput(), required=False)
         self.order_fields(self.ORDER)
 
     class Meta:
