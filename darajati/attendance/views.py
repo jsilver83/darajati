@@ -48,6 +48,7 @@ class AttendanceView(InstructorBaseView, FormSetView):
         for form in formset:
             form.user = self.request.user
             form.save()
+        messages.success(self.request, _('Attendance was saved successfully'))
         return super(AttendanceView, self).formset_valid(formset)
 
     def get(self, request, *args, **kwargs):
