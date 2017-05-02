@@ -7,7 +7,8 @@
         <ul class="messages">
             {% for message in messages %}
             <li
-            {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
+            </li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -21,28 +22,41 @@
         </div>
         {% if formset.forms %}
         <form method="post">
-            {% csrf_token %}
-            {{ formset.management_form }}
-            {% for form in formset %}
-            {% ifchanged form.period.value %}
-            <br>
-            <div>{{form.period}}</div>
-            <!--<div>{{form.period.value.section}}</div>-->
-            {% endifchanged %}
-            <br>
-            <div class="row">
-                <div class="col-6">
-                    {{form.student_name}}
-                </div>
-                <div class="col-6">
-                    {{form.status}}
-                </div>
-                {{form.enrollment}}
-                {{form.id}}
-                {{form.attendance_instance}}
-            </div>
-            {% endfor %}
-            <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Period1</th>
+                <th>Period2</th>
+                <th>Period3</th>
+                <th>Period4</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% csrf_token %}
+                {{ formset_management_form }}
+                {% for form in formset %}
+                    {% ifchanged form.enrollment.value %}
+                        <tr>
+                        <th scope="row">{{form.index.value}}</th>
+                        <td>{{ form.student_name }}</td>
+                        <td>{{ form.status }}</td>
+                        {{form.enrollment}}
+                        {{form.id}}
+                        {{form.attendance_instance}}
+                    {% else %}
+                        <span style="display: none;">{{ form.student_name }}</span>
+                        <td>{{ form.status }}</td>
+                        {{form.enrollment}}
+                        {{form.id}}
+                        {{form.attendance_instance}}
+                    {% endifchanged%}
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+        <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
         </form>
         {% else %}
         {% trans 'There are no students' %}
