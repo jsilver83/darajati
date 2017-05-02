@@ -1,8 +1,10 @@
 from django.shortcuts import redirect
 from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Section, Enrollment
 from django.urls import reverse_lazy
+
+from .models import Section, Enrollment
+from .utils import today
 
 
 class HomeView(LoginRequiredMixin, View):
