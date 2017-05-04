@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from .forms import AttendanceForm
-from .models import ScheduledPeriod
+from .models import ScheduledPeriod, Attendance
 from enrollment.utils import *
 from enrollment.models import Section, Enrollment
 
