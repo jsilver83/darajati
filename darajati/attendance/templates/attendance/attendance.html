@@ -40,14 +40,42 @@
                 {% csrf_token %}
                 {{ formset.management_form }}
                 {% for form in formset %}
-                    {% ifchanged form.enrollment.value %}
-                        <tr>
-                        <th scope="row">{{form.index.value}}</th>
-                        <td>{{ form.student_name }}</td>
-                        <td>{{ form.status }}</td>
-                        {{form.enrollment}}
-                        {{form.id}}
-                        {{form.attendance_instance}}
+                {% ifchanged form.enrollment.value %}
+                <tr>
+                    <th scope="row">{{form.index.value}}</th>
+                    <td>{{ form.student_university_id }}</td>
+                    <td>{{ form.student_name }}</td>
+                    <td>
+                        {% for enrollment in enrollments %}
+                        {% if form.enrollment.value == enrollment.enrollment %}
+                        {% ifequal enrollment.status 'abs' %}{{ enrollment.total }}{% endifequal %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for enrollment in enrollments %}
+                        {% if form.enrollment.value == enrollment.enrollment %}
+                        {% ifequal enrollment.status 'lat' %}{{ enrollment.total }}{% endifequal %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for enrollment in enrollments %}
+                        {% if form.enrollment.value == enrollment.enrollment %}
+                        {% ifequal enrollment.status 'exc' %}{{ enrollment.total }}{% endifequal %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ form.status }}
+                        <button type="button" class="btn" data-toggle="tooltip" data-placement="bottom"
+                                title="Updated By : {{ form.updated_by.value }}, Updated On : {{ form.updated_on.value }}">
+                            !
+                        </button>
+                    </td>
+                    {{form.enrollment}}
+                    {{form.id}}
+                    {{form.attendance_instance}}
+
                     {% else %}
                         <span style="display: none;">{{ form.student_name }}</span>
                         <td>{{ form.status }}</td>
