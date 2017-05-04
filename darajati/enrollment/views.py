@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 
 from .models import Section, Enrollment
-from .utils import today
+from .utils import now
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -39,7 +39,7 @@ class InstructorView(InstructorBaseView, ListView):
     template_name = 'enrollment/instructor_sections.html'
 
     def get_queryset(self):
-        query = Section.get_instructor_sections(self.request.user.profile.instructor, today())
+        query = Section.get_instructor_sections(self.request.user.profile.instructor, now())
         return query
 
 
