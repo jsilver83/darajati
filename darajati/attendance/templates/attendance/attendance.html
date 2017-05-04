@@ -77,17 +77,26 @@
                     {{form.attendance_instance}}
 
                     {% else %}
-                        <span style="display: none;">{{ form.student_name }}</span>
-                        <td>{{ form.status }}</td>
-                        {{form.enrollment}}
-                        {{form.id}}
-                        {{form.attendance_instance}}
+
+                    {% if form.id.value != None %}
+                    <span style="display: none;">{{ form.student_name }}</span>
+                    <td>{{ form.status }}
+                        <button type="button" class="btn" data-toggle="tooltip" data-placement="bottom"
+                                title="Updated By : {{ form.updated_by.value }}, Updated On : {{ form.updated_on.value }}">
+                            !
+                        </button>
+                    </td>
+                    {{form.enrollment}}
+                    {{form.id}}
+                    {{form.attendance_instance}}
+                    {% endif %}
+
                     {% endifchanged%}
                     {% endfor %}
                 </tr>
-            </tbody>
-        </table>
-        <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
+                </tbody>
+            </table>
+            <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
         </form>
         {% else %}
         {% trans 'There are no students' %}
