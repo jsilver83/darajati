@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from .utils import get_offset_day, number_of_days, day_string
 
@@ -239,20 +238,27 @@ class Enrollment(models.Model):
         for enrollment in enrollment_list:
             for period in periods:
                 id = 0
+                updated_by = None
+                updated_on = None
                 attendance_instance, created = AttendanceInstance.objects.get_or_create(period=period, date=period_date)
                 try:
                     attendance = Attendance.objects.get(enrollment=enrollment, attendance_instance=attendance_instance)
                     status = attendance.status
+                    updated_by = attendance.updated_by
+                    updated_on = attendance.updated_on
                     id = attendance.id
                 except Attendance.DoesNotExist:
                     status = Attendance.Types.PRESENT
 
                 enrollments.append(dict(enrollment=enrollment,
                                         student_name=enrollment.student.english_name,
+                                        student_university_id=enrollment.student.university_id,
                                         period=period,
                                         attendance_instance=attendance_instance,
                                         status=status,
                                         id=id,
-                                        index=index))
+                                        index=index,
+                                        updated_by=updated_by,
+                                        updated_on=updated_on))
             index += 1
         return enrollments
