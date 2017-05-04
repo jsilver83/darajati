@@ -41,7 +41,7 @@ class AttendanceView(InstructorBaseView, FormSetView):
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
         section_id = self.kwargs['section_id']
-        day = day_string(today())
+        day = None
         if self.kwargs['day']:
             day = self.kwargs['day']
 
