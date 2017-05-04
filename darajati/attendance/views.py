@@ -41,7 +41,14 @@ class AttendanceView(InstructorBaseView, FormSetView):
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
         section_id = self.kwargs['section_id']
+        day = day_string(today())
+        if self.kwargs['day']:
+            day = self.kwargs['day']
+
         context['periods'] = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
+        period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
+            section_id, self.request.user.profile.instructor, today(), day)
+        context['enrollments'] = Attendance.get_student_attendance(section_id)
         return context
 
     def formset_valid(self, formset):
