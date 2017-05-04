@@ -232,29 +232,10 @@ class Enrollment(models.Model):
         """
 
         enrollments = []
-        days_offset = 0
-        periods = None
-        period_date = None
         index = 1
-        if given_day:
-            periods = ScheduledPeriod.get_section_periods_of_date(section_id, given_day, instructor)
-            while days_offset <= 7:
-                period_date, day = get_offset_day(date, -days_offset)
-                if str(day).lower() == str(given_day).lower():
-                    days_offset = 8
-                days_offset += 1
-            """
-            When a day is not giving, we provide the attendance of the nearest day.
-            """
-        else:
-            while days_offset <= 7:
-                period_date, day = get_offset_day(date, -days_offset)
-                periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
-                if periods:
-                    days_offset = 8
-                days_offset += 1
-
-        enrollment_list = Enrollment.objects.filter(section=section_id)
+        period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date,
+                                                                                  given_day)
+        enrollment_list = Enrollment.get_students(section_id)
         for enrollment in enrollment_list:
             for period in periods:
                 id = 0
@@ -275,25 +256,3 @@ class Enrollment(models.Model):
                                         index=index))
             index += 1
         return enrollments
-        # This was listing starting by period then go loop the enrollment
-        # for period in periods:
-        #     attendance_instance, created = AttendanceInstance.objects.get_or_create(period=period, date=period_date)
-        #     enrollment_list = Enrollment.objects.filter(section=section_id)
-        #     for enrollment in enrollment_list:
-        #         id = 0
-        #         try:
-        #             attendance = Attendance.objects.get(enrollment=enrollment, attendance_instance=attendance_instance)
-        #             status = attendance.status
-        #             id = attendance.id
-        #         except Attendance.DoesNotExist:
-        #             status = Attendance.Types.PRESENT
-        #
-        #         enrollments.append(dict(enrollment=enrollment,
-        #                                 student_name=enrollment.student.english_name,
-        #                                 period=period,
-        #                                 attendance_instance=attendance_instance,
-        #                                 status=status,
-        #                                 id=id,
-        #                                 count=count))
-        #     count += 1
-        #return enrollments

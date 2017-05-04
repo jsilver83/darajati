@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from enrollment.utils import *
 
 User = settings.AUTH_USER_MODEL
 
@@ -84,6 +85,39 @@ class ScheduledPeriod(models.Model):
         :return: all periods for a giving section and date and instructor
         """
         return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
+
+    @staticmethod
+    def get_section_periods_of_nearest_day(section_id, instructor, date, giving_day=None):
+        """
+        :param section_id: 
+        :param giving_day: 
+        :param instructor: 
+        :param date
+        :return: 
+        """
+        days_offset = 0
+        period_date = None
+        day = None
+        if giving_day:
+            periods = ScheduledPeriod.get_section_periods_of_date(section_id, giving_day, instructor)
+            while days_offset <= 7:
+                period_date, day = get_offset_day(date, -days_offset)
+                if str(day).lower() == str(giving_day).lower():
+                    days_offset = 8
+                days_offset += 1
+            """
+            When a day is not giving, we provide the attendance of the nearest day.
+            """
+        else:
+            while days_offset <= 7:
+                period_date, day = get_offset_day(date, -days_offset)
+                periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
+                if periods:
+                    days_offset = 8
+                days_offset += 1
+
+        return period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
+                                                           instructor_assigned=instructor)
 
 
 class AttendanceInstance(models.Model):
