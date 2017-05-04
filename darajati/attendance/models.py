@@ -172,3 +172,13 @@ class Attendance(models.Model):
 
     def __str__(self):
         return str(self.attendance_instance.period) + ' - ' + self.enrollment.student.english_name
+
+    @staticmethod
+    def get_student_attendance(section_id):
+        """
+        :param section_id: 
+        :return: 
+        """
+        return Attendance.objects.filter(enrollment__section=section_id).values('enrollment', 'status').annotate(
+            total=models.Count('status')
+        )
