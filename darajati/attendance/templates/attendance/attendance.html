@@ -22,18 +22,21 @@
         </div>
         {% if formset.forms %}
         <form method="post">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>Full Name</th>
-                <th>Period1</th>
-                <th>Period2</th>
-                <th>Period3</th>
-                <th>Period4</th>
-            </tr>
-            </thead>
-            <tbody>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student ID</th>
+                    <th>Full Name</th>
+                    <th>A</th>
+                    <th>L</th>
+                    <th>E</th>
+                    {% for period in current_periods %}
+                    <th> Period {{ forloop.counter }} - {{ period.start_time }} ~ {{period.end_time }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
                 {% csrf_token %}
                 {{ formset.management_form }}
                 {% for form in formset %}
