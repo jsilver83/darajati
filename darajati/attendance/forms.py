@@ -25,10 +25,17 @@ class AttendanceForm(forms.ModelForm):
         super(AttendanceForm, self).__init__(*args, **kwargs)
         self.fields['student_name'] = forms.CharField(
             widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+        self.fields['student_university_id'] = forms.CharField(
+            widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
         self.fields['id'] = forms.IntegerField(widget=forms.HiddenInput())
         self.fields['period'] = forms.CharField(
             widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
         self.fields['index'] = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+        self.fields['updated_by'] = forms.DateTimeField(widget=forms.DateTimeInput(
+            attrs={'disable': 'disable'}), required=False)
+        self.fields['updated_on'] = forms.DateTimeField(widget=forms.DateTimeInput(
+            attrs={'disable': 'disable'}), required=False)
+
         self.order_fields(self.ORDER)
 
     class Meta:
