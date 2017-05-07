@@ -51,6 +51,11 @@ class AttendanceView(InstructorBaseView, FormSetView):
         context['enrollments'] = Attendance.get_student_attendance(section_id)
         return context
 
+    def get_extra_form_kwargs(self):
+        kwargs = super(AttendanceView, self).get_extra_form_kwargs()
+        kwargs.update({'request': self.request})
+        return kwargs
+
     def formset_valid(self, formset):
         for form in formset:
             form.user = self.request.user
