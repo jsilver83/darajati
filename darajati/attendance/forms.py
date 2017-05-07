@@ -3,12 +3,6 @@ from .models import Attendance
 from django.utils.translation import ugettext_lazy as _
 
 
-class Attendance1Form(forms.ModelForm):
-    class Meta:
-        model = Attendance
-        fields = '__all__'
-
-
 class AttendanceForm(forms.ModelForm):
     """
     Behavior: 
@@ -19,24 +13,28 @@ class AttendanceForm(forms.ModelForm):
     
     - add classes for css and re-order the list 
     """
+    student_name = forms.CharField(
+        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+    student_university_id = forms.CharField(
+        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+    id = forms.IntegerField(widget=forms.HiddenInput())
+    period = forms.CharField(
+        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+    index = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+    updated_by = forms.DateTimeField(widget=forms.DateTimeInput(
+        attrs={'disabled': 'disabled'}), required=False)
+    updated_on = forms.DateTimeField(widget=forms.DateTimeInput(
+        attrs={'disabled': 'disabled'}), required=False)
+
     ORDER = ('student_name', 'status')
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request')
+        self.permissions = self.request.user.get_all_permissions()
         super(AttendanceForm, self).__init__(*args, **kwargs)
-        self.fields['student_name'] = forms.CharField(
-            widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
-        self.fields['student_university_id'] = forms.CharField(
-            widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
-        self.fields['id'] = forms.IntegerField(widget=forms.HiddenInput())
-        self.fields['period'] = forms.CharField(
-            widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
-        self.fields['index'] = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-        self.fields['updated_by'] = forms.DateTimeField(widget=forms.DateTimeInput(
-            attrs={'disable': 'disable'}), required=False)
-        self.fields['updated_on'] = forms.DateTimeField(widget=forms.DateTimeInput(
-            attrs={'disable': 'disable'}), required=False)
-
         self.order_fields(self.ORDER)
+        if self.initial['status'] == Attendance.Types.EXCUSED:
+            self.fields['status'].widget.attrs['readonly'] = True
 
     class Meta:
         model = Attendance
