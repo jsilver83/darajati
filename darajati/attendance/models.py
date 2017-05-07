@@ -148,6 +148,12 @@ class AttendanceInstance(models.Model):
 
 
 class Attendance(models.Model):
+
+    class Meta:
+        permissions = (
+            ('can_give_excused_status', _('Can change student status to excused')),
+        )
+
     class Types:
         ABSENT = 'abs'
         LATE = 'lat'
