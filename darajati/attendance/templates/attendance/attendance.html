@@ -13,16 +13,17 @@
         </ul>
         {% endif %}
         <br>
-        <h3>{% trans 'Available Attendance Days - Select one to show the attendance' %}</h3>
-        <div class="btn-group">
+        <h3 class="text-center">{% trans 'Available Attendance Days' %}</h3>
+        <p class="text-center">{% trans 'Select one to show the attendance' %}</p>
+        <div class="btn-group avail-attend-days">
             {% for period in periods %}
             <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-               class="btn green" role="button"> {{ period.day }} </a>
+               class="btn green days" role="button"> {{ period.day }} </a>
             {% endfor %}
         </div>
         {% if formset.forms %}
         <form method="post">
-            <table class="table">
+            <table class="table thm-table">
                 <thead>
                 <tr>
                     <th>#</th>

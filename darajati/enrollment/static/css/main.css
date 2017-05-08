@@ -882,6 +882,13 @@ select.thm-field {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+.small-btn {
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0;
+  padding: 5px 15px;
+}
+
 .large-field {
   line-height: 24px;
   padding: 10px 15px;
@@ -1435,6 +1442,33 @@ body {
   border-radius: 4px;
   display: inline-block;
   cursor: pointer;
+}
+
+.avail-attend-days {
+  display: block;
+  margin: 10px 0 15px 0;
+  text-align: center;
+  width: 100%;
+}
+.avail-attend-days .days {
+  background-color: transparent;
+  border: 1px solid #333333;
+  border-radius: 50px !important;
+  color: #333333;
+  margin: 0 5px !important;
+  padding: 10px 20px;
+}
+.avail-attend-days .days:hover {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+.thm-table {
+  border: 1px solid #eeeeee;
+  width: 100%;
+}
+.thm-table thead th {
+  background-color: #eeeeee;
 }
 
 .arabic {
