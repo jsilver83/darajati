@@ -87,4 +87,26 @@ $(document).ready(function(){
 		$('.errorlist').hide();
 	});
 
+
+	/*Edit Attendance*/
+	$('.edit-btn').click(function(){
+		$(this).hide();
+		$('.save-atten').show();
+	});
+	$('.cancel-btn').click(function(){
+		$(this).parent('.save-atten').hide();
+		$('.edit-btn').show();
+	});
+
+	$('.info-icon').click(function(){
+		$('.info-cntnt').hide();
+		$(this).next('.info-cntnt').show();
+	});
+
+	$(window).click(function() {
+		if($(this).hasClass('info-icon')){
+			$('.info-cntnt').hide();
+		}
+	});
+
 });

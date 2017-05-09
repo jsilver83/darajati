@@ -852,6 +852,8 @@ select.thm-field {
 
 .thm-btn:hover {
   background-color: #36a670;
+  text-decoration: none;
+  color: #fff;
 }
 
 .thm-btn:focus, .thm-btn:active {
@@ -870,6 +872,7 @@ select.thm-field {
 
 .outline-btn-grey:hover {
   background-color: rgba(0, 0, 0, 0.05);
+  color: #333333;
 }
 
 .outline-btn-dgrey {
@@ -880,6 +883,7 @@ select.thm-field {
 
 .outline-btn-dgrey:hover {
   background-color: rgba(0, 0, 0, 0.05);
+  color: #333333;
 }
 
 .small-btn {
@@ -1447,7 +1451,6 @@ body {
 .avail-attend-days {
   display: block;
   margin: 10px 0 15px 0;
-  text-align: center;
   width: 100%;
 }
 .avail-attend-days .days {
@@ -1455,7 +1458,9 @@ body {
   border: 1px solid #333333;
   border-radius: 50px !important;
   color: #333333;
-  margin: 0 5px !important;
+  font-size: 14px;
+  line-height: 16px;
+  margin: 0 10px 0 0 !important;
   padding: 10px 20px;
 }
 .avail-attend-days .days:hover {
@@ -1464,11 +1469,58 @@ body {
 }
 
 .thm-table {
-  border: 1px solid #eeeeee;
+  border: 1px solid #e7e7e7;
+  border-radius: 4px;
   width: 100%;
 }
-.thm-table thead th {
-  background-color: #eeeeee;
+.thm-table table {
+  border: none !important;
+  width: 100%;
+}
+.thm-table table thead th {
+  background-color: #333333;
+  border-bottom: solid 2px #333333;
+  color: #ffffff;
+  font-size: 14px;
+  padding: 8px 15px;
+}
+
+.thm-table.odd .table tbody tr:nth-child(2n+1) td {
+  background-color: #f7f7f7;
+}
+
+.edit-btn {
+  margin: 25px 0 0 0;
+}
+
+.save-atten {
+  display: none;
+  margin: 25px 0 0 0;
+}
+
+.info .info-icon {
+  cursor: pointer;
+}
+.info .info-cntnt {
+  background-color: rgba(0, 0, 0, 0.85);
+  border: 1px solid #171717;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+  color: #ededed;
+  display: none;
+  font-size: 12px;
+  line-height: 20px;
+  margin-right: 50px;
+  padding: 10px;
+  position: absolute;
+  right: 0;
+  text-align: left;
+  top: -50%;
+  width: 140px;
+  z-index: 999;
+}
+.info .info-cntnt span {
+  display: block;
 }
 
 .arabic {

@@ -12,9 +12,19 @@
             {% endfor %}
         </ul>
         {% endif %}
-        <br>
-        <h3 class="text-center">{% trans 'Available Attendance Days' %}</h3>
-        <p class="text-center">{% trans 'Select one to show the attendance' %}</p>
+        <div class="title-sec row">
+            <div class="col-md-9">
+                <h3>{% trans 'Available Attendance Days' %}</h3>
+                <p>{% trans 'Select one to show the attendance' %}</p>
+            </div>
+            <div class="col-md-3 text-right">
+                <div class="save-atten">
+                    <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">Cancel</a>&nbsp;&nbsp;
+                    <input class="thm-btn small-btn" type="submit" value="Save">
+                </div>
+                <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">Edit</a>
+            </div>
+        </div>
         <div class="btn-group avail-attend-days">
             {% for period in periods %}
             <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
@@ -23,85 +33,98 @@
         </div>
         {% if formset.forms %}
         <form method="post">
-            <table class="table thm-table">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Student ID</th>
-                    <th>Full Name</th>
-                    <th>A</th>
-                    <th>L</th>
-                    <th>E</th>
-                    {% for period in current_periods %}
-                    <th> Period {{ forloop.counter }} - {{ period.start_time }} ~ {{period.end_time }}</th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
-                {% csrf_token %}
-                {{ formset.management_form }}
-                {% for form in formset %}
-                {% ifchanged form.enrollment.value %}
-                <tr>
-                    <th scope="row">{{form.index.value}}</th>
-                    <td>{{ form.student_university_id }}</td>
-                    <td>{{ form.student_name }}</td>
-                    <td>
-                        {% for enrollment in enrollments %}
-                        {% if form.enrollment.value == enrollment.enrollment %}
-                        {% ifequal enrollment.status 'abs' %}{{ enrollment.total }}{% endifequal %}
-                        {% endif %}
+            <div class="thm-table odd">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <!--<th>#</th>-->
+                        <th>Student ID</th>
+                        <th>Full Name</th>
+                        <th>A</th>
+                        <th>L</th>
+                        <th>E</th>
+                        {% for period in current_periods %}
+                        <th> Period {{ forloop.counter }} - {{ period.start_time }} ~ {{period.end_time }}</th>
                         {% endfor %}
-                    </td>
-                    <td>
-                        {% for enrollment in enrollments %}
-                        {% if form.enrollment.value == enrollment.enrollment %}
-                        {% ifequal enrollment.status 'lat' %}{{ enrollment.total }}{% endifequal %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                    {% ifchanged form.enrollment.value %}
+                    <tr>
+                        <!--<th scope="row">{{form.index.value}}</th>-->
+                        <td>{{ form.student_university_id }}</td>
+                        <td>{{ form.student_name }}</td>
+                        <td>
+                            {% for enrollment in enrollments %}
+                            {% if form.enrollment.value == enrollment.enrollment %}
+                            {% ifequal enrollment.status 'abs' %}{{ enrollment.total }}{% endifequal %}
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for enrollment in enrollments %}
+                            {% if form.enrollment.value == enrollment.enrollment %}
+                            {% ifequal enrollment.status 'lat' %}{{ enrollment.total }}{% endifequal %}
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for enrollment in enrollments %}
+                            {% if form.enrollment.value == enrollment.enrollment %}
+                            {% ifequal enrollment.status 'exc' %}{{ enrollment.total }}{% endifequal %}
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-8">{{ form.status }}</div>
+                                <div class="col-md-4 info text-right">
+                                    <img class="info-icon" src="info.png" />
+                                    <div class="info-cntnt">
+                                        <span>Updated By : {{ form.updated_by.value }}</span>
+                                        <span>Updated On : {{ form.updated_on.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        {{form.enrollment}}
+                        {{form.id}}
+                        {{form.attendance_instance}}
+
+                        {% else %}
+
+                        {% if form.id.value != None %}
+                        <span style="display: none;">{{ form.student_name }}</span>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-8">{{ form.status }}</div>
+                                <div class="col-md-4 info text-right">
+                                    <img class="info-icon" src="info.png" />
+                                    <div class="info-cntnt">
+                                        <span>Updated By : {{ form.updated_by.value }}</span>
+                                        <span>Updated On : {{ form.updated_on.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        {{form.enrollment}}
+                        {{form.id}}
+                        {{form.attendance_instance}}
                         {% endif %}
+
+                        {% endifchanged%}
                         {% endfor %}
-                    </td>
-                    <td>
-                        {% for enrollment in enrollments %}
-                        {% if form.enrollment.value == enrollment.enrollment %}
-                        {% ifequal enrollment.status 'exc' %}{{ enrollment.total }}{% endifequal %}
-                        {% endif %}
-                        {% endfor %}
-                    </td>
-                    <td>{{ form.status }}
-                        <button type="button" class="btn" data-toggle="tooltip" data-placement="bottom"
-                                title="Updated By : {{ form.updated_by.value }}, Updated On : {{ form.updated_on.value }}">
-                            !
-                        </button>
-                    </td>
-                    {{form.enrollment}}
-                    {{form.id}}
-                    {{form.attendance_instance}}
-
-                    {% else %}
-
-                    {% if form.id.value != None %}
-                    <span style="display: none;">{{ form.student_name }}</span>
-                    <td>{{ form.status }}
-                        <button type="button" class="btn" data-toggle="tooltip" data-placement="bottom"
-                                title="Updated By : {{ form.updated_by.value }}, Updated On : {{ form.updated_on.value }}">
-                            !
-                        </button>
-                    </td>
-                    {{form.enrollment}}
-                    {{form.id}}
-                    {{form.attendance_instance}}
-                    {% endif %}
-
-                    {% endifchanged%}
-                    {% endfor %}
-                </tr>
-                </tbody>
-            </table>
-            <input class="btn btn-default" type="submit" value="submit" style="margin-top: 1%">
-        </form>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         {% else %}
         {% trans 'There are no students' %}
         {% endif %}
+        </form>
     </div>
 </div>
 {% endblock %}
