@@ -3,7 +3,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
-
 from .forms import AttendanceForm
 from .models import ScheduledPeriod, Attendance
 from enrollment.utils import *
@@ -59,8 +58,9 @@ class AttendanceView(InstructorBaseView, FormSetView):
     def formset_valid(self, formset):
         for form in formset:
             form.user = self.request.user
-            form.save()
-        messages.success(self.request, _('Attendance was saved successfully'))
+            saved_form = form.save(commit=False)
+            if saved_form:
+                saved_form.save()
         return super(AttendanceView, self).formset_valid(formset)
 
     def get(self, request, *args, **kwargs):
