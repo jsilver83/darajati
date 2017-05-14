@@ -5,26 +5,27 @@ from django.utils.translation import ugettext_lazy as _
 
 class AttendanceForm(forms.ModelForm):
     """
-    Behavior: 
+    Behavior:
     - getting the tow fields from the model Attendance then add one more field to them
     by calling the super class in the initial state and adding the field 'student_name' as disabled inputText field
-    
+
     - convert the enrollment field to a HiddenInput
-    
-    - add classes for css and re-order the list 
+
+    - add classes for css and re-order the list
     """
+
     student_name = forms.CharField(
-        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+        widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
     student_university_id = forms.CharField(
-        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+        widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
     id = forms.IntegerField(widget=forms.HiddenInput())
     period = forms.CharField(
-        widget=forms.TextInput(attrs={'disabled': 'disabled', 'class': 'form-control'}), required=False)
+        widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
     index = forms.IntegerField(widget=forms.HiddenInput(), required=False)
     updated_by = forms.DateTimeField(widget=forms.DateTimeInput(
-        attrs={'disabled': 'disabled'}), required=False)
+        attrs={'readonly': 'True'}), required=False)
     updated_on = forms.DateTimeField(widget=forms.DateTimeInput(
-        attrs={'disabled': 'disabled'}), required=False)
+        attrs={'readonly': 'True'}), required=False)
 
     ORDER = ('student_name', 'status')
 
@@ -33,7 +34,8 @@ class AttendanceForm(forms.ModelForm):
         self.permissions = self.request.user.get_all_permissions()
         super(AttendanceForm, self).__init__(*args, **kwargs)
         self.order_fields(self.ORDER)
-        if self.initial['status'] == Attendance.Types.EXCUSED:
+        if self.initial['status'] == Attendance.Types.EXCUSED \
+                and 'attendance.can_give_excused_status' in self.permissions:
             self.fields['status'].widget.attrs['readonly'] = True
 
     class Meta:
@@ -49,9 +51,18 @@ class AttendanceForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
+
         if self.cleaned_data['id']:
             self.instance.id = self.cleaned_data['id']
 
         if 'status' in self.changed_data:
             self.instance.updated_by = self.user
             return super(AttendanceForm, self).save()
+
+    def clean_status(self):
+        print(self.changed_data)
+        if 'can_give_excused_status' not in self.permissions \
+                and self.cleaned_data.get('status') == Attendance.Types.EXCUSED\
+                and 'status' in self.changed_data:
+            self.add_error('status', _("You don't have permission to make this change"))
+        return self.cleaned_data.get('status')
