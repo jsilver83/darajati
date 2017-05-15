@@ -1449,28 +1449,33 @@ body {
 }
 
 .avail-attend-days {
-  display: block;
-  margin: 10px 0 15px 0;
+  display: inline-block;
+  margin: 10px 0 -2px 0;
   width: 100%;
 }
 .avail-attend-days .days {
   background-color: transparent;
   border: 1px solid #333333;
-  border-radius: 50px !important;
+  border-radius: 4px 4px 0 0;
   color: #333333;
+  float: left;
   font-size: 14px;
   line-height: 16px;
-  margin: 0 10px 0 0 !important;
+  margin: 0;
   padding: 10px 20px;
 }
 .avail-attend-days .days:hover {
   background-color: #333333;
   color: #ffffff;
 }
+.avail-attend-days .days.active-period {
+  background-color: #333333;
+  color: #fff;
+}
 
 .thm-table {
   border: 1px solid #e7e7e7;
-  border-radius: 4px;
+  border-top: 2px solid #333;
   width: 100%;
 }
 .thm-table table {
@@ -1478,9 +1483,9 @@ body {
   width: 100%;
 }
 .thm-table table thead th {
-  background-color: #333333;
-  border-bottom: solid 2px #333333;
-  color: #ffffff;
+  background-color: #f0f0f0;
+  border-bottom: 2px solid #eaeaea;
+  color: #333;
   font-size: 14px;
   padding: 8px 15px;
 }
@@ -1500,6 +1505,9 @@ body {
 
 .info .info-icon {
   cursor: pointer;
+  margin: 10px 0;
+  vertical-align: middle;
+  width: 18px;
 }
 .info .info-cntnt {
   background-color: rgba(0, 0, 0, 0.85);
@@ -1521,6 +1529,21 @@ body {
 }
 .info .info-cntnt span {
   display: block;
+}
+.info .info-cntnt input {
+  border: none;
+  background-color: transparent;
+  width: auto;
+}
+
+.period-cntnt td {
+  font-size: 13px;
+  line-height: 18px;
+  vertical-align: middle;
+}
+.period-cntnt .form-control {
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .arabic {

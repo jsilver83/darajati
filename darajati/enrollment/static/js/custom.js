@@ -109,4 +109,22 @@ $(document).ready(function(){
 		}
 	});
 
+
+	$("body").click(function(e) {
+	    if($('.info-cntnt').is(':visible')){
+	    	$('.info-cntnt').hide().removeClass('active');
+	    }
+	    e.stopPropagation();
+	    //return false;
+	});
+
+
+	/*Student Screen Available Tutors*/
+	$('.info-icon').click(function(){
+		var thiselct = $(this);
+		$('.info-cntnt').hide().removeClass('active');
+		thiselct.siblings('.info-cntnt').show().addClass('active');
+		return false;
+	});
+
 });
