@@ -14,25 +14,30 @@
         {% endif %}
         {% if formset.forms %}
         <form method="post">
-        <div class="title-sec row">
-            <div class="col-md-9">
-                <h3>{% trans 'Available Attendance Days' %}</h3>
-                <p>{% trans 'Select one to show the attendance' %}</p>
-            </div>
-            <div class="col-md-3 text-right">
-                <div class="save-atten">
-                    <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">Cancel</a>&nbsp;&nbsp;
-                    <input class="thm-btn small-btn" type="submit" value="Save">
+            <div class="title-sec row">
+                <div class="col-md-9">
+                    <h3>{% trans 'Available Attendance Days' %}</h3>
+                    <p>{% trans 'Select one to show the attendance' %}</p>
                 </div>
-                <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">Edit</a>
+                <div class="col-md-3 text-right">
+                    <div class="save-atten">
+                        <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">Cancel</a>&nbsp;&nbsp;
+                        <input class="thm-btn small-btn" type="submit" value="Save">
+                    </div>
+                    <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">Edit</a>
+                </div>
             </div>
-        </div>
-        <div class="btn-group avail-attend-days">
-            {% for period in periods %}
-            <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-               class="btn green days" role="button"> {{ period.day }} </a>
-            {% endfor %}
-        </div>
+            <div class="btn-group avail-attend-days">
+                {% for period in periods %}
+                {% if period.day|lower == current_day|lower %}
+                    <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
+                   class="btn green days active-period" role="button"> {{ period.day }} </a>
+                {% else %}
+                    <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
+                       class="btn green days" role="button"> {{ period.day }} </a>
+                {% endif %}
+                {% endfor %}
+            </div>
             <div class="thm-table odd period-cntnt">
                 <table class="table">
                     <thead>
@@ -83,7 +88,7 @@
                             <div class="row">
                                 <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
                                 <div class="col-md-4 info text-right">
-                                    <img class="info-icon" src="{% static 'images/info.png' %}" />
+                                    <img class="info-icon" src="{% static 'images/info.png' %}"/>
                                     <div class="info-cntnt">
                                         <span>Updated By : {{ form.updated_by }}</span>
                                         <span>Updated On : {{ form.updated_on }}</span>
@@ -104,7 +109,7 @@
                             <div class="row">
                                 <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
                                 <div class="col-md-4 info text-right">
-                                    <img class="info-icon" src="{% static 'images/info.png' %}" />
+                                    <img class="info-icon" src="{% static 'images/info.png' %}"/>
                                     <div class="info-cntnt">
                                         <span>Updated By : {{ form.updated_by }}</span>
                                         <span>Updated On : {{ form.updated_on }}</span>
@@ -123,9 +128,9 @@
                     </tbody>
                 </table>
             </div>
-        {% else %}
-        {% trans 'There are no students' %}
-        {% endif %}
+            {% else %}
+            {% trans 'There are no students' %}
+            {% endif %}
         </form>
     </div>
 </div>
