@@ -22,7 +22,7 @@ class AttendanceForm(forms.ModelForm):
     period = forms.CharField(
         widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
     index = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-    updated_by = forms.DateTimeField(widget=forms.DateTimeInput(
+    updated_by = forms.CharField(widget=forms.TextInput(
         attrs={'readonly': 'True'}), required=False)
     updated_on = forms.DateTimeField(widget=forms.DateTimeInput(
         attrs={'readonly': 'True'}), required=False)
@@ -60,7 +60,6 @@ class AttendanceForm(forms.ModelForm):
             return super(AttendanceForm, self).save()
 
     def clean_status(self):
-        print(self.changed_data)
         if 'can_give_excused_status' not in self.permissions \
                 and self.cleaned_data.get('status') == Attendance.Types.EXCUSED\
                 and 'status' in self.changed_data:
