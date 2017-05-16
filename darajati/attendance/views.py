@@ -45,8 +45,9 @@ class AttendanceView(InstructorBaseView, FormSetView):
             day = self.kwargs['day']
 
         context['periods'] = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
-        period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
+        day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
             section_id, self.request.user.profile.instructor, today(), day)
+        context['current_day'] = day
         context['enrollments'] = Attendance.get_student_attendance(section_id)
         return context
 

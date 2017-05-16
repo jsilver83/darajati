@@ -232,8 +232,8 @@ class Enrollment(models.Model):
 
         enrollments = []
         index = 1
-        period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date,
-                                                                                  given_day)
+        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date,
+                                                                                       given_day)
         enrollment_list = Enrollment.get_students(section_id)
         for enrollment in enrollment_list:
             for period in periods:

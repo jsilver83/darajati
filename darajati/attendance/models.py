@@ -116,8 +116,8 @@ class ScheduledPeriod(models.Model):
                     days_offset = 8
                 days_offset += 1
 
-        return period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
-                                                           instructor_assigned=instructor)
+        return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
+                                                                instructor_assigned=instructor)
 
 
 class AttendanceInstance(models.Model):
@@ -148,7 +148,6 @@ class AttendanceInstance(models.Model):
 
 
 class Attendance(models.Model):
-
     class Meta:
         permissions = (
             ('can_give_excused_status', _('Can change student status to excused')),
