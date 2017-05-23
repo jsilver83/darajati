@@ -1,8 +1,12 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+
+from .types import RoundTypes
+from .utils import to_string
+
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
-from .utils import get_offset_day, number_of_days, day_string
+from grade.models import GradeBreakDown, StudentGrade
 
 User = settings.AUTH_USER_MODEL
 

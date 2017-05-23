@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from enrollment.utils import *
+
+from enrollment.utils import to_string, get_offset_day
 
 User = settings.AUTH_USER_MODEL
 
