@@ -277,3 +277,26 @@ class Enrollment(models.Model):
                                         updated_on=updated_on))
             index += 1
         return enrollments
+        # @staticmethod
+        # def get_students_enrollment_grades(section):
+        #     """
+        #     :param section:
+        #     :return:
+        #     """
+        #     enrollments = []
+        #     enrollment_list = Enrollment.get_students(section.id)
+        #     tasks = GradeBreakDown.get_grade_break_down(section)
+        #     for enrollment in enrollment_list:
+        #         for task in tasks:
+        #             try:
+        #                 grade = StudentGrade.objects.get(enrollment=enrollment, grade_break_down=task)
+        #             except StudentGrade.DoesNotExist:
+        #                 grade = StudentGrade()
+        #
+        #             enrollments.append(dict(
+        #                 enrollment=enrollment,
+        #                 grade_break_down=task,
+        #                 grade_quantity=grade.grade_quantity,
+        #                 remarks=grade.remarks
+        #             ))
+        #     return enrollments
