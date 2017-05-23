@@ -199,7 +199,7 @@ class Section(models.Model):
     @staticmethod
     def get_sections():
         """
-        :return: list of section objects
+        :return: objects of all sections
         """
         return Section.objects.all()
 
