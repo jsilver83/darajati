@@ -167,6 +167,11 @@ class Section(models.Model):
     semester = models.ForeignKey(Semester, related_name='sections', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='sections', on_delete=models.CASCADE)
     code = models.CharField(max_length=20, null=True, blank=False)
+    rounding_type = models.CharField(_('Rounding Type'), max_length=50, choices=RoundTypes.choices(), null=True,
+                                     blank=False,
+                                     default=RoundTypes.NONE,
+                                     help_text=_('Total grade rounding method for letter grade calculation'))
+    crn = models.CharField(_('CRN'), max_length=100, null=True, blank=False)
 
     def __str__(self):
         return to_string(self.semester.code, self.course.code, self.code)
