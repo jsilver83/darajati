@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+<div class="content-panel">
+    <div class="cntnt-sec">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li
+                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if grades_break_down %}
+        <h3>{% trans 'Welcome, find your current enrolled sections grades break down' %}</h3>
+        <br>
+        {% with grades_break_down|first as item %}
+            <span><strong>{% trans 'Semester : ' %}</strong>{{ item.semester.code }}</span>
+            <br>
+            <span><strong>{% trans 'Course : ' %}</strong>{{ item.course.name }}</span>
+            <br>
+            {% if item.section %}<span><strong>{% trans 'Section : ' %}</strong>{{ item.section.code }}</span>{% endif %}
+        {% endwith %}
+
+        <table class="table table-condensed text-center">
+            <thead>
+            <tr>
+                <th class="text-center">{% trans 'Category' %}</th>
+                <th class="text-center">{% trans 'Description' %}</th>
+                <th class="text-center">{% trans 'Weight' %}</th>
+                <th class="text-center">{% trans 'Type' %}</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for grade_break_down in grades_break_down %}
+            <tr>
+                <td>{{ grade_break_down.category }}</td>
+                <td>{{ grade_break_down.description }}</td>
+                <td>{{ grade_break_down.weight }}</td>
+                <td>{{ grade_break_down.type }}</td>
+                <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_break_down_id=grade_break_down.id%}"
+                       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        {% trans 'There are no results' %}
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
