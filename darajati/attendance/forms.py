@@ -3,7 +3,17 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from .models import Attendance
-from django.utils.translation import ugettext_lazy as _
+
+
+class PlainTextWidget(forms.Widget):
+    def render(self, name, value, attrs=None):
+        if value is not None:
+            field = "<input type='hidden' name='%s' value='%s' readonly> <span>%s</span>"\
+                    %(name, mark_safe(value), mark_safe(value))
+        else:
+            field = "<input type='hidden' name='%s' value='' readonly> <span>-</span>" % (name)
+        return field
+        # return mark_safe(value) if value is not None else '-'
 
 
 class AttendanceForm(forms.ModelForm):
@@ -18,17 +28,16 @@ class AttendanceForm(forms.ModelForm):
     """
 
     student_name = forms.CharField(
-        widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
+        widget=PlainTextWidget)
     student_university_id = forms.CharField(
-        widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
+        widget=PlainTextWidget)
     id = forms.IntegerField(widget=forms.HiddenInput())
     period = forms.CharField(
         widget=forms.TextInput(attrs={'readonly': 'True', 'class': 'form-control'}), required=False)
     index = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-    updated_by = forms.CharField(widget=forms.TextInput(
-        attrs={'readonly': 'True'}), required=False)
-    updated_on = forms.DateTimeField(widget=forms.DateTimeInput(
-        attrs={'readonly': 'True'}), required=False)
+    updated_by = forms.CharField(
+        widget=PlainTextWidget, required=False)
+    updated_on = forms.DateTimeField(widget=PlainTextWidget, required=False)
 
     ORDER = ('student_name', 'status')
 
