@@ -133,6 +133,8 @@ class Instructor(Person):
 class Semester(models.Model):
     start_date = models.DateTimeField(_('start date'))
     end_date = models.DateTimeField(_('end date'))
+    grade_break_down_deadline = models.DateTimeField(_('Grade Break Down Deadline Date'),
+                                                     null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
