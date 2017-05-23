@@ -191,7 +191,10 @@ class Section(models.Model):
         :param section_id:
         :return: an object of the giving section_id
         """
-        return Section.objects.filter(id=section_id)
+        try:
+            return Section.objects.get(id=section_id)
+        except Section.DoesNotExist:
+            return None
 
     @staticmethod
     def get_sections():
