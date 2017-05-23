@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
+
 from .forms import AttendanceForm
 from .models import ScheduledPeriod, Attendance
 
@@ -17,9 +18,17 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     - check if the current user is instructor or superuser
     - redirect the current user even if he is AnonymousUser
     """
+    section_id = None
+    section = None
+    day = None
     # TODO: add a check for the active user
-    def test_func(self):
-        return self.request.user.profile.is_instructor
+
+    def test_func(self, **kwargs):
+        self.section_id = self.kwargs['section_id']
+        self.section = Section.get_section(self.section_id)
+        if self.kwargs['day']:
+            self.day = self.kwargs['day']
+        return self.section and self.request.user.profile.is_instructor
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -31,25 +40,17 @@ class AttendanceView(InstructorBaseView, FormSetView):
     form_class = AttendanceForm
     extra = 0
 
-    def get_initial(self, **kwargs):
-        section_id = self.kwargs['section_id']
-        day = None
-        if self.kwargs['day']:
-            day = self.kwargs['day']
-        return Enrollment.get_students_enrollment(section_id, today(), self.request.user.profile.instructor, day)
+    def get_initial(self):
+        return Enrollment.get_students_enrollment(self.section_id, today(), self.request.user.profile.instructor,
+                                                  self.day)
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
-        section_id = self.kwargs['section_id']
-        day = None
-        if self.kwargs['day']:
-            day = self.kwargs['day']
-
-        context['periods'] = ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
+        context['periods'] = ScheduledPeriod.get_section_periods(self.section_id, self.request.user.profile.instructor)
         day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
-            section_id, self.request.user.profile.instructor, today(), day)
+            self.section_id, self.request.user.profile.instructor, today(), self.day)
         context['current_day'] = day
-        context['enrollments'] = Attendance.get_student_attendance(section_id)
+        context['enrollments'] = Attendance.get_student_attendance(self.section_id)
         return context
 
     def get_extra_form_kwargs(self):
@@ -63,20 +64,17 @@ class AttendanceView(InstructorBaseView, FormSetView):
             saved_form = form.save(commit=False)
             if saved_form:
                 saved_form.save()
+        messages.success(self.request, _('Attendance were saved successfully'))
         return super(AttendanceView, self).formset_valid(formset)
 
     def get(self, request, *args, **kwargs):
-        section_id = self.kwargs['section_id']
-        ScheduledPeriod.get_section_periods(section_id, self.request.user.profile.instructor)
+        ScheduledPeriod.get_section_periods(self.section_id, self.request.user.profile.instructor)
         return super(AttendanceView, self).get(request, *args, **kwargs)
 
-    def get_success_url(self, **kwargs):
-        section_id = self.kwargs['section_id']
-        day = None
-        if self.kwargs['day']:
-            day = self.kwargs['day']
+    def get_success_url(self):
+        if self.day:
             return reverse_lazy('attendance:section_day_attendance',
-                                kwargs={'section_id': section_id, 'day': day})
+                                kwargs={'section_id': self.section_id, 'day': self.day})
 
         return reverse_lazy('attendance:section_attendance',
-                            kwargs={'section_id': section_id})
+                            kwargs={'section_id': self.section_id})
