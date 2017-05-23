@@ -189,7 +189,7 @@ class Section(models.Model):
     def get_section(section_id):
         """
         :param section_id:
-        :return: a section object got the giving ID
+        :return: an object of the giving section_id
         """
         return Section.objects.filter(id=section_id)
 
