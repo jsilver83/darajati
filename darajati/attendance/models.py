@@ -42,8 +42,8 @@ class ScheduledPeriod(models.Model):
     absence_deduction = models.FloatField(_('absence deduction'), null=True, blank=False, default=0.0)
 
     def __str__(self):
-        return self.section.code + ' - ' + self.instructor_assigned.english_name + ' - ' + str(self.day) + ' - ' + \
-               str(self.start_time) + ' - ' + str(self.end_time)
+        return to_string(self.section.code, self.instructor_assigned.english_name, self.day, self.start_time,
+                         self.end_time)
 
     @staticmethod
     def get_period(period_id=None):
@@ -127,7 +127,7 @@ class AttendanceInstance(models.Model):
     comment = models.CharField(max_length=150, null=True, blank=True)
 
     def __str__(self):
-        return str(self.period) + ' - ' + str(self.date)
+        return to_string(self.period, self.date)
 
     @staticmethod
     def is_created(period, date):
@@ -177,7 +177,7 @@ class Attendance(models.Model):
     updated_by = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return str(self.attendance_instance.period) + ' - ' + self.enrollment.student.english_name
+        return to_string(self.attendance_instance.period, self.enrollment.student.english_name)
 
     @staticmethod
     def get_student_attendance(section_id):

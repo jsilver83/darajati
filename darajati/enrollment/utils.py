@@ -32,3 +32,10 @@ def number_of_days(start_date, end_date):
 
 def day_string(date):
     return calendar.day_name[date.weekday()]
+
+
+def to_string(*args):
+    sentence = ' '
+    for arg in args:
+        sentence += str(arg) + ' '
+    return sentence

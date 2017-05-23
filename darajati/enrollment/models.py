@@ -79,7 +79,7 @@ class Student(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='student', null=True, blank=True)
 
     def __str__(self):
-        return self.arabic_name + ' ' + self.university_id
+        return to_string(self.arabic_name, self.university_id)
 
     @staticmethod
     def is_active(user=None):
@@ -107,7 +107,7 @@ class Instructor(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
-        return self.arabic_name + ' - ' + self.university_id
+        return to_string(self.arabic_name, self.university_id)
 
         # :TODO Function to get the email ID from the USER_AUTH_MODEL.
 
@@ -137,7 +137,7 @@ class Semester(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return self.code
+        return to_string(self.code, self.description)
 
 
 class Department(models.Model):
@@ -146,10 +146,11 @@ class Department(models.Model):
     code = models.CharField(max_length=10, null=True, blank=False)
 
     def __str__(self):
-        return self.name + ' - ' + self.code
+        return to_string(self.name, self.code)
 
 
 class Course(models.Model):
+    # TODO: Attendance Deduction Formula
     name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
     department = models.ForeignKey(Department, related_name='courses', null=True, blank=False)
@@ -159,7 +160,7 @@ class Course(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return self.code
+        return to_string(self.name, self.code)
 
 
 class Section(models.Model):
@@ -168,7 +169,7 @@ class Section(models.Model):
     code = models.CharField(max_length=20, null=True, blank=False)
 
     def __str__(self):
-        return self.semester.code + ' - ' + self.course.code + ' - ' + self.code
+        return to_string(self.semester.code, self.course.code, self.code)
 
     @property
     def attendance_entry_window(self):
