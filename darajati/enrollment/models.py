@@ -224,7 +224,7 @@ class Enrollment(models.Model):
     letter_grade = models.CharField(_('letter grade'), max_length=10, null=True, blank=False, default='UD')
 
     def __str__(self):
-        return self.student.arabic_name + ' - ' + self.section.code
+        return to_string(self.student.english_name, self.section.code)
 
     @staticmethod
     def get_students(section_id):
