@@ -3,18 +3,28 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li
+                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <h3>{% trans 'Welcome, find your current enrolled sections' %}</h3>
         <br>
         {% if sections %}
-        <table class="table table-condensed">
+        <table class="table table-condensed text-center">
             <thead>
             <tr>
-                <th>{% trans 'Semester Code' %}</th>
-                <th>{% trans 'Course Code' %}</th>
-                <th>{% trans 'Course Name' %}</th>
-                <th>{% trans 'Section Code' %}</th>
-                <th>{% trans 'Attendances' %}</th>
-                <th>{% trans 'Students' %}</th>
+                <th class="text-center">{% trans 'Semester Code' %}</th>
+                <th class="text-center">{% trans 'Course Code' %}</th>
+                <th class="text-center">{% trans 'Course Name' %}</th>
+                <th class="text-center">{% trans 'Section Code' %}</th>
+                <th class="text-center">{% trans 'Attendances' %}</th>
+                <th class="text-center">{% trans 'Grades' %}</th>
+                <th class="text-center">{% trans 'Students' %}</th>
                 <th></th>
             </tr>
             </thead>
@@ -22,10 +32,12 @@
             {% for section in sections %}
                 <tr>
                     <td>{{ section.semester.code }}</td>
-                    <td>{{ section.course.code }}</td>
+                    <td {% if section.course.coordinated %} style="color:red" {% endif %}>
+                        {{ section.course.code }}</td>
                     <td>{{ section.course.name }}</td>
                     <td>{{ section.code }}</td>
                     <td><a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+                    <td><a href="{% url 'grade:section_grade' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
                     <td><a href="{% url 'enrollment:section_students' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
                     <td></td>
                 </tr>
