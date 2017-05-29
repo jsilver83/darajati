@@ -12,12 +12,11 @@
             {% endfor %}
         </ul>
         {% endif %}
+
         {% if grades_break_down %}
         <h3>{% trans 'Welcome, find your current enrolled sections grades break down' %}</h3>
         <br>
         {% with grades_break_down|first as item %}
-            <span><strong>{% trans 'Semester : ' %}</strong>{{ item.semester.code }}</span>
-            <br>
             <span><strong>{% trans 'Course : ' %}</strong>{{ item.course.name }}</span>
             <br>
             {% if item.section %}<span><strong>{% trans 'Section : ' %}</strong>{{ item.section.code }}</span>{% endif %}
