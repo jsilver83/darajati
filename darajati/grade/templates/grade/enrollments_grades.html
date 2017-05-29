@@ -12,16 +12,59 @@
             {% endfor %}
         </ul>
         {% endif %}
-        {% if enrollment|length == formset|length %}
-            "Enrollments Are Equal to Grades Records"
+        {% if enrollments|length == formset|length %}
+        "Enrollments Are Equal to Grades Records"
         {% endif %}
-        {% if enrollment|length > formset|length %}
-            "Enrollments Are More then Grades Records"
+        {% if enrollments|length > formset|length %}
+        "Enrollments Are More then Grades Records"
         {% endif %}
-        {% if enrollment|length < formset|length %}
-            "Enrollments Are Less then Grades Records"
+        {% if enrollments|length < formset|length %}
+        "Enrollments Are Less then Grades Records"
         {% endif %}
-        {{ formset }}
+
+        {% if formset.forms %}
+            <form method="post">
+                <div class="title-sec row">
+                    <div class="col-md-9">
+                        <h3>{% trans 'Available Grades' %}</h3>
+                    </div>
+                    <div class="col-md-3 text-right">
+                        <div class="save-atten">
+                            <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">Cancel</a>&nbsp;&nbsp;
+                            <input class="thm-btn small-btn" type="submit" value="Save">
+                        </div>
+                        <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">Edit</a>
+                    </div>
+                </div>
+                <div class="thm-table odd period-cntnt">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Grade</th>
+                            <th>Remark</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                        {% for form in formset %}
+                        <tr>
+                            <td>{{ form.enrollment }}{{ form.enrollment.errors }}</td>
+                            <td>{{ form.grade_break_down }}{{ form.grade_break_down.errors }}</td>
+                            <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
+                            <td>{{ form.remarks }}</td>
+                            {{ form.id }}
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        {% else %}
+        {% trans 'There are no students' %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}
