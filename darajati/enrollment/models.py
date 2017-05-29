@@ -197,11 +197,12 @@ class Section(models.Model):
             return None
 
     @staticmethod
-    def get_sections():
+    def get_sections(today):
         """
         :return: objects of all sections
         """
-        return Section.objects.all()
+        return Section.objects.filter(semester__start_date__lte=today,
+                                      semester__end_date__gte=today).distinct()
 
     @staticmethod
     def get_instructor_sections(instructor, today):
