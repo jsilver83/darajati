@@ -209,7 +209,7 @@ class Section(models.Model):
         """
         :param instructor: current login user
         :param today: current date
-        :return: a unique ist of section objects for the login user and for the current semester
+        :return: a unique list of section objects for the login user and for the current semester
         """
         return Section.objects.filter(scheduled_periods__instructor_assigned=instructor,
                                       scheduled_periods__section__semester__start_date__lte=today,
