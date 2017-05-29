@@ -57,7 +57,7 @@ class GradeBreakDown(models.Model):
     def get_grade_break_down(grade_break_down_id):
         try:
             return GradeBreakDown.objects.get(id=grade_break_down_id)
-        except GradeBreakDown.DoesNotExist:
+        except:
             return None
 
     @staticmethod
@@ -87,9 +87,13 @@ class StudentGrade(models.Model):
     class Meta:
         unique_together = ('enrollment', 'grade_break_down')
 
-    enrollment = models.ForeignKey('enrollment.Enrollment', on_delete=models.CASCADE, related_name="grades", null=True, blank=False)
-    grade_break_down = models.ForeignKey(GradeBreakDown, on_delete=models.CASCADE, related_name="grades", null=True, blank=False)
-    grade_quantity = models.FloatField(_('Student Grade Quantity'), null=True, blank=False, default=0.0)
+    enrollment = models.ForeignKey('enrollment.Enrollment', on_delete=models.CASCADE, related_name="grades", null=True,
+                                   blank=False)
+    grade_break_down = models.ForeignKey(GradeBreakDown, on_delete=models.CASCADE, related_name="grades", null=True,
+                                         blank=False)
+    grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False, default=0.0000,
+                                         decimal_places=4,
+                                         max_digits=7)
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='grades', default=0)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
