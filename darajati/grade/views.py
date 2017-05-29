@@ -12,7 +12,6 @@ from enrollment.utils import now
 
 
 class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
-
     """
     :InstructorBaseView:
     - check if the current user is instructor or superuser
@@ -23,17 +22,26 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     grade_break_down_id = None
     grade_break_down = None
     grade_break_down_deadline = None
+
     # TODO: add a check for the active user
 
     def test_func(self, **kwargs):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
+        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.is_instructor, now())
+
         if not self.section:
             messages.error(self.request, _('Please enter a valid section'))
             return self.section and self.request.user.profile.is_instructor
 
-        if self.section.semester.grade_break_down_deadline <= now():  # or self.request.user.is_superuser:
+        if not self.section.is_instructor_section(self.request.user.profile.is_instructor, now()):
+            messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
+
+            return self.section and self.request.user.profile.is_instructor and is_instructor_section
+
+        if self.section.semester.grade_break_down_deadline <= now():
             self.grade_break_down_deadline = True
+
         else:
             messages.error(self.request, _('You can not access grades currently'))
 

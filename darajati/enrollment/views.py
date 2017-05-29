@@ -1,14 +1,14 @@
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-
+from django.utils.translation import ugettext_lazy as _
 from .models import Section, Enrollment
 from .utils import now
 
 
 class HomeView(LoginRequiredMixin, View):
-
     def get(self, request, *args, **kwargs):
         # TODO: redirect the new users to fill their information
         if request.user.profile.is_instructor & request.user.profile.has_access:
@@ -18,14 +18,16 @@ class HomeView(LoginRequiredMixin, View):
 
 
 class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
-
     """
     :InstructorBaseView:
     - check if the current user is instructor or superuser
     - redirect the current user even if he is AnonymousUser
     """
     # TODO: add a check for the active user
-    def test_func(self):
+    section_id = None
+    section = None
+
+    def test_func(self, **kwargs):
         return self.request.user.profile.is_instructor
 
     def get_login_url(self):
@@ -34,7 +36,6 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 
 
 class InstructorView(InstructorBaseView, ListView):
-
     context_object_name = 'sections'
     template_name = 'enrollment/instructor_sections.html'
 
@@ -47,7 +48,17 @@ class SectionStudentView(InstructorBaseView, ListView):
     context_object_name = 'enrollments'
     template_name = 'enrollment/section_students.html'
 
-    def get_queryset(self, *args, **kwargs):
-        section_id = self.kwargs['section_id']
-        query = Enrollment.get_students(section_id)
+    def test_func(self, **kwargs):
+        rules = super(SectionStudentView, self).test_func(**kwargs)
+        self.section_id = self.kwargs['section_id']
+        self.section = Section.get_section(self.section_id)
+        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor,
+                                                                    now())
+        if not is_instructor_section:
+            messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
+
+        return rules and is_instructor_section
+
+    def get_queryset(self):
+        query = Enrollment.get_students(self.section_id)
         return query

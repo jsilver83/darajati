@@ -26,9 +26,15 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self, **kwargs):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
+        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor,
+                                                                   now())
+        if not is_instructor_section:
+            messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
+
         if self.kwargs['day']:
             self.day = self.kwargs['day']
-        return self.section and self.request.user.profile.is_instructor
+
+        return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
