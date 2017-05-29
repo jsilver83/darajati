@@ -31,22 +31,25 @@ class GradeBreakDown(models.Model):
     course = models.ForeignKey('enrollment.Course', related_name="grades_break_down", null=True, blank=False)
     section = models.ForeignKey('enrollment.Section', related_name="grades_break_down", null=True, blank=True)
     category = models.CharField(_('Category'), max_length=100, null=True, blank=False,
-                                help_text='Categories are like: Quiz, Midterm, Final Exam')
+                                help_text='Categories are like: Quiz, Midterm, Final Exam etc..')
     description = models.CharField(_('Description'), max_length=100, null=True, blank=False)
     weight = models.FloatField(_('Weight'), null=True, blank=False, default=0.0)
-    type = models.CharField(_('Type'), max_length=20, choices=GradeTypes.choices(),
-                            default=GradeTypes.OBJECTIVE, null=True, blank=False)
-    allow_entry = models.BooleanField(_('Allow Entry'), null=False, blank=False, default=True)
-    order = models.PositiveSmallIntegerField(_('Display Order'), null=True, blank=False)
+    allow_entry = models.BooleanField(_('Allow Entry'), null=False, blank=False, default=True,
+                                      help_text=_('Allowing instructor to enter the marks for this grade break down'))
+    order = models.PositiveSmallIntegerField(_('Display Order'), null=True, blank=False,
+                                             help_text=_('The order of which grade break down should show up first'))
     show_teacher_report = models.BooleanField(_('Show in Teacher Report'), null=False, blank=False, default=True)
     show_student_report = models.BooleanField(_('Show in Student Report'), null=False, blank=False, default=True)
     boundary_type = models.CharField(_('Boundary Type'), max_length=20, choices=GradesBoundaries.choices(),
-                                     null=True, blank=False, default=GradesBoundaries.FREE)
-    boundary_range = models.FloatField(_('Boundary Range'), null=True, blank=True)
+                                     null=True, blank=False, default=GradesBoundaries.SUBJECTIVE_FREE)
+    boundary_range = models.FloatField(_('Boundary Range'), null=True, blank=True,
+                                       help_text=_('When the type is subjective and it is not free, give a range +-'))
     boundary_fixed_average = models.FloatField(_('Boundary Fixed Average'), null=True, blank=True)
     allow_change = models.BooleanField(_('Allow Change After Submission'), null=False, blank=False, default=True)
-    allow_subjective_marking = models.BooleanField(_('Allow Subjective Marking'), null=False, blank=False, default=False)
-    entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False)
+    allow_subjective_marking = models.BooleanField(_('Allow Subjective Marking'), null=False, blank=False,
+                                                   default=False)
+    entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False,
+                                               help_text=_('Checked when the course entered grades are in %'))
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='grades_break_down')
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
