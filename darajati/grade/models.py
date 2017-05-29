@@ -11,28 +11,19 @@ class GradeBreakDown(models.Model):
     class Meta:
         ordering = ['order']
 
-    class GradeTypes:
-        SUBJECTIVE = 'SUBJECTIVE'
-        OBJECTIVE = 'OBJECTIVE'
-
-        @classmethod
-        def choices(cls):
-            return (
-                (cls.SUBJECTIVE, _('Subjective')),
-                (cls.OBJECTIVE, _('Objective')),
-            )
-
     class GradesBoundaries:
-        BOUNDED = 'BOUNDED'
-        BOUNDED_FIXED = 'BOUNDED_FIXED'
-        FREE = 'FREE'
+        OBJECTIVE = 'OBJECTIVE'
+        SUBJECTIVE_BOUNDED = 'SUBJECTIVE_BOUNDED'
+        SUBJECTIVE_BOUNDED_FIXED = 'SUBJECTIVE_BOUNDED_FIXED'
+        SUBJECTIVE_FREE = 'SUBJECTIVE_FREE'
 
         @classmethod
         def choices(cls):
             return (
-                (cls.BOUNDED, _('Bounded')),
-                (cls.BOUNDED_FIXED, _('Bounded Fixed')),
-                (cls.FREE, _('Free')),
+                (cls.OBJECTIVE, _('Objective')),
+                (cls.SUBJECTIVE_BOUNDED, _('Subjective Bounded')),
+                (cls.SUBJECTIVE_BOUNDED_FIXED, _('Subjective Bounded Fixed')),
+                (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
     # TODO: Add help text for each complex field
