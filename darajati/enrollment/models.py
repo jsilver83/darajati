@@ -79,7 +79,7 @@ class Student(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='student', null=True, blank=True)
 
     def __str__(self):
-        return to_string(self.arabic_name, self.university_id)
+        return to_string(self.english_name, self.university_id)
 
     @staticmethod
     def is_active(user=None):
@@ -107,7 +107,7 @@ class Instructor(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
-        return to_string(self.arabic_name, self.university_id)
+        return to_string(self.english_name, self.university_id)
 
         # :TODO Function to get the email ID from the USER_AUTH_MODEL.
 
