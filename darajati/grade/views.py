@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from .models import GradeBreakDown, StudentGrade
+from .forms import GradesForm
 
 from enrollment.models import Enrollment, Section
 from enrollment.utils import now
@@ -68,7 +69,8 @@ class GradeBreakDownView(InstructorBaseView, ListView):
 class BreakDownGradesView(InstructorBaseView, ModelFormSetView):
     template_name = 'grade/enrollments_grades.html'
     model = StudentGrade
-    fields = ['enrollment', 'grade_break_down', 'grade_quantity', 'remarks']
+    form_class = GradesForm
+
     extra = 0
 
     def test_func(self, **kwargs):
@@ -85,5 +87,5 @@ class BreakDownGradesView(InstructorBaseView, ModelFormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(BreakDownGradesView, self).get_context_data(**kwargs)
-        context['enrollment'] = Enrollment.get_students(self.section_id)
+        context['enrollments'] = Enrollment.get_students(self.section_id)
         return context
