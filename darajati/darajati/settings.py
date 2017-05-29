@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'attendance',
     'grade',
 
+    # 'django_rq',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -134,11 +136,11 @@ LOCALE_PATHS = (
 
 STATIC_URL = '/static/'
 
-
 # Override settings using environment-specific settings, if any
 
 LOGIN_URL = reverse_lazy('login')
 LOGIN_REDIRECT_URL = reverse_lazy('enrollment:home')
+
 
 try:
     from darajati.local_settings import *
