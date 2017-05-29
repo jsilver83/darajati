@@ -214,6 +214,28 @@ class Section(models.Model):
                                       scheduled_periods__section__semester__start_date__lte=today,
                                       scheduled_periods__section__semester__end_date__gte=today).distinct()
 
+    def is_instructor_section(self, instructor, today):
+        """
+        :param instructor: current login user
+        :param today: current date
+        :return: a unique list of section objects for the login user and for the current semester
+        """
+        return Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
+                                      scheduled_periods__section__semester__start_date__lte=today,
+                                      scheduled_periods__section__semester__end_date__gte=today).distinct().first()
+
+
+class Coordinator(models.Model):
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='coordinators', null=True,
+                                 blank=False)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='coordinators',
+                               null=True, blank=False)
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='coordinators',
+                                   null=True, blank=False)
+
+    def __str__(self):
+        return to_string(self.semester, self.course, self.instructor)
+
 
 class Enrollment(models.Model):
     class Meta:
@@ -229,7 +251,6 @@ class Enrollment(models.Model):
     @staticmethod
     def get_students(section_id):
         """
-        :param section_id:
         :return: list of all students for a giving section ID
         """
         return Enrollment.objects.filter(section=section_id)
