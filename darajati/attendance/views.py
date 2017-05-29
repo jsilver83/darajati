@@ -7,12 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from .forms import AttendanceForm
 from .models import ScheduledPeriod, Attendance
 
-from enrollment.utils import today
+from enrollment.utils import today, now
 from enrollment.models import Enrollment, Section
 
 
 class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
-
     """
     :InstructorBaseView:
     - check if the current user is instructor or superuser
@@ -21,6 +20,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     section_id = None
     section = None
     day = None
+
     # TODO: add a check for the active user
 
     def test_func(self, **kwargs):
