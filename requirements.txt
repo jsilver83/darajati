@@ -1,6 +1,13 @@
+amqp==2.1.4
 appdirs==1.4.0
+billiard==3.5.0.2
+celery==4.0.2
 Django==1.11.1
 django-extra-views==0.9.0
+django-rq==0.9.5
+kombu==4.0.2
 packaging==16.8
 pytz==2017.2
+redis==2.10.5
 six==1.10.0
+vine==1.1.3
