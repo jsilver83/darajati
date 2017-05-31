@@ -6,10 +6,12 @@ from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from .models import Section, Enrollment
 from .utils import now
+from .tasks import get_students_enrollment_grades
 
 
 class HomeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        get_students_enrollment_grades.delay(now())
         # TODO: redirect the new users to fill their information
         if request.user.profile.is_instructor & request.user.profile.has_access:
             return redirect('enrollment:instructor')
