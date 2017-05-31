@@ -21,7 +21,7 @@ def get_students_enrollment_grades(today):
         for enrollment in enrollment_list:
             for task in tasks:
                 created, grade = StudentGrade.objects.get_or_create(enrollment=enrollment, grade_break_down=task)
-                enrollments += enrollments.append(grade)
+                enrollments.append(grade)
                 if created:
                     count += 1
     return enrollments
