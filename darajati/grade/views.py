@@ -88,4 +88,5 @@ class BreakDownGradesView(InstructorBaseView, ModelFormSetView):
     def get_context_data(self, **kwargs):
         context = super(BreakDownGradesView, self).get_context_data(**kwargs)
         context['enrollments'] = Enrollment.get_students(self.section_id)
+        context['section_average'] = StudentGrade.get_section_average(self.section, self.grade_break_down)
         return context
