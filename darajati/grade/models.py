@@ -26,7 +26,6 @@ class GradeBreakDown(models.Model):
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
-    # TODO: Add help text for each complex field
     semester = models.ForeignKey('enrollment.Semester', related_name="grades_break_down", null=True, blank=False)
     course = models.ForeignKey('enrollment.Course', related_name="grades_break_down", null=True, blank=False)
     section = models.ForeignKey('enrollment.Section', related_name="grades_break_down", null=True, blank=True)
@@ -91,7 +90,7 @@ class StudentGrade(models.Model):
                                    blank=False)
     grade_break_down = models.ForeignKey(GradeBreakDown, on_delete=models.CASCADE, related_name="grades", null=True,
                                          blank=False)
-    grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False, default=0.0000,
+    grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False,
                                          decimal_places=4,
                                          max_digits=7)
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
