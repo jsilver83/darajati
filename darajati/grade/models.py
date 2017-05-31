@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum, Count
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
@@ -100,6 +101,24 @@ class StudentGrade(models.Model):
     @staticmethod
     def get_section_break_down_grades(section_id, grade_break_down_id):
         return StudentGrade.objects.filter(enrollment__section=section_id, grade_break_down=grade_break_down_id)
+
+    @staticmethod
+    def get_section_average(section, grade_break_down):
+        grades = StudentGrade.objects.filter(
+            grade_break_down=grade_break_down, enrollment__section=section
+        ).values().aggregate(
+            sum=Sum('grade_quantity'),
+            count=Count('id'),
+        )
+        return grades
+
+    @staticmethod
+    def get_section_objective_average(section):
+        pass
+
+    @staticmethod
+    def get_course_average(section):
+        pass
 
     def __str__(self):
         return to_string(self.enrollment, self.grade_break_down, self.remarks)
