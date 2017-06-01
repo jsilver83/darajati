@@ -38,7 +38,7 @@
                 <td>{{ grade_break_down.category }}</td>
                 <td>{{ grade_break_down.description }}</td>
                 <td>{{ grade_break_down.weight }}</td>
-                <td>{{ grade_break_down.type }}</td>
+                <td>{{ grade_break_down.boundary_type }}</td>
                 <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_break_down_id=grade_break_down.id%}"
                        class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
             </tr>

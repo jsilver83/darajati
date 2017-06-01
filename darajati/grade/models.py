@@ -27,8 +27,8 @@ class GradeBreakDown(models.Model):
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
-    semester = models.ForeignKey('enrollment.Semester', related_name="grades_break_down", null=True, blank=False)
-    course = models.ForeignKey('enrollment.Course', related_name="grades_break_down", null=True, blank=False)
+    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="grades_break_down", null=True,
+                                        blank=False)
     section = models.ForeignKey('enrollment.Section', related_name="grades_break_down", null=True, blank=True)
     category = models.CharField(_('Category'), max_length=100, null=True, blank=False,
                                 help_text='Categories are like: Quiz, Midterm, Final Exam etc..')
@@ -63,17 +63,17 @@ class GradeBreakDown(models.Model):
 
     @staticmethod
     def get_section_grade_break_down(section):
-        if section.course.coordinated:
-            return GradeBreakDown.objects.filter(course=section.course, allow_entry=True)
+        if section.course_offering.coordinated:
+            return GradeBreakDown.objects.filter(course_offering=section.course_offering, allow_entry=True)
         return GradeBreakDown.objects.filter(section=section.id, allow_entry=True)
 
     def __str__(self):
-        return to_string(self.course, self.category, self.description)
+        return to_string(self.course_offering, self.category, self.description)
 
 
 class LetterGrade(models.Model):
-    semester = models.ForeignKey('enrollment.Semester', related_name="letter_grades", null=True, blank=False)
-    course = models.ForeignKey('enrollment.Course', related_name="letter_grades", null=True, blank=False)
+    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="letter_grades", null=True,
+                                        blank=False)
     section = models.ForeignKey('enrollment.Section', related_name="letter_grades", null=True, blank=True)
     letter_grade = models.CharField(_('Letter Grade'), max_length=5, null=True, blank=False)
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
@@ -81,9 +81,10 @@ class LetterGrade(models.Model):
                                         decimal_places=settings.MAX_DECIMAL_POINT)
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='letter_grade', default=0)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
+    # TODO: Ordering of letter grade
 
     def __str__(self):
-        return to_string(self.course, self.section, self.letter_grade)
+        return to_string(self.course_offering, self.section, self.letter_grade)
 
 
 class StudentGrade(models.Model):

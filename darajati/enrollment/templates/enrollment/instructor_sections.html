@@ -31,10 +31,10 @@
             <tbody>
             {% for section in sections %}
                 <tr>
-                    <td>{{ section.semester.code }}</td>
-                    <td {% if section.course.coordinated %} style="color:red" {% endif %}>
-                        {{ section.course.code }}</td>
-                    <td>{{ section.course.name }}</td>
+                    <td>{{ section.course_offering.semester.code }}</td>
+                    <td {% if section.course_offering.coordinated %} style="color:red" {% endif %}>
+                        {{ section.course_offering.course.code }}</td>
+                    <td>{{ section.course_offering.course.name }}</td>
                     <td>{{ section.code }}</td>
                     <td><a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
                     <td><a href="{% url 'grade:section_grade' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>

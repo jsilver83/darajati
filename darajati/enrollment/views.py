@@ -6,12 +6,10 @@ from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from .models import Section, Enrollment
 from .utils import now
-from .tasks import get_students_enrollment_grades
 
 
 class HomeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        get_students_enrollment_grades.delay(now())
         # TODO: redirect the new users to fill their information
         if request.user.profile.is_instructor & request.user.profile.has_access:
             return redirect('enrollment:instructor')
@@ -55,7 +53,7 @@ class SectionStudentView(InstructorBaseView, ListView):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
         is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor,
-                                                                    now())
+                                                                   now())
         if not is_instructor_section:
             messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
 
@@ -64,3 +62,5 @@ class SectionStudentView(InstructorBaseView, ListView):
     def get_queryset(self):
         query = Enrollment.get_students(self.section_id)
         return query
+
+

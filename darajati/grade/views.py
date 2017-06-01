@@ -40,7 +40,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 
             return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
-        if self.section.semester.grade_break_down_deadline <= now():
+        if self.section.course_offering.semester.grade_break_down_deadline <= now():
             self.grade_break_down_deadline = True
 
         else:
