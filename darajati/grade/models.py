@@ -33,7 +33,8 @@ class GradeBreakDown(models.Model):
     category = models.CharField(_('Category'), max_length=100, null=True, blank=False,
                                 help_text='Categories are like: Quiz, Midterm, Final Exam etc..')
     description = models.CharField(_('Description'), max_length=100, null=True, blank=False)
-    weight = models.FloatField(_('Weight'), null=True, blank=False, default=0.0)
+    weight = models.DecimalField(_('Weight'), null=True, blank=False, default=0.0, max_digits=settings.MAX_DIGITS,
+                                 decimal_places=settings.MAX_DECIMAL_POINT)
     allow_entry = models.BooleanField(_('Allow Entry'), null=False, blank=False, default=True,
                                       help_text=_('Allowing instructor to enter the marks for this grade break down'))
     order = models.PositiveSmallIntegerField(_('Display Order'), null=True, blank=False,
@@ -75,7 +76,9 @@ class LetterGrade(models.Model):
     course = models.ForeignKey('enrollment.Course', related_name="letter_grades", null=True, blank=False)
     section = models.ForeignKey('enrollment.Section', related_name="letter_grades", null=True, blank=True)
     letter_grade = models.CharField(_('Letter Grade'), max_length=5, null=True, blank=False)
-    cut_off_point = models.FloatField(_('Cut off Point'), null=True, blank=False, default=0.0)
+    cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
+                                        max_digits=settings.MAX_DIGITS,
+                                        decimal_places=settings.MAX_DECIMAL_POINT)
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='letter_grade', default=0)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
@@ -92,8 +95,8 @@ class StudentGrade(models.Model):
     grade_break_down = models.ForeignKey(GradeBreakDown, on_delete=models.CASCADE, related_name="grades", null=True,
                                          blank=False)
     grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False,
-                                         decimal_places=4,
-                                         max_digits=7)
+                                         decimal_places=settings.MAX_DECIMAL_POINT,
+                                         max_digits=settings.MAX_DIGITS)
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='grades', default=0)
     updated_on = models.DateField(_('Updated On'), auto_now=True)

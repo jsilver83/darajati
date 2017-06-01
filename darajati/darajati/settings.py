@@ -148,6 +148,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'US/Eastern'
 
+# Decimal max digits
+MAX_DIGITS = 4
+MAX_DECIMAL_POINT = 2
+
 try:
     from darajati.local_settings import *
 except ImportError:
