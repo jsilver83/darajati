@@ -80,7 +80,11 @@ class GradesView(InstructorBaseView, ModelFormSetView):
             messages.error(self.request, _('Please enter a valid grade plan'))
             return test_roles and self.grade_fragment
 
-        return test_roles and self.grade_break_down
+        if not self.grade_fragment.allow_entry:
+            messages.error(self.request, _('You are not allowed to enter the marks'))
+            return test_roles and self.grade_fragment.allow_entry
+
+        return test_roles and self.grade_fragment and self.grade_fragment.allow_entry
 
     def get_queryset(self):
         return StudentGrade.get_section_grades(self.section_id, self.grade_fragment_id)
