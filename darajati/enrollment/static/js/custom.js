@@ -111,8 +111,8 @@ $(document).ready(function(){
 
 
 	$("body").click(function(e) {
-	    if($('.info-cntnt').is(':visible')){
-	    	$('.info-cntnt').hide().removeClass('active');
+	    if($('.info-cntnt,.errorlist').is(':visible')){
+	    	$('.info-cntnt,.errorlist').hide().removeClass('active');
 	    }
 	    e.stopPropagation();
 	    //return false;
