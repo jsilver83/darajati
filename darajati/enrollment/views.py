@@ -4,8 +4,10 @@ from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+
 from .models import Section, Enrollment
 from .utils import now
+from .tasks import get_students_enrollment_grades
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -61,6 +63,6 @@ class SectionStudentView(InstructorBaseView, ListView):
 
     def get_queryset(self):
         query = Enrollment.get_students(self.section_id)
+        # get_students_enrollment_grades.apply_async(args=[now()],
+        #                                            eta=self.section.course_offering.semester.grade_fragment_deadline)
         return query
-
-
