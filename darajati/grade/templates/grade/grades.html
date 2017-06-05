@@ -52,7 +52,7 @@
                         {% for form in formset %}
                         <tr>
                             <td>{{ form.enrollment }}{{ form.enrollment.errors }}</td>
-                            <td>{{ form.grade_break_down }}{{ form.grade_break_down.errors }}</td>
+                            <td>{{ form.grade_fragment }}{{ form.grade_fragment.errors }}</td>
                             <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
                             <td>{{ form.remarks }}</td>
                             {{ form.id }}
@@ -62,6 +62,9 @@
                     </table>
                 </div>
             </form>
+        <div> Section Average: {{ section_average }}</div>
+        <div> Section Objective Average: {{ section_average }}</div>
+        <div> Coordinated Course Average: {{ section_average }}</div>
         {% else %}
         {% trans 'There are no students' %}
         {% endif %}

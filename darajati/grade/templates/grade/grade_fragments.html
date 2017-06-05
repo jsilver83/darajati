@@ -13,10 +13,10 @@
         </ul>
         {% endif %}
 
-        {% if grades_break_down %}
-        <h3>{% trans 'Welcome, find your current enrolled sections grades break down' %}</h3>
+        {% if grade_fragments %}
+        <h3>{% trans 'Welcome, find your current enrolled sections grades plans' %}</h3>
         <br>
-        {% with grades_break_down|first as item %}
+        {% with grade_fragments|first as item %}
             <span><strong>{% trans 'Course : ' %}</strong>{{ item.course.name }}</span>
             <br>
             {% if item.section %}<span><strong>{% trans 'Section : ' %}</strong>{{ item.section.code }}</span>{% endif %}
@@ -33,13 +33,13 @@
             </tr>
             </thead>
             <tbody>
-            {% for grade_break_down in grades_break_down %}
+            {% for grade_fragment in grade_fragments %}
             <tr>
-                <td>{{ grade_break_down.category }}</td>
-                <td>{{ grade_break_down.description }}</td>
-                <td>{{ grade_break_down.weight }}</td>
-                <td>{{ grade_break_down.boundary_type }}</td>
-                <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_break_down_id=grade_break_down.id%}"
+                <td>{{ grade_fragment.category }}</td>
+                <td>{{ grade_fragment.description }}</td>
+                <td>{{ grade_fragment.weight }}</td>
+                <td>{{ grade_fragment.boundary_type }}</td>
+                <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
                        class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
             </tr>
             {% endfor %}

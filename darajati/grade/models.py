@@ -8,9 +8,7 @@ from enrollment.utils import to_string
 User = settings.AUTH_USER_MODEL
 
 
-class GradeBreakDown(models.Model):
-    class Meta:
-        ordering = ['order']
+class GradeFragment(models.Model):
 
     class GradesBoundaries:
         OBJECTIVE = 'OBJECTIVE'
@@ -27,9 +25,9 @@ class GradeBreakDown(models.Model):
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
-    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="grades_break_down", null=True,
+    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="GradeFragment", null=True,
                                         blank=False)
-    section = models.ForeignKey('enrollment.Section', related_name="grades_break_down", null=True, blank=True)
+    section = models.ForeignKey('enrollment.Section', related_name="GradeFragment", null=True, blank=True)
     category = models.CharField(_('Category'), max_length=100, null=True, blank=False,
                                 help_text='Categories are like: Quiz, Midterm, Final Exam etc..')
     description = models.CharField(_('Description'), max_length=100, null=True, blank=False)
@@ -43,29 +41,38 @@ class GradeBreakDown(models.Model):
     show_student_report = models.BooleanField(_('Show in Student Report'), null=False, blank=False, default=True)
     boundary_type = models.CharField(_('Boundary Type'), max_length=20, choices=GradesBoundaries.choices(),
                                      null=True, blank=False, default=GradesBoundaries.SUBJECTIVE_FREE)
-    boundary_range = models.FloatField(_('Boundary Range'), null=True, blank=True,
-                                       help_text=_('When the type is subjective and it is not free, give a range +-'))
-    boundary_fixed_average = models.FloatField(_('Boundary Fixed Average'), null=True, blank=True)
+    boundary_range = models.DecimalField(_('Boundary Range'), null=True, blank=True,
+                                         help_text=_('When the type is subjective and it is not free, give a range +-'),
+                                         max_digits=settings.MAX_DIGITS,
+                                         decimal_places=settings.MAX_DECIMAL_POINT
+                                         )
+    boundary_fixed_average = models.DecimalField(_('Boundary Fixed Average'), null=True, blank=True,
+                                                 max_digits=settings.MAX_DIGITS,
+                                                 decimal_places=settings.MAX_DECIMAL_POINT
+                                                 )
     allow_change = models.BooleanField(_('Allow Change After Submission'), null=False, blank=False, default=True)
     allow_subjective_marking = models.BooleanField(_('Allow Subjective Marking'), null=False, blank=False,
                                                    default=False)
     entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False,
                                                help_text=_('Checked when the course entered grades are in %'))
-    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='grades_break_down')
+    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='GradeFragment')
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
+    class Meta:
+        ordering = ['order']
+
     @staticmethod
-    def get_grade_break_down(grade_break_down_id):
+    def get_grade_fragment(grade_fragment_id):
         try:
-            return GradeBreakDown.objects.get(id=grade_break_down_id)
+            return GradeFragment.objects.get(id=grade_fragment_id)
         except:
             return None
 
     @staticmethod
-    def get_section_grade_break_down(section):
+    def get_section_grade_fragments(section):
         if section.course_offering.coordinated:
-            return GradeBreakDown.objects.filter(course_offering=section.course_offering, allow_entry=True)
-        return GradeBreakDown.objects.filter(section=section.id, allow_entry=True)
+            return GradeFragment.objects.filter(course_offering=section.course_offering, allow_entry=True)
+        return GradeFragment.objects.filter(section=section.id, allow_entry=True)
 
     def __str__(self):
         return to_string(self.course_offering, self.category, self.description)
@@ -81,6 +88,7 @@ class LetterGrade(models.Model):
                                         decimal_places=settings.MAX_DECIMAL_POINT)
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='letter_grade', default=0)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
+
     # TODO: Ordering of letter grade
 
     def __str__(self):
@@ -89,12 +97,12 @@ class LetterGrade(models.Model):
 
 class StudentGrade(models.Model):
     class Meta:
-        unique_together = ('enrollment', 'grade_break_down')
+        unique_together = ('enrollment', 'grade_fragment')
 
     enrollment = models.ForeignKey('enrollment.Enrollment', on_delete=models.CASCADE, related_name="grades", null=True,
                                    blank=False)
-    grade_break_down = models.ForeignKey(GradeBreakDown, on_delete=models.CASCADE, related_name="grades", null=True,
-                                         blank=False)
+    grade_fragment = models.ForeignKey(GradeFragment, on_delete=models.CASCADE, related_name="grades", null=True,
+                                       blank=False)
     grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False,
                                          decimal_places=settings.MAX_DECIMAL_POINT,
                                          max_digits=settings.MAX_DIGITS)
@@ -103,13 +111,13 @@ class StudentGrade(models.Model):
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
     @staticmethod
-    def get_section_break_down_grades(section_id, grade_break_down_id):
-        return StudentGrade.objects.filter(enrollment__section=section_id, grade_break_down=grade_break_down_id)
+    def get_section_grades(section_id, grade_fragment_id):
+        return StudentGrade.objects.filter(enrollment__section=section_id, grade_fragment=grade_fragment_id)
 
     @staticmethod
-    def get_section_average(section, grade_break_down):
+    def get_section_average(section, grade_fragment):
         grades = StudentGrade.objects.filter(
-            grade_break_down=grade_break_down, enrollment__section=section
+            grade_fragment=grade_fragment, enrollment__section=section
         ).values().aggregate(
             sum=Sum('grade_quantity'),
             count=Count('id'),
@@ -125,4 +133,4 @@ class StudentGrade(models.Model):
         pass
 
     def __str__(self):
-        return to_string(self.enrollment, self.grade_break_down, self.remarks)
+        return to_string(self.enrollment, self.grade_fragment, self.remarks)

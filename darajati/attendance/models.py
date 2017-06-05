@@ -38,8 +38,11 @@ class ScheduledPeriod(models.Model):
     start_time = models.TimeField(_('start time'))
     end_time = models.TimeField(_('end time'))
     location = models.CharField(max_length=50, null=True, blank=False)
-    late_deduction = models.FloatField(_('late deduction'), null=True, blank=False, default=0.0)
-    absence_deduction = models.FloatField(_('absence deduction'), null=True, blank=False, default=0.0)
+    late_deduction = models.DecimalField(_('late deduction'), null=True, blank=False, max_digits=settings.MAX_DIGITS,
+                                         decimal_places=settings.MAX_DECIMAL_POINT)
+    absence_deduction = models.DecimalField(_('absence deduction'), null=True, blank=False,
+                                            max_digits=settings.MAX_DIGITS,
+                                            decimal_places=settings.MAX_DECIMAL_POINT)
 
     def __str__(self):
         return to_string(self.section.code, self.instructor_assigned.english_name, self.day, self.start_time,
@@ -71,7 +74,6 @@ class ScheduledPeriod(models.Model):
         """
         :param instructor: login user
         :param section_id: passed by the url
-        :param current_day: current day string
         :return: a list of all periods for that section ID for that instructor
         """
         return ScheduledPeriod.objects.filter(section=section_id, instructor_assigned=instructor).values(
@@ -100,7 +102,6 @@ class ScheduledPeriod(models.Model):
         period_date = None
         day = None
         if giving_day:
-            periods = ScheduledPeriod.get_section_periods_of_date(section_id, giving_day, instructor)
             while days_offset <= 7:
                 period_date, day = get_offset_day(date, -days_offset)
                 if str(day).lower() == str(giving_day).lower():
