@@ -122,7 +122,8 @@ class StudentGrade(models.Model):
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
-        return grades
+
+        return grades['sum'] / grades['count']
 
     @staticmethod
     def get_section_objective_average(section):
