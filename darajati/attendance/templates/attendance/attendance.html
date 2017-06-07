@@ -21,10 +21,10 @@
                 </div>
                 <div class="col-md-3 text-right">
                     <div class="save-atten">
-                        <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">Cancel</a>&nbsp;&nbsp;
-                        <input class="thm-btn small-btn" type="submit" value="Save">
+                        <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">{% trans 'Cancel' %}</a>&nbsp;&nbsp;
+                        <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
                     </div>
-                    <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">Edit</a>
+                    <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">{% trans 'Edit' %}</a>
                 </div>
             </div>
             <div class="btn-group avail-attend-days">
@@ -43,11 +43,11 @@
                     <thead>
                     <tr>
                         <!--<th>#</th>-->
-                        <th>Student ID</th>
-                        <th>Full Name</th>
-                        <th>A</th>
-                        <th>L</th>
-                        <th>E</th>
+                        <th>{% trans 'Student ID' %}</th>
+                        <th>{% trans 'Full Name' %}</th>
+                        <th>{% trans 'Absent' %}</th>
+                        <th>{% trans 'Late' %}</th>
+                        <th>{% trans 'Excused' %}</th>
                         {% for period in current_periods %}
                         <th> Period {{ forloop.counter }} - {{ period.start_time }} ~ {{period.end_time }}</th>
                         {% endfor %}

@@ -17,7 +17,7 @@
         <h3>{% trans 'Welcome, find your current enrolled sections grades plans' %}</h3>
         <br>
         {% with grade_fragments|first as item %}
-            <span><strong>{% trans 'Course : ' %}</strong>{{ item.course.name }}</span>
+            <span><strong>{% trans 'Course : ' %}</strong>{{ item.course_offering.course.name }}</span>
             <br>
             {% if item.section %}<span><strong>{% trans 'Section : ' %}</strong>{{ item.section.code }}</span>{% endif %}
         {% endwith %}
@@ -29,7 +29,7 @@
                 <th class="text-center">{% trans 'Description' %}</th>
                 <th class="text-center">{% trans 'Weight' %}</th>
                 <th class="text-center">{% trans 'Type' %}</th>
-                <th></th>
+                <th class="text-center">{% trans 'Edit' %}</th>
             </tr>
             </thead>
             <tbody>
