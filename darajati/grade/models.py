@@ -71,9 +71,15 @@ class GradeFragment(models.Model):
 
     @staticmethod
     def get_section_grade_fragments(section):
+        # TODO: Should we show the full list and only allow the instructor to enter the marks for the allowed ones ?
         if section.course_offering.coordinated:
-            return GradeFragment.objects.filter(course_offering=section.course_offering, allow_entry=True)
-        return GradeFragment.objects.filter(section=section.id, allow_entry=True)
+            return GradeFragment.objects.filter(course_offering=section.course_offering)
+        return GradeFragment.objects.filter(section=section.id)
+
+        # TODO: Or should we just show the allowed ones ?
+        # if section.course_offering.coordinated:
+        #     return GradeFragment.objects.filter(course_offering=section.course_offering, allow_entry=True)
+        # return GradeFragment.objects.filter(section=section.id, allow_entry=True)
 
     def __str__(self):
         return to_string(self.course_offering, self.category, self.description)
