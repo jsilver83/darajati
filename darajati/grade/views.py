@@ -1,12 +1,12 @@
-from extra_views import FormSetView, ModelFormSetView
-from django.views.generic import ListView
+from extra_views import ModelFormSetView
+from django.views.generic import ListView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from .models import GradeFragment, StudentGrade
-from .forms import GradesForm
+from .forms import GradesForm, GradeFragmentForm
 
 from enrollment.models import Enrollment, Section
 from enrollment.utils import now
@@ -66,6 +66,11 @@ class GradeFragmentView(InstructorBaseView, ListView):
         return context
 
 
+class CreateGradeFragmentView(InstructorBaseView, CreateView):
+    form_class = GradeFragmentForm
+    template_name = 'grade/create_grade_fragment.html'
+
+
 class GradesView(InstructorBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
     model = StudentGrade
@@ -76,6 +81,7 @@ class GradesView(InstructorBaseView, ModelFormSetView):
         test_roles = super(GradesView, self).test_func(**kwargs)
         self.grade_fragment_id = self.kwargs['grade_fragment_id']
         self.grade_fragment = GradeFragment.get_grade_fragment(self.grade_fragment_id)
+
         if not self.grade_fragment:
             messages.error(self.request, _('Please enter a valid grade plan'))
             return test_roles and self.grade_fragment

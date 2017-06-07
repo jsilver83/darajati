@@ -42,3 +42,25 @@ class GradesForm(forms.ModelForm):
             self.instance.grade_quantity = self.cleaned_data['grade_quantity'] * (
                 self.fragment.weight / 100)
         return super(GradesForm, self).save()
+
+
+class GradeFragmentForm(forms.ModelForm):
+    class Meta:
+        model = GradeFragment
+        fields = '__all__'
+        exclude = ['updated_by', 'updated_on', 'course_offering', 'section']
+        widgets = {
+            'category': forms.TextInput(attrs={'class': 'thm-field'}),
+            'description': forms.TextInput(attrs={'class': 'thm-field'}),
+            'weight': forms.NumberInput(attrs={'class': 'thm-field'}),
+            'allow_entry': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'order': forms.NumberInput(attrs={'class': 'thm-field'}),
+            'show_teacher_report': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'show_student_report': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'boundary_type': forms.Select(attrs={'class': 'thm-field'}),
+            'boundary_range': forms.NumberInput(attrs={'class': 'thm-field'}),
+            'boundary_fixed_average': forms.NumberInput(attrs={'class': 'thm-field'}),
+            'allow_change': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'allow_subjective_marking': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'entry_in_percentages': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+        }
