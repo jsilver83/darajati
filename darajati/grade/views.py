@@ -35,12 +35,14 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
             messages.error(self.request, _('Please enter a valid section'))
             return self.section and self.request.user.profile.is_instructor
 
-        if not self.section.is_instructor_section(self.request.user.profile.is_instructor, now()):
+        if not self.section.is_instructor_section(self.request.user.profile.is_instructor, now()) \
+                or not self.request.user.is_superuser:
             messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
 
             return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
-        if self.section.course_offering.semester.grade_fragment_deadline <= now():
+        if self.section.course_offering.semester.grade_fragment_deadline <= now() \
+                or self.request.user.is_superuser:
             self.grade_fragment_deadline = True
 
         else:
@@ -86,11 +88,11 @@ class GradesView(InstructorBaseView, ModelFormSetView):
             messages.error(self.request, _('Please enter a valid grade plan'))
             return test_roles and self.grade_fragment
 
-        if not self.grade_fragment.allow_entry:
+        if not self.grade_fragment.allow_entry and not self.request.user.is_superuser:
             messages.error(self.request, _('You are not allowed to enter the marks'))
             return test_roles and self.grade_fragment.allow_entry
 
-        return test_roles and self.grade_fragment and self.grade_fragment.allow_entry
+        return test_roles and self.grade_fragment
 
     def get_queryset(self):
         return StudentGrade.get_section_grades(self.section_id, self.grade_fragment_id)
