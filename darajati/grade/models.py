@@ -5,11 +5,12 @@ from django.conf import settings
 
 from enrollment.utils import to_string
 
+from decimal import *
+
 User = settings.AUTH_USER_MODEL
 
 
 class GradeFragment(models.Model):
-
     class GradesBoundaries:
         OBJECTIVE = 'OBJECTIVE'
         SUBJECTIVE_BOUNDED = 'SUBJECTIVE_BOUNDED'
@@ -122,16 +123,32 @@ class StudentGrade(models.Model):
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
-
-        return grades['sum'] / grades['count']
+        return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
+        # TODO: There are different type of round should it be apply here ?
 
     @staticmethod
     def get_section_objective_average(section):
-        pass
+        grades = StudentGrade.objects.filter(
+            grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
+            enrollment__section=section
+        ).values().aggregate(
+            sum=Sum('grade_quantity'),
+            count=Count('id'),
+        )
+        return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
 
     @staticmethod
-    def get_course_average(section):
-        pass
+    def get_course_average(section, grade_fragment):
+        if section.course_offering.coordinated:
+            grades = StudentGrade.objects.filter(
+                grade_fragment=grade_fragment,
+                grade_fragment__course_offering=section.course_offering
+            ).values().aggregate(
+                sum=Sum('grade_quantity'),
+                count=Count('id'),
+            )
+            return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
+        return False
 
     def __str__(self):
         return to_string(self.enrollment, self.grade_fragment, self.remarks)
