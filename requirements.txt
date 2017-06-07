@@ -3,8 +3,9 @@ appdirs==1.4.0
 billiard==3.5.0.2
 celery==4.0.2
 Django==1.11.1
+django-celery-beat==1.0.1
+django-celery-results==1.0.1
 django-extra-views==0.9.0
-django-rq==0.9.5
 kombu==4.0.2
 packaging==16.8
 pytz==2017.2
