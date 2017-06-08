@@ -1,25 +1,25 @@
 from django import forms
-from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from .models import StudentGrade, GradeFragment
+from enrollment.utils import today
 
 
 class GradesForm(forms.ModelForm):
     class Meta:
         model = StudentGrade
-        fields = ['enrollment', 'grade_fragment', 'grade_quantity', 'remarks']
+        fields = ['enrollment', 'grade_fragment', 'grade_quantity', 'remarks', 'updated_on']
         widgets = {
             'remarks': forms.TextInput(attrs={'class': 'thm-field'}),
             'enrollment': forms.HiddenInput(),
             'grade_fragment': forms.HiddenInput(),
+            'updated_on': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super(GradesForm, self).__init__(*args, **kwargs)
         self.fragment = GradeFragment.get_grade_fragment(self.initial['grade_fragment'])
         max_value = self.fragment.weight
-
         if self.fragment.entry_in_percentages:
             # Set another field to show the actual grade
             self.fields['actual_grade'] = forms.DecimalField(
@@ -27,25 +27,39 @@ class GradesForm(forms.ModelForm):
                 max_digits=settings.MAX_DIGITS,
                 required=False,
                 widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
-            self.initial['actual_grade'] = self.initial['grade_quantity']
 
-            # Set some dynamic changes to the grade_quantity field
-            self.fields['grade_quantity'].label = _('Student Grade in Percent')
-            self.fields['grade_quantity'] = forms.DecimalField(
-                decimal_places=settings.MAX_DECIMAL_POINT,
-                max_digits=settings.MAX_DIGITS,
-                max_value=100, min_value=0, widget=forms.NumberInput(attrs={'class': 'thm-field'}))
-            self.initial['grade_quantity'] = (self.initial['grade_quantity'] * 100) / self.fragment.weight
+            if self.initial['grade_quantity']:
+                # Set some dynamic changes to the grade_quantity field
+                self.initial['actual_grade'] = self.initial['grade_quantity']
+                if self.initial['updated_on'] and not self.fragment.allow_change:
+                    self.fields['grade_quantity'] = forms.DecimalField(
+                        decimal_places=settings.MAX_DECIMAL_POINT,
+                        max_digits=settings.MAX_DIGITS,
+                        required=False,
+                        max_value=100, min_value=0,
+                        widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
+                else:
+                    self.fields['grade_quantity'] = forms.DecimalField(
+                        decimal_places=settings.MAX_DECIMAL_POINT,
+                        max_digits=settings.MAX_DIGITS,
+                        required=False,
+                        max_value=100, min_value=0,
+                        widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                self.initial['grade_quantity'] = round((self.initial['grade_quantity'] * 100) / self.fragment.weight, 2)
 
         else:
             self.fields['grade_quantity'] = forms.DecimalField(
-                max_value=max_value, min_value=0, widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                max_value=max_value, min_value=0, required=False,
+                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
 
     def save(self, commit=True):
         self.instance.updated_by = self.user
-        if self.fragment.entry_in_percentages:
-            self.instance.grade_quantity = (self.fragment.weight / 100) * self.cleaned_data['grade_quantity']
-        return super(GradesForm, self).save()
+        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and \
+                self.fragment.allow_change and self.cleaned_data['updated_on'] is None:
+            self.instance.updated_on = today()
+            if self.fragment.entry_in_percentages and self.cleaned_data['grade_quantity']:
+                self.instance.grade_quantity = (self.fragment.weight / 100) * self.cleaned_data['grade_quantity']
+            return super(GradesForm, self).save()
 
 
 class GradeFragmentForm(forms.ModelForm):

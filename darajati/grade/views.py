@@ -30,27 +30,18 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
 
+        # Valid Section
         if not self.section:
             messages.error(self.request, _('Please enter a valid section'))
             return self.section and self.request.user.profile.is_instructor
 
-        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.is_instructor, now())
-
-        if not self.section.is_instructor_section(self.request.user.profile.is_instructor, now()) \
-                or not self.request.user.is_superuser:
+        # Is this section belong to this instructor
+        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor, now())
+        if not is_instructor_section and not self.request.user.is_superuser:
             messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
-
             return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
-        # TODO: Ask Abdullah about Enabling everyone to see the plans but not be able to enter them.
-        # if self.section.course_offering.semester.grade_fragment_deadline <= now() \
-        #         or self.request.user.is_superuser:
-        #     self.grade_fragment_deadline = True
-        #
-        # else:
-        #     messages.error(self.request, _('You can not access grades currently'))
-
-        return self.section and self.request.user.profile.is_instructor  # and self.grade_fragment_deadline
+        return self.section and self.request.user.profile.is_instructor and  is_instructor_section
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -107,10 +98,11 @@ class GradesView(InstructorBaseView, ModelFormSetView):
     def formset_valid(self, formset):
         for form in formset:
             form.user = self.request.user.profile
-            saved_form = form.save(commit=False)
-            if saved_form:
-                saved_form.save()
+            form.save()
         return super(GradesView, self).formset_valid(formset)
+
+    def formset_invalid(self, formset):
+        print(formset.errors)
 
 
 class CreateGradeFragmentView(InstructorBaseView, CreateView):

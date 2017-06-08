@@ -9,12 +9,13 @@
             <div class="float-left">
                 <p>{% trans 'Course:' %} {{ section.course_offering.course.name }}</p>
             </div>
-
+            {% if not section.course_offering.coordinated %}
             <div class="float-right">
                 <a class="thm-btn small-btn outline-btn-dgrey"
                    href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
                     {% trans 'Create New Grade Plan' %}</a>
             </div>
+            {% endif %}
         </div>
 
         {% if grade_fragments %}
