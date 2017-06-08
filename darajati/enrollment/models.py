@@ -133,7 +133,7 @@ class Semester(models.Model):
     start_date = models.DateTimeField(_('start date'))
     end_date = models.DateTimeField(_('end date'))
     grade_fragment_deadline = models.DateTimeField(_('Grade Break Down Deadline Date'),
-                                                     null=True, blank=False)
+                                                   null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
@@ -234,10 +234,10 @@ class Section(models.Model):
         :param now: current date
         :return: a unique list of section objects for the login user and for the current semester
         """
-        return Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
-                                      scheduled_periods__section__course_offering__semester__start_date__lte=now,
-                                      scheduled_periods__section__course_offering__semester__end_date__gte=now
-                                      ).distinct().first()
+        return True if Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
+                                              scheduled_periods__section__course_offering__semester__start_date__lte=now,
+                                              scheduled_periods__section__course_offering__semester__end_date__gte=now
+                                              ).distinct().first() else False
 
 
 class Coordinator(models.Model):

@@ -14,23 +14,25 @@ def get_students_enrollment_grades(now):
     count = 0
     enrollments = []
     sections = Section.get_sections(now)
-    messages = ''
+    messages = []
     if not sections:
         return "There is no sections available to create grades for - 'Scheduled Task - get_students_enrollment_grades'"
     for section in sections:
         enrollment_list = Enrollment.get_students(section.id)
         if not enrollment_list:
-            messages = 'There are no enrollments for section {}'.format(section)
-            return messages
+            messages.append('There are no enrollments for section {}'.format(section))
         else:
             tasks = GradeFragment.get_section_grade_fragments(section)
             if not tasks:
-                messages = 'There are no grades fragments for section {}'.format(section)
+                messages.append('There are no grades fragments for section {}'.format(section))
                 return messages
             for enrollment in enrollment_list:
                 for task in tasks:
                     created, grade = StudentGrade.objects.get_or_create(enrollment=enrollment, grade_fragment=task)
-                    enrollments.append(grade)
                     if created:
+                        enrollments.append(
+                            '{} | Grade was created for student {} in section {} for grade plan {}'.format(
+                                count, enrollment.student.english_name, section.code, task
+                            ))
                         count += 1
-    return enrollments
+    return enrollments, messages
