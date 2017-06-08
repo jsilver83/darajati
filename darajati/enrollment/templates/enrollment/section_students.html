@@ -3,15 +3,6 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li
-                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
         <a href="{{request.META.HTTP_REFERER}}">Go back</a>
         <h3>{% trans 'Welcome' %}</h3>
         <br>

@@ -3,50 +3,50 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li
-                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+        <h3>{% trans 'Welcome, find your current enrolled sections grades plans' %}</h3>
+
+        <div style="margin-top: 30px;">
+            <div class="float-left">
+                <p>{% trans 'Course:' %} {{ section.course_offering.course.name }}</p>
+            </div>
+
+            <div class="float-right">
+                <a class="thm-btn small-btn outline-btn-dgrey"
+                   href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
+                    {% trans 'Create New Grade Plan' %}</a>
+            </div>
+        </div>
 
         {% if grade_fragments %}
-        <h3>{% trans 'Welcome, find your current enrolled sections grades plans' %}</h3>
-        <br>
-        {% with grade_fragments|first as item %}
-            <span><strong>{% trans 'Course : ' %}</strong>{{ item.course_offering.course.name }}</span>
-            <br>
-            {% if item.section %}<span><strong>{% trans 'Section : ' %}</strong>{{ item.section.code }}</span>{% endif %}
-        {% endwith %}
 
-        <table class="table table-condensed text-center">
-            <thead>
-            <tr>
-                <th class="text-center">{% trans 'Category' %}</th>
-                <th class="text-center">{% trans 'Description' %}</th>
-                <th class="text-center">{% trans 'Weight' %}</th>
-                <th class="text-center">{% trans 'Type' %}</th>
-                <th class="text-center">{% trans 'Edit' %}</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for grade_fragment in grade_fragments %}
-            <tr>
-                <td>{{ grade_fragment.category }}</td>
-                <td>{{ grade_fragment.description }}</td>
-                <td>{{ grade_fragment.weight }}</td>
-                <td>{{ grade_fragment.boundary_type }}</td>
-                <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-                       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            <table class="table table-condensed text-center">
+                <thead>
+                <tr>
+                    <th class="text-center">{% trans 'Category' %}</th>
+                    <th class="text-center">{% trans 'Description' %}</th>
+                    <th class="text-center">{% trans 'Weight' %}</th>
+                    <th class="text-center">{% trans 'Type' %}</th>
+                    <th class="text-center">{% trans 'Edit' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for grade_fragment in grade_fragments %}
+                <tr>
+                    <td>{{ grade_fragment.category }}</td>
+                    <td>{{ grade_fragment.description }}</td>
+                    <td>{{ grade_fragment.weight }}</td>
+                    <td>{{ grade_fragment.boundary_type }}</td>
+                    <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+                           class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         {% else %}
-        {% trans 'There are no results' %}
+            <br>
+            <h4>
+                {% trans 'There are no results' %}
+            </h4>
         {% endif %}
 
     </div>

@@ -3,15 +3,6 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li
-                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
         <!--{% if enrollments|length == formset|length %}-->
         <!--"Enrollments Are Equal to Grades Records"-->
         <!--{% endif %}-->
@@ -43,7 +34,7 @@
                         <th>{% trans 'Student ID' %}</th>
                         <th>{% trans 'Full Name' %}</th>
                         <th>{% trans 'Student Grade'%}</th>
-                        {% if grade_fragment.entry_in_percentages %}<th>{% trans 'Student Grade' %}</th>{% endif %}
+                        {% if grade_fragment.entry_in_percentages %}<th>{% trans 'Actual Student Grade' %}</th>{% endif %}
                         <th>{% trans 'Remark' %}</th>
                     </tr>
                     </thead>
@@ -51,14 +42,20 @@
                     {% csrf_token %}
                     {{ formset.management_form }}
                     {% for form in formset %}
-                    <tr>
-                        <td>{{ form.enrollment }}{{ form.enrollment.errors }}</td>
-                        <td>{{ form.grade_fragment }}{{ form.grade_fragment.errors }}</td>
-                        <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
-                        {% if form.actual_grade %}<td>{{ form.actual_grade }}</td>{% endif %}
-                        <td>{{ form.remarks }}</td>
-                        {{ form.id }}
-                    </tr>
+                        {% for enrollment in enrollments %}
+                            {% if enrollment.id == form.enrollment.value %}
+                            <tr>
+                                <td>{{ enrollment.student.university_id }}</td>
+                                <td>{{ enrollment.student.english_name }}</td>
+                                <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
+                                {% if form.actual_grade %}<td>{{ form.actual_grade }}</td>{% endif %}
+                                <td>{{ form.remarks }}</td>
+                                {{ form.id }}
+                                {{ form.enrollment }}
+                                {{ form.grade_fragment }}
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
                     {% endfor %}
                     </tbody>
                 </table>
