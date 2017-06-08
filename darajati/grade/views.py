@@ -29,11 +29,12 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self, **kwargs):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
-        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.is_instructor, now())
 
         if not self.section:
             messages.error(self.request, _('Please enter a valid section'))
             return self.section and self.request.user.profile.is_instructor
+
+        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.is_instructor, now())
 
         if not self.section.is_instructor_section(self.request.user.profile.is_instructor, now()) \
                 or not self.request.user.is_superuser:
@@ -41,14 +42,15 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 
             return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
-        if self.section.course_offering.semester.grade_fragment_deadline <= now() \
-                or self.request.user.is_superuser:
-            self.grade_fragment_deadline = True
+        # TODO: Ask Abdullah about Enabling everyone to see the plans but not be able to enter them.
+        # if self.section.course_offering.semester.grade_fragment_deadline <= now() \
+        #         or self.request.user.is_superuser:
+        #     self.grade_fragment_deadline = True
+        #
+        # else:
+        #     messages.error(self.request, _('You can not access grades currently'))
 
-        else:
-            messages.error(self.request, _('You can not access grades currently'))
-
-        return self.section and self.request.user.profile.is_instructor and self.grade_fragment_deadline
+        return self.section and self.request.user.profile.is_instructor  # and self.grade_fragment_deadline
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -65,12 +67,8 @@ class GradeFragmentView(InstructorBaseView, ListView):
     def get_context_data(self):
         context = super(GradeFragmentView, self).get_context_data()
         context['section_id'] = self.section_id
+        context['section'] = self.section
         return context
-
-
-class CreateGradeFragmentView(InstructorBaseView, CreateView):
-    form_class = GradeFragmentForm
-    template_name = 'grade/create_grade_fragment.html'
 
 
 class GradesView(InstructorBaseView, ModelFormSetView):
@@ -113,3 +111,24 @@ class GradesView(InstructorBaseView, ModelFormSetView):
             if saved_form:
                 saved_form.save()
         return super(GradesView, self).formset_valid(formset)
+
+
+class CreateGradeFragmentView(InstructorBaseView, CreateView):
+    form_class = GradeFragmentForm
+    model = GradeFragment
+    template_name = 'grade/create_grade_fragment.html'
+
+    def form_valid(self, form):
+        form = form.save(commit=False)
+
+        if not self.section.course_offering.coordinated:
+            form.section = self.section
+
+        form.course_offering = self.section.course_offering
+        form.updated_by = self.request.user.profile
+        form.save()
+        messages.success(self.request, _('Grade plan created successfully'))
+        return super(CreateGradeFragmentView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('grade:section_grade', kwargs={'section_id': self.section_id})
