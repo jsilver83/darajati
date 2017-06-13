@@ -45,7 +45,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {{ form.non_field_errors }}
+                    {{ formset.non_field_errors }}
                     {% csrf_token %}
                     {{ formset.management_form }}
                     {% for form in formset %}

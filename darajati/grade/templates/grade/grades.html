@@ -3,16 +3,15 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <!--{% if enrollments|length == formset|length %}-->
-        <!--"Enrollments Are Equal to Grades Records"-->
-        <!--{% endif %}-->
-        <!--{% if enrollments|length > formset|length %}-->
-        <!--"Enrollments Are More then Grades Records"-->
-        <!--{% endif %}-->
-        <!--{% if enrollments|length < formset|length %}-->
-        <!--"Enrollments Are Less then Grades Records"-->
-        <!--{% endif %}-->
-
+        {% if formset.total_error_count %}
+            <ul class="errorList">
+            {% for dict in formset.errors %}
+                {% for error in dict.values %}
+                    <li>{{ error.0 }}</li>
+                {% endfor %}
+            {% endfor %}
+            </ul>
+        {% endif %}
         {% if formset.forms %}
         <form method="post">
             <div class="title-sec row">
@@ -34,7 +33,9 @@
                         <th>{% trans 'Student ID' %}</th>
                         <th>{% trans 'Full Name' %}</th>
                         <th>{% trans 'Student Grade'%}</th>
-                        {% if grade_fragment.entry_in_percentages %}<th>{% trans 'Actual Student Grade' %}</th>{% endif %}
+                        {% if grade_fragment.entry_in_percentages %}
+                        <th>{% trans 'Actual Student Grade' %}</th>
+                        {% endif %}
                         <th>{% trans 'Remark' %}</th>
                     </tr>
                     </thead>
@@ -42,21 +43,25 @@
                     {% csrf_token %}
                     {{ formset.management_form }}
                     {% for form in formset %}
-                        {% for enrollment in enrollments %}
-                            {% if enrollment.id == form.enrollment.value %}
-                            <tr>
-                                <td>{{ enrollment.student.university_id }}</td>
-                                <td>{{ enrollment.student.english_name }}</td>
-                                <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
-                                {% if form.actual_grade %}<td>{{ form.actual_grade }}</td>{% endif %}
-                                <td>{{ form.remarks }}</td>
-                                {{ form.id }}
-                                {{ form.enrollment }}
-                                {{ form.grade_fragment }}
-                                {{ form.updated_on }}
-                            </tr>
-                            {% endif %}
-                        {% endfor %}
+                    {% for enrollment in enrollments %}
+                    {% ifequal enrollment.id|stringformat:"s" form.enrollment.value|stringformat:"s" %}
+                    <tr>
+                        <td>{{ enrollment.student.university_id }}</td>
+                        <td>{{ enrollment.student.english_name }}</td>
+                        <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
+                        {% if form.actual_grade %}
+                        <td>{{ form.actual_grade }}</td>
+                        {% endif %}
+                        <td>{{ form.remarks }}</td>
+                        {{ form.id }}
+                        {{ form.enrollment }}
+                        {{ form.grade_fragment_id }}
+                        {{ form.enrollment_id }}
+                        {{ form.grade_fragment }}
+                        {{ form.updated_on }}
+                    </tr>
+                    {% endifequal %}
+                    {% endfor %}
                     {% endfor %}
                     </tbody>
                 </table>

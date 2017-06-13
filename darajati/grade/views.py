@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from .models import GradeFragment, StudentGrade
-from .forms import GradesForm, GradeFragmentForm
+from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
 
 from enrollment.models import Enrollment, Section
 from enrollment.utils import now
@@ -41,7 +41,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
             messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
             return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
-        return self.section and self.request.user.profile.is_instructor and  is_instructor_section
+        return self.section and self.request.user.profile.is_instructor and is_instructor_section
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -66,6 +66,7 @@ class GradesView(InstructorBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
     model = StudentGrade
     form_class = GradesForm
+    formset_class = BaseGradesFormSet
     extra = 0
 
     def test_func(self, **kwargs):
@@ -98,11 +99,9 @@ class GradesView(InstructorBaseView, ModelFormSetView):
     def formset_valid(self, formset):
         for form in formset:
             form.user = self.request.user.profile
-            form.save()
+            form.save(commit=False)
+        messages.success(self.request, _('Grades were saved successfully'))
         return super(GradesView, self).formset_valid(formset)
-
-    def formset_invalid(self, formset):
-        print(formset.errors)
 
 
 class CreateGradeFragmentView(InstructorBaseView, CreateView):
