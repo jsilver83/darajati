@@ -101,7 +101,38 @@ class BaseGradesFormSet(BaseModelFormSet):
         self.average = Decimal(000.00)
 
     def clean(self):
-        print('I am here Once')
+        # if by somehow the grade was passed greater then what it should be it will accept it. Fix later
+        for form in self.forms:
+            if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
+                    ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
+                raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
+
+            self.average += form.cleaned_data['grade_quantity']
+
+        if self.fragment.entry_in_percentages:
+
+            self.average = round((self.fragment.weight / (100 * len(self.forms))) * self.average, 2)
+
+        else:
+            self.average = round(self.average / len(self.forms), 2)
+
+        # This is for subjective bounded
+        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
+            objective_average = StudentGrade.get_section_objective_average(self.section)
+            less_objective_average = objective_average - self.fragment.boundary_range
+            more_objective_average = objective_average + self.fragment.boundary_range
+            if self.fragment.boundary_range:
+                if not less_objective_average <= self.average <= more_objective_average:
+                    raise forms.ValidationError(
+                        _('Section average {} should be between {} and {}'.format(
+                            self.average, more_objective_average, less_objective_average)))
+            else:
+                raise forms.ValidationError(
+                    _('Submitting Failed, Make sure the boundary range of this grade plan has a value'))
+
+        # This is for subjective bounded fixed
+        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
+            pass
         return self.cleaned_data
 
 
