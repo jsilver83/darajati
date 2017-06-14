@@ -25,7 +25,6 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     grade_fragment_deadline = None
 
     # TODO: add a check for the active user
-
     def test_func(self, **kwargs):
         self.section_id = self.kwargs['section_id']
         self.section = Section.get_section(self.section_id)
@@ -102,6 +101,12 @@ class GradesView(InstructorBaseView, ModelFormSetView):
             form.save(commit=False)
         messages.success(self.request, _('Grades were saved successfully'))
         return super(GradesView, self).formset_valid(formset)
+
+    def get_formset_kwargs(self):
+        kwargs = super(GradesView, self).get_formset_kwargs()
+        kwargs['fragment'] = GradeFragment.get_grade_fragment(self.grade_fragment_id)
+        kwargs['section'] = self.section
+        return kwargs
 
 
 class CreateGradeFragmentView(InstructorBaseView, CreateView):

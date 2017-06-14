@@ -2,8 +2,11 @@ from django import forms
 from django.forms import BaseModelFormSet
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+
 from .models import StudentGrade, GradeFragment
+
 from enrollment.utils import today
+from decimal import Decimal
 
 
 class GradesForm(forms.ModelForm):
@@ -91,6 +94,12 @@ class GradesForm(forms.ModelForm):
 
 
 class BaseGradesFormSet(BaseModelFormSet):
+    def __init__(self, fragment, section, *args, **kwargs):
+        super(BaseGradesFormSet, self).__init__(*args, **kwargs)
+        self.fragment = fragment
+        self.section = section
+        self.average = Decimal(000.00)
+
     def clean(self):
         print('I am here Once')
         return self.cleaned_data
