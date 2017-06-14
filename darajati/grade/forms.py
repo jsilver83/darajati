@@ -11,58 +11,64 @@ class GradesForm(forms.ModelForm):
         super(GradesForm, self).__init__(*args, **kwargs)
         self.fragment = GradeFragment.get_grade_fragment(self.initial['grade_fragment'])
         max_value = self.fragment.weight
-        if self.fragment.entry_in_percentages:
-            # Set another field to show the actual grade
+
+        # IF entry in percent and there is grade value
+        if self.fragment.entry_in_percentages and self.initial['grade_quantity']:
             self.fields['actual_grade'] = forms.DecimalField(
                 decimal_places=settings.MAX_DECIMAL_POINT,
                 max_digits=settings.MAX_DIGITS,
                 required=False,
                 widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
 
-            if self.initial['grade_quantity']:
-                # Set some dynamic changes to the grade_quantity field
-                self.initial['actual_grade'] = self.initial['grade_quantity']
-                if self.initial['updated_on'] and not self.fragment.allow_change:
-                    self.fields['grade_quantity'] = forms.DecimalField(
-                        decimal_places=settings.MAX_DECIMAL_POINT,
-                        max_digits=settings.MAX_DIGITS,
-                        required=False,
-                        max_value=100, min_value=0,
-                        widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
-                else:
-                    self.fields['grade_quantity'] = forms.DecimalField(
-                        decimal_places=settings.MAX_DECIMAL_POINT,
-                        max_digits=settings.MAX_DIGITS,
-                        required=False,
-                        max_value=100, min_value=0,
-                        widget=forms.NumberInput(attrs={'class': 'thm-field'}))
-                self.initial['grade_quantity'] = round((self.initial['grade_quantity'] * 100) / self.fragment.weight, 2)
-            else:
+            self.fields['grade_quantity'] = forms.DecimalField(
+                decimal_places=settings.MAX_DECIMAL_POINT,
+                max_digits=settings.MAX_DIGITS,
+                required=False,
+                max_value=100, min_value=0,
+                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+
+            self.initial['actual_grade'] = self.initial['grade_quantity']
+
+            # IF grade value was submitted once and it's not allowed to enter more then one time
+            if self.initial['updated_on'] and not self.fragment.allow_change:
                 self.fields['grade_quantity'] = forms.DecimalField(
                     decimal_places=settings.MAX_DECIMAL_POINT,
                     max_digits=settings.MAX_DIGITS,
                     required=False,
                     max_value=100, min_value=0,
-                    widget=forms.NumberInput(attrs={'class': 'thm-field'}))
-        else:
+                    widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
+                self.fields['remarks'] = forms.CharField(widget=forms.TextInput(attrs={'class': 'thm-field',
+                                                                                       'readonly': 'True'}))
+
+            self.initial['grade_quantity'] = round((self.initial['grade_quantity'] * 100) / self.fragment.weight, 2)
+
+        # IF entry not in percent and there is grade value
+        elif not self.fragment.entry_in_percentages and self.initial['grade_quantity']:
             self.fields['grade_quantity'] = forms.DecimalField(
                 max_value=max_value, min_value=0, required=False,
                 widget=forms.NumberInput(attrs={'class': 'thm-field'}))
 
-    def clean(self):
-        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and \
-                (self.cleaned_data['updated_on'] is None or self.fragment.allow_change):
+            # IF grade value was submitted once and it's not allowed to enter more then one time
+            if self.initial['updated_on'] and not self.fragment.allow_change:
+                self.fields['grade_quantity'] = forms.DecimalField(
+                    max_value=max_value, min_value=0, required=False,
+                    widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
+                self.fields['remarks'] = forms.CharField(widget=forms.TextInput(attrs={'class': 'thm-field',
+                                                                                       'readonly': 'True'}))
+        else:
+            self.fields['grade_quantity'] = forms.DecimalField(
+                max_value=max_value, min_value=0, required=False,
+                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+            if self.fragment.entry_in_percentages:
+                self.fields['grade_quantity'] = forms.DecimalField(
+                    max_value=100, min_value=0, required=False,
+                    widget=forms.NumberInput(attrs={'class': 'thm-field'}))
 
-            if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
-                pass
-            if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
-                pass
-            return self.cleaned_data
-
-        elif ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data)\
-                and not self.fragment.allow_change:
-            self.add_error(None, _('You are not allowed to change the grades '))
-        return self.cleaned_data
+                self.fields['actual_grade'] = forms.DecimalField(
+                    decimal_places=settings.MAX_DECIMAL_POINT,
+                    max_digits=settings.MAX_DIGITS,
+                    required=False,
+                    widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
 
     def save(self, commit=True):
         self.instance.updated_by = self.user
