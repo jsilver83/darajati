@@ -242,3 +242,31 @@ body{
     position: absolute;
     top: calc(50% - 8px);
 }
+
+.mess-sec {
+    margin-bottom: 15px;
+    text-align: center;
+
+	.messages {
+	    background-color: #f0e7b4;
+	    border: 1px solid #ddcc68;
+	    border-radius: 4px;
+	    color: #333333;
+	    display: inline-block;
+	    font-size: 14px;
+	    line-height: 20px;
+	    list-style-type: none;
+	    margin: 0;
+	    padding: 5px 15px;
+	    text-align: center;
+	    z-index: 999;
+
+	    > li {
+		    border-bottom: 1px solid #e3e380;
+		    padding: 3px 0;
+		}
+		> li:last-child {
+			border-bottom: none;
+		}
+	}
+}
