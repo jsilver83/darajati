@@ -564,6 +564,10 @@ img {
   transition: all 0.3s ease;
 }
 
+a:focus, a:hover {
+  color: #fff;
+}
+
 .preloader {
   background-color: #fff;
   height: 100%;
@@ -1303,6 +1307,32 @@ body {
   top: calc(50% - 8px);
 }
 
+.mess-sec {
+  margin-bottom: 15px;
+  text-align: center;
+}
+.mess-sec .messages {
+  background-color: #f0e7b4;
+  border: 1px solid #ddcc68;
+  border-radius: 4px;
+  color: #333333;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 20px;
+  list-style-type: none;
+  margin: 0;
+  padding: 5px 15px;
+  text-align: center;
+  z-index: 999;
+}
+.mess-sec .messages > li {
+  border-bottom: 1px solid #e3e380;
+  padding: 3px 0;
+}
+.mess-sec .messages > li:last-child {
+  border-bottom: none;
+}
+
 .adv-srch {
   max-width: 630px;
 }
@@ -1461,9 +1491,9 @@ body {
 .avail-attend-days .days {
   background-color: transparent;
   border: 1px solid #333333;
-  border-radius: 4px 4px 0 0;
+  border-radius: 0;
   color: #333333;
-  float: left;
+  float: right;
   font-size: 14px;
   line-height: 16px;
   margin: 0;

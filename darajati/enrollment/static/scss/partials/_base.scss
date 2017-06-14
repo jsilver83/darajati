@@ -1,6 +1,9 @@
 *{
     @include transition(all, .3s, ease);
 }
+a:focus, a:hover{
+    color:#fff;
+}
 
 .preloader {
     background-color: #fff;
