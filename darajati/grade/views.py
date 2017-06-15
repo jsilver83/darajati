@@ -93,6 +93,7 @@ class GradesView(InstructorBaseView, ModelFormSetView):
         context['section_objective_average'] = StudentGrade.get_section_objective_average(self.section)
         context['course_average'] = StudentGrade.get_course_average(self.section, self.grade_fragment)
         context['grade_fragment'] = self.grade_fragment
+        context['section'] = self.section
         return context
 
     def formset_valid(self, formset):
