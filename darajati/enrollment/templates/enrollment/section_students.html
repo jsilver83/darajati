@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <a href="{{request.META.HTTP_REFERER}}">Go back</a>
+        <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
         <h3>{% trans 'Welcome' %}</h3>
         <br>
         {% if enrollments %}
