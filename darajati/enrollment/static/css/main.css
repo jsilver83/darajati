@@ -565,7 +565,7 @@ img {
 }
 
 a:focus, a:hover {
-  color: #fff;
+  color: #333;
 }
 
 .preloader {
@@ -1308,7 +1308,7 @@ body {
 }
 
 .mess-sec {
-  margin-bottom: 15px;
+  margin: 15px 0 10px 0;
   text-align: center;
 }
 .mess-sec .messages {
@@ -1331,6 +1331,10 @@ body {
 }
 .mess-sec .messages > li:last-child {
   border-bottom: none;
+}
+.mess-sec .error-mess {
+  background-color: #fadada;
+  border-color: #de5959;
 }
 
 .adv-srch {
@@ -1398,6 +1402,8 @@ body {
 /* Search Detail */
 .back-btn {
   display: inline-block;
+  position: absolute;
+  left: 30px;
   vertical-align: middle;
 }
 .back-btn a {
@@ -1529,7 +1535,7 @@ body {
   background-color: #f7f7f7;
 }
 
-.edit-btn {
+.save-btn, .edit-btn {
   margin: 25px 0 0 0;
 }
 
@@ -1585,6 +1591,9 @@ body {
 .arabic {
   font-family: 'KacstOffice', Open Sans, Arial;
 }
+.arabic th {
+  text-align: initial;
+}
 .arabic button, .arabic input, .arabic optgroup, .arabic select, .arabic textarea {
   font-family: 'KacstOffice', Open Sans, Arial;
 }
@@ -1606,8 +1615,15 @@ body {
 .arabic .text-right {
   text-align: left;
 }
+.arabic .back-btn {
+  left: auto;
+  right: 30px;
+}
 .arabic .back-btn a {
   background-image: url("../images/back-arrow-icon-right.png");
+  background-position: right center;
+  padding-left: 0;
+  padding-right: 20px;
 }
 .arabic .lft-head .dept-logo {
   border-right: 1px solid #157235;

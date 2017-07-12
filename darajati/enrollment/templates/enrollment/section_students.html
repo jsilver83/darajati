@@ -3,9 +3,12 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
-        <h3>{% trans 'Welcome' %}</h3>
-        <br>
+        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+        <div class="title-sec text-center">
+            <h3>{% trans 'Welcome' %}</h3>
+        </div>
+    </div>
+    <div class="cntnt-sec">
         {% if enrollments %}
         <table class="table table-condensed">
             <thead>

@@ -1,6 +1,10 @@
 .arabic {
 
   font-family: 'KacstOffice', Open Sans, Arial;
+
+  th{
+    text-align: initial;
+  }
   
   button, input, optgroup, select, textarea {
     font-family: 'KacstOffice', Open Sans, Arial;
@@ -25,9 +29,18 @@
   .text-right{
     text-align: left;
   }
-  .back-btn a{
-        background-image: url("../images/back-arrow-icon-right.png");
+  .back-btn{
+    left:auto;
+    right:30px;
+
+    a{
+      background-image: url("../images/back-arrow-icon-right.png");
+      background-position: right center;
+      padding-left: 0;
+      padding-right: 20px;
+    }
   }
+  
 
   .lft-head .dept-logo {
     border-right: 1px solid #157235;

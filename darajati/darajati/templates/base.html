@@ -68,14 +68,25 @@
 <div class="main-cntnt text-center">
     <div class="max-container fit-window">
         {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li
-                    {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-            </li>
-            {% endfor %}
-        </ul>
+        <div class="mess-sec">
+            <ul class="messages">
+                {% for message in messages %}
+                <li
+                        {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
         {% endif %}
+
+        {% for error in formset.non_form_errors %}
+        <div class="mess-sec">
+            <ul class="messages error-mess">
+                <li>{{error}}</li>
+            </ul>
+        </div>
+        {% endfor %}
+
 
         {% block content %}
         {% endblock %}

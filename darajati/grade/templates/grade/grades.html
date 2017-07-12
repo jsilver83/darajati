@@ -5,10 +5,6 @@
     <div class="cntnt-sec">
         <a href="{% url 'grade:section_grade' section_id=section.id %}">{% trans 'Go Back' %}</a>
 
-        {% for error in formset.non_form_errors %}
-            {{error}}
-        {% endfor %}
-
         {% if formset.forms %}
         <form method="post">
             <div class="title-sec row">
@@ -16,11 +12,12 @@
                     <h3>{% trans 'Available Grades' %}</h3>
                 </div>
                 <div class="col-md-3 text-right">
-                    <div class="save-atten">
+                    <!--<div class="save-atten">
                         <a href="javascript:void(0);" class="thm-btn small-btn outline-btn-dgrey cancel-btn">{% trans 'Cancel' %}</a>&nbsp;&nbsp;
                         <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
-                    </div>
-                    <a href="javascript:void(0);" class="thm-btn small-btn edit-btn">{% trans 'Edit' %}</a>
+                    </div>-->
+                    <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
+                    <!--<a href="javascript:void(0);" class="thm-btn small-btn edit-btn">{% trans 'Edit' %}</a>-->
                 </div>
             </div>
             <div class="thm-table odd period-cntnt">
