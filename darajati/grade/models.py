@@ -40,7 +40,7 @@ class GradeFragment(models.Model):
                                              help_text=_('The order of which grade break down should show up first'))
     show_teacher_report = models.BooleanField(_('Show in Teacher Report'), null=False, blank=False, default=True)
     show_student_report = models.BooleanField(_('Show in Student Report'), null=False, blank=False, default=True)
-    boundary_type = models.CharField(_('Boundary Type'), max_length=20, choices=GradesBoundaries.choices(),
+    boundary_type = models.CharField(_('Boundary Type'), max_length=24, choices=GradesBoundaries.choices(),
                                      null=True, blank=False, default=GradesBoundaries.SUBJECTIVE_FREE)
     boundary_range = models.DecimalField(_('Boundary Range'), null=True, blank=True,
                                          help_text=_('When the type is subjective and it is not free, give a range +-'),
