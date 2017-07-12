@@ -142,13 +142,12 @@ class BaseGradesFormSet(BaseModelFormSet):
 
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
-                        _('Submitting Failed, Make sure the boundary range of this grade plan has a value'))
+                        _('Section average {} should be between {} and {}'.format(
+                            self.average, more_objective_average, less_objective_average)))
             else:
                 raise forms.ValidationError(
-                    _('There are no objective grades average, make sure you objective grades are entered'))
-        # This is for subjective bounded fixed
-        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
-            pass
+                    _('Submitting Failed, Make sure the boundary range of this grade plan has a value'))
+
         return self.cleaned_data
 
 
