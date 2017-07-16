@@ -99,46 +99,52 @@ class BaseGradesFormSet(BaseModelFormSet):
         self.fragment = fragment
         self.section = section
         self.average = Decimal(000.00)
+        self.average_in_percent = None
+        self.average_boundary = None
 
     def clean(self):
 
         # if by somehow the grade was passed greater then what it should be it will accept it. Fix later
         for form in self.forms:
-            if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
-                    ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
-                raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
+            # if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
+            #         ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
+            #     raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
             if form.cleaned_data['grade_quantity']:
                 self.average += form.cleaned_data['grade_quantity']
 
-        if self.fragment.entry_in_percentages:
-            self.average = round((self.fragment.weight / (100 * len(self.forms))) * self.average, 2)
-        else:
-            self.average = round(self.average / len(self.forms), 2)
+        self.average = round(self.average / len(self.forms), 2)
 
+        """
+        SUBJECTIVE_BOUNDED require an average of objective exams if there is not show a validation error
+        """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
-            objective_average = StudentGrade.get_section_objective_average(self.section)
-            print(objective_average)
-            if not objective_average:
+            self.average_boundary = StudentGrade.get_section_objective_average(self.section)
+            if not self.average_boundary:
                 raise forms.ValidationError(
                     _('There are no objective grades average, make sure your objective grades are entered'))
 
+        """
+        SUBJECTIVE_BOUNDED_FIXED require boundary_fixed_average to not be null. If null show an error
+        """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
             if not self.fragment.boundary_fixed_average:
                 raise forms.ValidationError(_('There is no fixed average for this grade plan'))
-            objective_average = self.fragment.boundary_fixed_average
+            self.average_boundary = self.fragment.boundary_fixed_average
 
-        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED or \
-                        self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
+        """
+        Validating the average or SUBJECTIVE_BOUNDED
+        """
+        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
+
             if self.fragment.boundary_range:
-                less_objective_average = objective_average - self.fragment.boundary_range
-                more_objective_average = objective_average + self.fragment.boundary_range
+
+                less_objective_average = self.average_boundary - self.fragment.boundary_range
+                more_objective_average = self.average_boundary + self.fragment.boundary_range
 
                 if self.fragment.entry_in_percentages:
-                    # less_objective_average = objective_average - (self.fragment.boundary_range / 100)
-                    # more_objective_average = objective_average + (self.fragment.boundary_range / 100)
-                    # print(less_objective_average)
-                    # print(more_objective_average)
-                    pass
+                    x = round((self.average_boundary * 100) / self.fragment.weight, 2)
+                    less_objective_average = x - self.fragment.boundary_range
+                    more_objective_average = x + self.fragment.boundary_range
 
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
@@ -147,6 +153,12 @@ class BaseGradesFormSet(BaseModelFormSet):
             else:
                 raise forms.ValidationError(
                     _('Submitting Failed, Make sure the boundary range of this grade plan has a value'))
+
+        """
+        Validating the average or SUBJECTIVE_BOUNDED_FIXED
+        """
+        if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
+            pass
 
         return self.cleaned_data
 
