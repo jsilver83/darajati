@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
@@ -63,6 +63,19 @@ class SectionStudentView(InstructorBaseView, ListView):
 
     def get_queryset(self):
         query = Enrollment.get_students(self.section_id)
-        # get_students_enrollment_grades.apply_async(args=[now()],
-        #                                            eta=self.section.course_offering.semester.grade_fragment_deadline)
         return query
+
+
+class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = 'enrollment/admin_controls.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        if self.request.POST.get('create_grade'):
+            get_students_enrollment_grades.apply_async(args=[now()], eta=now())
+        return render(request, self.template_name)
+
+    def test_func(self):
+        return self.request.user.is_superuser

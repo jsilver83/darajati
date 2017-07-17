@@ -28,11 +28,13 @@ def get_students_enrollment_grades(now):
                 return messages
             for enrollment in enrollment_list:
                 for task in tasks:
-                    created, grade = StudentGrade.objects.get_or_create(enrollment=enrollment, grade_fragment=task)
+                    grade, created = StudentGrade.objects.get_or_create(enrollment=enrollment, grade_fragment=task)
                     if created:
                         enrollments.append(
                             '{} | Grade was created for student {} in section {} for grade plan {}'.format(
                                 count, enrollment.student.english_name, section.code, task
                             ))
                         count += 1
-    return enrollments, messages
+    if enrollments:
+        return enrollments
+    return messages

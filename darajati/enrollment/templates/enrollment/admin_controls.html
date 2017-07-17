@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content-panel">
+    <div class="cntnt-sec">
+        <div class="title-sec text-center">
+            <h3>{% trans 'Admin Controls' %}</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input class="thm-btn small-btn save-btn" type="submit" name="create_grade" value="{% trans 'Create Grades' %}">
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
