@@ -17,7 +17,7 @@ email_user: darajati@kfupm.edu.sa
 
 # pick a unique port that is not used by any other application on the target
 # application server
-uwsgi_http_port: 8002
+uwsgi_http_port: 8001
 
 cas_login_url: "{{ test_cas_login_url }}"
 cas_validate_url: "{{ test_cas_validate_url }}"
