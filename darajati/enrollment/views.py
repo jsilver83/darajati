@@ -29,8 +29,29 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
     section_id = None
     section = None
 
+    def dispatch(self, request, *args, **kwargs):
+        """
+         Assign section_id and get section object
+        """
+        if self.kwargs.get('section_id'):
+            self.section_id = self.kwargs['section_id']
+            self.section = Section.get_section(self.section_id)
+        return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
+
     def test_func(self, **kwargs):
-        return self.request.user.profile.is_instructor
+        if not self.section:
+            messages.error(self.request, _('This is not a valid section'))
+            return False
+
+        is_instructor_section = self.section.is_instructor_section(
+            self.request.user.profile.instructor,
+            now())
+        if not is_instructor_section:
+            messages.error(self.request,
+                           _('The requested section do not belong to you, or it is out of this semester'))
+            return False
+
+        return True
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -40,6 +61,10 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 class InstructorView(InstructorBaseView, ListView):
     context_object_name = 'sections'
     template_name = 'enrollment/instructor_sections.html'
+    model = Section
+
+    def test_func(self, **kwargs):
+        return self.request.user.profile.is_instructor
 
     def get_queryset(self):
         query = Section.get_instructor_sections(self.request.user.profile.instructor, now())
@@ -49,17 +74,7 @@ class InstructorView(InstructorBaseView, ListView):
 class SectionStudentView(InstructorBaseView, ListView):
     context_object_name = 'enrollments'
     template_name = 'enrollment/section_students.html'
-
-    def test_func(self, **kwargs):
-        rules = super(SectionStudentView, self).test_func(**kwargs)
-        self.section_id = self.kwargs['section_id']
-        self.section = Section.get_section(self.section_id)
-        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor,
-                                                                   now())
-        if not is_instructor_section:
-            messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
-
-        return rules and is_instructor_section
+    model = Enrollment
 
     def get_queryset(self):
         query = Enrollment.get_students(self.section_id)
@@ -74,7 +89,8 @@ class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         if self.request.POST.get('create_grade'):
-            get_students_enrollment_grades.apply_async(args=[now()], eta=now())
+            get_students_enrollment_grades(now())
+            # get_students_enrollment_grades.apply_async(args=[now()], eta=now())
         return render(request, self.template_name)
 
     def test_func(self):

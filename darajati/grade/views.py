@@ -1,53 +1,29 @@
 from extra_views import ModelFormSetView
 from django.views.generic import ListView, CreateView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from .models import GradeFragment, StudentGrade
 from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
 
-from enrollment.models import Enrollment, Section
-from enrollment.utils import now
+from enrollment.models import Enrollment
+from enrollment.views import InstructorBaseView
 
 
-class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
-    """
-    :InstructorBaseView:
-    - check if the current user is instructor or superuser
-    - redirect the current user even if he is AnonymousUser
-    """
-    section_id = None
-    section = None
+class AttendanceBaseView(InstructorBaseView):
     grade_fragment_id = None
     grade_fragment = None
     grade_fragment_deadline = None
 
-    # TODO: add a check for the active user
-    def test_func(self, **kwargs):
-        self.section_id = self.kwargs['section_id']
-        self.section = Section.get_section(self.section_id)
-
-        # Valid Section
-        if not self.section:
-            messages.error(self.request, _('Please enter a valid section'))
-            return self.section and self.request.user.profile.is_instructor
-
-        # Is this section belong to this instructor
-        is_instructor_section = self.section.is_instructor_section(self.request.user.profile.instructor, now())
-        if not is_instructor_section and not self.request.user.is_superuser:
-            messages.error(self.request, _('The requested section do not belong to you, or it is out of this semester'))
-            return self.section and self.request.user.profile.is_instructor and is_instructor_section
-
-        return self.section and self.request.user.profile.is_instructor and is_instructor_section
-
-    def get_login_url(self):
-        if self.request.user != "AnonymousUser":
-            return reverse_lazy('enrollment:home')
+    def dispatch(self, request, *args, **kwargs):
+        if self.kwargs.get('grade_fragment_id'):
+            self.grade_fragment_id = self.kwargs['grade_fragment_id']
+            self.grade_fragment = GradeFragment.get_grade_fragment(self.grade_fragment_id)
+        return super(AttendanceBaseView, self).dispatch(request, *args, **kwargs)
 
 
-class GradeFragmentView(InstructorBaseView, ListView):
+class GradeFragmentView(AttendanceBaseView, ListView):
     template_name = 'grade/grade_fragments.html'
     context_object_name = 'grade_fragments'
 
@@ -61,7 +37,7 @@ class GradeFragmentView(InstructorBaseView, ListView):
         return context
 
 
-class GradesView(InstructorBaseView, ModelFormSetView):
+class GradesView(AttendanceBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
     model = StudentGrade
     form_class = GradesForm
@@ -69,19 +45,18 @@ class GradesView(InstructorBaseView, ModelFormSetView):
     extra = 0
 
     def test_func(self, **kwargs):
-        test_roles = super(GradesView, self).test_func(**kwargs)
-        self.grade_fragment_id = self.kwargs['grade_fragment_id']
-        self.grade_fragment = GradeFragment.get_grade_fragment(self.grade_fragment_id)
+        rules = super(GradesView, self).test_func(**kwargs)
 
-        if not self.grade_fragment:
-            messages.error(self.request, _('Please enter a valid grade plan'))
-            return test_roles and self.grade_fragment
+        if rules:
+            if not self.grade_fragment:
+                messages.error(self.request, _('Please enter a valid grade plan'))
+                return False
 
-        if not self.grade_fragment.allow_entry and not self.request.user.is_superuser:
-            messages.error(self.request, _('You are not allowed to enter the marks'))
-            return test_roles and self.grade_fragment.allow_entry
-
-        return test_roles and self.grade_fragment
+            if not self.grade_fragment.allow_entry and not self.request.user.is_superuser:
+                messages.error(self.request, _('You are not allowed to enter the marks'))
+                return False
+            return True
+        return False
 
     def get_queryset(self):
         return StudentGrade.get_section_grades(self.section_id, self.grade_fragment_id)
@@ -110,10 +85,19 @@ class GradesView(InstructorBaseView, ModelFormSetView):
         return kwargs
 
 
-class CreateGradeFragmentView(InstructorBaseView, CreateView):
+class CreateGradeFragmentView(AttendanceBaseView, CreateView):
     form_class = GradeFragmentForm
     model = GradeFragment
     template_name = 'grade/create_grade_fragment.html'
+
+    def test_func(self, **kwargs):
+        rules = super(CreateGradeFragmentView, self).test_func(**kwargs)
+        if rules:
+            if self.section.course_offering.coordinated:
+                messages.error(self.request, _('You can not create grade plans'))
+                return False
+            return True
+        return False
 
     def form_valid(self, form):
         form = form.save(commit=False)
