@@ -44,8 +44,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
             return False
 
         is_instructor_section = self.section.is_instructor_section(
-            self.request.user.profile.instructor,
-            now())
+            self.request.user.profile.instructor)
         if not is_instructor_section:
             messages.error(self.request,
                            _('The requested section do not belong to you, or it is out of this semester'))
@@ -67,7 +66,7 @@ class InstructorView(InstructorBaseView, ListView):
         return self.request.user.profile.is_instructor
 
     def get_queryset(self):
-        query = Section.get_instructor_sections(self.request.user.profile.instructor, now())
+        query = Section.get_instructor_sections(self.request.user.profile.instructor)
         return query
 
 
@@ -89,7 +88,7 @@ class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         if self.request.POST.get('create_grade'):
-            get_students_enrollment_grades(now())
+            get_students_enrollment_grades()
             # get_students_enrollment_grades.apply_async(args=[now()], eta=now())
         return render(request, self.template_name)
 

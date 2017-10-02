@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="title-sec text-center">
+                {% if not section_report or not student_report %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form }}
+                        <input class="thm-btn small-btn save-btn" type="submit" name="create_grade"
+                               value="{% trans 'Generate Report' %}">
+
+                    </form>
+                {% else %}
+                    {% if section_report %}
+                        <h3>{% trans 'Total Number Of Sections To Be Created is ' %}{{ section_report|length }}</h3>
+
+                        <table class="table table-condensed text-center">
+                            <thead>
+                            <tr>
+                                <th class="text-center">{% trans 'No.' %}</th>
+                                <th class="text-center">{% trans 'Section Code' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in section_report %}
+
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                    {% if student_report %}
+                        <h3>{% trans 'Total Number Of Student To Be Created is ' %}{{ student_report|length }}</h3>
+
+                        <table class="table table-condensed text-center">
+                            <thead>
+                            <tr>
+                                <th class="text-center">{% trans 'No.' %}</th>
+                                <th class="text-center">{% trans 'Student ID' %}</th>
+                                <th class="text-center">{% trans 'Student Name' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in student_report %}
+
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.student_id }}</td>
+                                    <td>{{ item.student_name }}</td>
+                                    <td>{{ item.student_email }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

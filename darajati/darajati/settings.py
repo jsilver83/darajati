@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'enrollment',
     'attendance',
     'grade',
-
+    'banner_integration',
     'django_celery_results',
 
     'django.contrib.admin',

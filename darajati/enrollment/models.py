@@ -1,12 +1,12 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-
+from django.utils.dateparse import parse_datetime
+from django.contrib.auth.models import User as User_model
 from .types import RoundTypes
-from .utils import to_string
+from .utils import to_string, now
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
-
 User = settings.AUTH_USER_MODEL
 
 
@@ -101,6 +101,28 @@ class Student(Person):
         except:
             return False
 
+    @staticmethod
+    def is_student_exists(email):
+        return Student.objects.filter(personal_email__exact=email).exists()
+
+    @staticmethod
+    def get_create_student(username, university_id, government_id, english_name, arabic_name, mobile, personal_email):
+        user, created = User_model.objects.get_or_create(username=username)
+
+        profile, created = UserProfile.objects.get_or_create(
+            user=user
+        )
+        return Student.objects.get_or_create(
+            user_profile=profile,
+            university_id=university_id,
+            government_id=government_id,
+            english_name=english_name,
+            arabic_name=arabic_name,
+            mobile=mobile,
+            personal_email=personal_email,
+            active=True
+        )
+
 
 class Instructor(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
@@ -176,6 +198,17 @@ class CourseOffering(models.Model):
     def __str__(self):
         return to_string(self.semester, self.course)
 
+    @staticmethod
+    def get_course_offering(course_offering_id):
+        return CourseOffering.objects.get(id=course_offering_id)
+
+    @staticmethod
+    def get_current_course_offerings():
+        return CourseOffering.objects.filter(
+            semester__start_date__lte=now(),
+            semester__end_date__gte=now()
+        ).values_list('id', 'course__code')
+
 
 class Section(models.Model):
     course_offering = models.ForeignKey(CourseOffering, related_name='sections', on_delete=models.CASCADE)
@@ -208,36 +241,46 @@ class Section(models.Model):
             return None
 
     @staticmethod
-    def get_sections(now):
+    def get_sections():
         """
-        :param now: 
         :return: objects of all sections
         """
-        return Section.objects.filter(course_offering__semester__start_date__lte=now,
-                                      course_offering__semester__end_date__gte=now).distinct()
+        return Section.objects.filter(course_offering__semester__start_date__lte=now(),
+                                      course_offering__semester__end_date__gte=now()).distinct()
 
     @staticmethod
-    def get_instructor_sections(instructor, now):
+    def get_instructor_sections(instructor):
         """
         :param instructor: current login user
-        :param now: current date
         :return: a unique list of section objects for the login user and for the current semester
         """
         return Section.objects.filter(scheduled_periods__instructor_assigned=instructor,
-                                      scheduled_periods__section__course_offering__semester__start_date__lte=now,
-                                      scheduled_periods__section__course_offering__semester__end_date__gte=now
+                                      scheduled_periods__section__course_offering__semester__start_date__lte=now(),
+                                      scheduled_periods__section__course_offering__semester__end_date__gte=now()
                                       ).distinct()
 
-    def is_instructor_section(self, instructor, now):
+    def is_instructor_section(self, instructor):
         """
         :param instructor: current login user
-        :param now: current date
         :return: a unique list of section objects for the login user and for the current semester
         """
         return True if Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
-                                              scheduled_periods__section__course_offering__semester__start_date__lte=now,
-                                              scheduled_periods__section__course_offering__semester__end_date__gte=now
+                                              scheduled_periods__section__course_offering__semester__start_date__lte=now(),
+                                              scheduled_periods__section__course_offering__semester__end_date__gte=now()
                                               ).distinct().first() else False
+
+    @staticmethod
+    def is_section_exists(course_offering, section_code):
+        return Section.objects.filter(course_offering__exact=course_offering,
+                                      code__exact=section_code).exists()
+
+    @staticmethod
+    def get_create_section(course_offering, code, crn):
+        return Section.objects.get_or_create(
+            course_offering=course_offering,
+            code=code,
+            crn=crn,
+        )
 
 
 class Coordinator(models.Model):
@@ -256,7 +299,10 @@ class Enrollment(models.Model):
 
     student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
+    active = models.BooleanField(_('Active'), blank=False, default=True)
+    comment = models.CharField(_('Comment'), max_length=200, blank=True)
     letter_grade = models.CharField(_('letter grade'), max_length=10, null=True, blank=False, default='UD')
+    register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
 
     def __str__(self):
         return to_string(self.student.english_name, self.section.code)
@@ -267,6 +313,18 @@ class Enrollment(models.Model):
         :return: list of all students for a giving section ID
         """
         return Enrollment.objects.filter(section=section_id)
+
+    @staticmethod
+    def is_enrollment_exists(student, section):
+        return Enrollment.objects.filter(student=student, section=section).exists()
+
+    @staticmethod
+    def get_create_enrollment(student, section, register_date):
+        return Enrollment.objects.get_or_create(
+            student=student,
+            section=section,
+            register_date=parse_datetime(register_date)
+        )
 
     @staticmethod
     def get_students_enrollment(section_id, date, instructor, given_day=None):
