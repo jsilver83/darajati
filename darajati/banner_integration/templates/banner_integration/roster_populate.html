@@ -4,59 +4,94 @@
     <div class="content-panel">
         <div class="cntnt-sec">
             <div class="title-sec text-center">
-                {% if not section_report or not student_report %}
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form }}
-                        <input class="thm-btn small-btn save-btn" type="submit" name="create_grade"
-                               value="{% trans 'Generate Report' %}">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <input class="thm-btn small-btn save-btn" type="submit" name="create_grade"
+                           value="{% trans 'Generate Report' %}">
 
-                    </form>
-                {% else %}
-                    {% if section_report %}
-                        <h3>{% trans 'Total Number Of Sections To Be Created is ' %}{{ section_report|length }}</h3>
+                </form>
+                    {{ comment }}
+                {% if report %}
+                    {% if detail_report %}
+                        {% if section_report %}
+                            <h3>{% trans 'Total Number Of Sections To Be Created is ' %}{{ section_report|length }}</h3>
 
-                        <table class="table table-condensed text-center">
-                            <thead>
-                            <tr>
-                                <th class="text-center">{% trans 'No.' %}</th>
-                                <th class="text-center">{% trans 'Section Code' %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for item in section_report %}
-
+                            <table class="table table-condensed text-center">
+                                <thead>
                                 <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ item }}</td>
+                                    <th class="text-center">{% trans 'No.' %}</th>
+                                    <th class="text-center">{% trans 'Section Code' %}</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endif %}
-                    {% if student_report %}
-                        <h3>{% trans 'Total Number Of Student To Be Created is ' %}{{ student_report|length }}</h3>
+                                </thead>
+                                <tbody>
+                                {% for item in section_report %}
 
-                        <table class="table table-condensed text-center">
-                            <thead>
-                            <tr>
-                                <th class="text-center">{% trans 'No.' %}</th>
-                                <th class="text-center">{% trans 'Student ID' %}</th>
-                                <th class="text-center">{% trans 'Student Name' %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for item in student_report %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.code }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                        {% if student_report %}
+                            <h3>{% trans 'Total Number Of Student To Be Created is ' %}{{ student_report|length }}</h3>
 
+                            <table class="table table-condensed text-center">
+                                <thead>
                                 <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ item.student_id }}</td>
-                                    <td>{{ item.student_name }}</td>
-                                    <td>{{ item.student_email }}</td>
+                                    <th class="text-center">{% trans 'No.' %}</th>
+                                    <th class="text-center">{% trans 'Student ID' %}</th>
+                                    <th class="text-center">{% trans 'Student Name' %}</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {% for item in student_report %}
+
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.university_id }}</td>
+                                        <td>{{ item.english_name }}</td>
+                                        <td>{{ item.personal_email }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                        {% if enrollment_report %}
+                            <h3>
+                                {% trans 'Total Number Of Enrollment To Be Created is ' %}{{ enrollment_report|length }}</h3>
+
+                            <table class="table table-condensed text-center">
+                                <thead>
+                                <tr>
+                                    <th class="text-center">{% trans 'No.' %}</th>
+                                    <th class="text-center">{% trans 'Student ID' %}</th>
+                                    <th class="text-center">{% trans 'Student Name' %}</th>
+                                    <th class="text-center">{% trans 'Section' %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for item in enrollment_report %}
+
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.student.university_id }}</td>
+                                        <td>{{ item.student.english_name }}</td>
+                                        <td>{{ item.section.code }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                        <p>{% trans 'Total number of section to be removed ' %}{{ inactive_sections_count }}</p>
+                    {% else %}
+                        <h3>{% trans 'Short report' %}</h3>
+                        <p>{% trans 'Total number of section to be created ' %}{{ section_report|length }}</p>
+                        <p>{% trans 'Total number of student to be created ' %}{{ student_report|length }}</p>
+                        <p>{% trans 'Total number of endrollment to be created ' %}{{ enrollment_report|length }}</p>
+                        <p>{% trans 'Total number of section to be removed ' %}{{ inactive_sections_count|length }}</p>
                     {% endif %}
 
                 {% endif %}
