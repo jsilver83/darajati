@@ -1,7 +1,8 @@
 import requests, json
 from django.conf import settings
 from django.contrib.auth.models import User
-from enrollment.models import Section, Enrollment, Student, CourseOffering
+from enrollment.models import Section, Enrollment, Student, CourseOffering, UserProfile
+from django.db import transaction
 
 
 def request_faculty_teaching(semester_code, section_code):
@@ -27,113 +28,107 @@ def request_class_roaster(semester_code, course_code):
     return response['data'][0]
 
 
-# "data" : [ {
-#     "sem_code" : "201710",
-#     "sem_name" : "First Semester 2017-18",
-#     "crse_code" : "ENGL01-FH",
-#     "crse_name" : "Prep. English I",
-#     "sec_code" : "01",
-#     "crn" : "15897",
-#     "stu_id" : "201721930",
-#     "stu_name_engl" : "ALMUKHTAR, HASSAN ALI",
-#     "stu_name_arab" : "حسن بن علي بن حبيب المختار",
-#     "stu_mobile" : "0541088145",
-#     "stu_email" : "s201721930@kfupm.edu.sa",
-#     "reg_date" : "2017-08-24T07:51:23.000+03:00",
-#     "grade" : {
-#       "@nil" : "true"
-#     }
-
-def initial_roster_creation(course_offering):
+def initial_roster_creation(course_offering, commit=False):
+    """
+    Method Summary: 
+    :param course_offering: an ID of the course offering
+    :param commit
+    
+    Note: We are requesting these information via the web-service
+    
+    There are sections 1, 2 and 3 in this method when commit is True
+        section 1: Will populate all new sections/students/enrollments.
+        section 2: Will deactivate any record that was moved to other section/deleted.
+        section 3: assigning instructors to their scheduled periods.
+    """
+    # Web-service retrieval
     # results = request_class_roaster('201630', 'ENGL02-SM')
     json_data = open('/home/malnajdi/Projects/Django/darajati/darajati/banner_integration/roaster.json')
     results = json.load(json_data)
+
+    # Course offering
+    course_offering = CourseOffering.get_course_offering(course_offering)
+    inactive_sections = Section.objects.filter(course_offering__exact=course_offering)
+    inactive_sections_count = 0
+
+    # Bulk Lists to report and to commit
     students = []
     sections = []
     enrollments = []
-    total_student_in_section = 0
-
-    course_offering = CourseOffering.get_course_offering(course_offering)
+    crn = []
 
     for result in results['data']:
-        section = '{}-{}'.format(course_offering.course.code, result['sec_code'])
-        is_section_exists = Section.is_section_exists(course_offering, section)
-        is_student_exists = Student.is_student_exists(result['stu_email'])
-        student = None
-        """
-        If the current section do not exists.
-        """
-        if not is_section_exists:
-            section, created = Section.get_create_section(course_offering, section, result['crn'])
-            sections.append(section)
+        # Initialize non existing sections
+        section_code = '{}-{}'.format(course_offering.course.code, result['sec_code'])
+        if not Section.is_section_exists(course_offering, section_code):
+            section = Section(course_offering=course_offering,
+                              code=section_code,
+                              crn=result['crn'])
+            if section.crn not in crn:
+                sections.append(section)
+                crn.append(section.crn)
+        else:
+            section = Section.objects.get(course_offering__exact=course_offering,
+                                          code__exact=section_code)
 
-            student, created = Student.get_create_student(
-                result['stu_email'][:10],
-                result['stu_id'],
-                result['stu_id'],
-                result['stu_name_engl'],
-                result['stu_name_arab'],
-                result['stu_mobile'],
-                result['stu_email'])
-            students.append(
-                {'student_id': result['stu_id'],
-                 'student_name': result['stu_name_engl'],
-                 'student_email': result['stu_email']}
+        # Initialize non students sections
+        if not Student.is_student_exists(result['stu_email']):
+            user, created = User.objects.get_or_create(username=result['stu_email'][:10])
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            student = Student(
+                user_profile=profile,
+                university_id=result['stu_id'],
+                government_id=result['stu_id'],
+                english_name=result['stu_name_engl'],
+                arabic_name=result['stu_name_arab'],
+                mobile=result['stu_mobile'],
+                personal_email=result['stu_email'],
+                active=True)
+            students.append(student)
+
+        # Remove active sections from inactive list
+        if section in inactive_sections:
+            inactive_sections = inactive_sections.exclude(
+                id=section.id
             )
 
-            Enrollment.get_create_enrollment(
-                student=student,
-                section=section,
-                register_date=result['reg_date']
+    inactive_sections_count = len(inactive_sections)
+    if commit:
+        with transaction.atomic():
+            """
+            :param commit
+            If the commit option was set to True we then only commit the changes.
+            """
+            # 1.1. Create section or get it if exists
+            Section.objects.bulk_create(
+                sections
+            )
+            # 1.2. Create student or get it if exists
+            Student.objects.bulk_create(
+                students
             )
 
-            enrollments.append(
-                {'student': result['stu_id'],
-                 'section': section}
-            )
-        """
-        If the current section do exists.
-        """
-        if is_section_exists:
-            section = Section.objects.get(code__exact=section)
+        for result in results['data']:
+            # Initialize non existing enrollments
+            section_code = '{}-{}'.format(course_offering.course.code, result['sec_code'])
+            section = Section.objects.get(course_offering__exact=course_offering,
+                                          code__exact=section_code)
+            student = Student.objects.get(personal_email__exact=result['stu_email'])
 
-            if not is_student_exists:
-                # Create Student
-                student, created = Student.get_create_student(
-                    result['stu_email'][:10],
-                    result['stu_id'],
-                    result['stu_id'],
-                    result['stu_name_engl'],
-                    result['stu_name_arab'],
-                    result['stu_mobile'],
-                    result['stu_email'])
-                students.append(
-                    {'student_id': result['stu_id'],
-                     'student_name': result['stu_name_engl'],
-                     'student_email': result['stu_email']}
-                )
-
-            # Get the enrollment if exists
             if not Enrollment.is_enrollment_exists(student, section):
-                enrollment, created = Enrollment.get_create_enrollment(
-                    student=student,
+                enrollment = Enrollment(
                     section=section,
+                    student=student,
                     register_date=result['reg_date']
                 )
-                enrollments.append(
-                    {'student': result['stu_id'],
-                     'section': section}
-                )
+                enrollments.append(enrollment)
+        with transaction.atomic():
+            # # 1.3. Create enrollment or get it if exists
+            Enrollment.objects.bulk_create(
+                enrollments
+            )
+            # # 2.1 Delete the inactive sections with CASCADE
+            if inactive_sections_count:
+                inactive_sections.update()
 
-
-
-        # TODO: Delete section
-    return sections, students
-
-# university_id
-# government_id
-# english_name =
-# arabic_name =
-# mobile = model
-# personal_email
-# active = model
+    return sections, students, enrollments, inactive_sections_count
