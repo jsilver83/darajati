@@ -218,6 +218,7 @@ class Section(models.Model):
                                      default=RoundTypes.NONE,
                                      help_text=_('Total grade rounding method for letter grade calculation'))
     crn = models.CharField(_('CRN'), max_length=100, null=True, blank=False)
+    active = models.BooleanField(_('Active'), default=False)
 
     def __str__(self):
         return to_string(self.course_offering.semester.code, self.course_offering.course.code, self.code)
