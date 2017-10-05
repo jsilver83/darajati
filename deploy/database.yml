@@ -1,5 +1,8 @@
-- name: Deploy Darajati database
+- name: Deploy darajati database
   hosts: database-servers
+
+  vars:
+    vault_url: https://vault.itc.kfupm.edu.sa
 
   vars_prompt:
     - name: ad_username
@@ -18,19 +21,18 @@
 
     - name: Vault authentication
       uri:
-        url: https://vault-1.test.kfupm.edu.sa:8200/v1/auth/ldap/login/{{ ad_username }}
+        url: "{{ vault_url }}/v1/auth/ldap/login/{{ ad_username }}"
         method: POST
         body: {"password": "{{ ad_password }}"}
         body_format: json
-        validate_certs: no
       connection: local
       register: auth
 
     - name: Retrieve database password from Vault
       uri:
-        url: https://vault-1.test.kfupm.edu.sa:8200/v1/secret/{{ env }}/apps/darajati/database_password
-        HEADER_X-Vault-Token: "{{ auth.json.auth.client_token }}"
-        validate_certs: no
+        url: "{{ vault_url }}/v1/secret/{{ env }}/database/apps/darajati/database_password"
+        headers:
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
       connection: local
       register: database_password
 

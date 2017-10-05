@@ -21,13 +21,18 @@ Requirements
 
     The rest of this document assumes that the `vault` binary is in your path.
 
+3. KFUPM enterprise CA.
+
+    To install the KFUPM enterprise CA follow the developer-guide at
+    http://docs.itc.kfupm.edu.sa/doc/developer-guide/developer-guide.html#_managing_secrets
+
 
 Create the Secrets in Vault
 ---------------------------
 
 1. Authenticate to Vault:
 
-        $ VAULT_SKIP_VERIFY=1 VAULT_ADDR="https://vault-1.test.kfupm.edu.sa:8200" vault auth -method=ldap username=<your-AD-username>
+        $ vault auth -address https://vault.itc.kfupm.edu.sa -method=ldap username=<username>
 
 2. Generate the application's secret key by running the following one-liner in a
    Python 3 shell:
@@ -47,7 +52,7 @@ Create the Secrets in Vault
 
 3. Write the secret key to Vault:
 
-	    VAULT_SKIP_VERIFY=1 VAULT_ADDR="https://vault-1.test.kfupm.edu.sa:8200" vault write secret/testing/apps/darajati/secret_key value=<generated-secret-key>
+        $ vault write -address https://vault.itc.kfupm.edu.sa secret/testing/operations/apps/darajati/secret_key value="<generated-secret-key>"
 
     where `<generated-secret-key>` is the key you generated in the previous step.
 
@@ -56,11 +61,11 @@ Create the Secrets in Vault
     Use https://www.grc.com/passwords.htm to generate secure passwords (use the
     second or third red random string boxes; do not use the first!).
 
-        $ VAULT_SKIP_VERIFY=1 VAULT_ADDR="https://vault-1.test.kfupm.edu.sa:8200" vault write secret/testing/apps/darajati/database_password value=<generated-database-password>
+        $ vault write -address https://vault.itc.kfupm.edu.sa secret/testing/database/apps/darajati/database_password value=<generated-database-password>
 
 5. Generate and write a new email password to Vault.
 
-	    $ VAULT_SKIP_VERIFY=1 VAULT_ADDR="https://vault-1.test.kfupm.edu.sa:8200" vault write secret/testing/apps/darajati/email_password value=<generated-email-password>
+        $ vault write -address https://vault.itc.kfupm.edu.sa secret/testing/email/apps/darajati/email_password value=<generated-email-password>
 
 6. Change the email password of the application email user: log into
    https://mail.kfupm.edu.sa/ using the application user, e.g. `darajati@kfupm.edu.sa`, and change the password to the
@@ -76,20 +81,16 @@ Application Deployment
 
 2. Install the required Ansible roles.
 
-        $ ansible-galaxy install -f -r requirements.yml
-
-    This is almost always required. However, it is not required if you are not
-    using any pre-defined roles, or if you have the `ansible-roles` repository
-    at `../../config` relative to the root of this repository.
+        $ rm -rf roles
+        $ ansible-galaxy install -r requirements.yml
 
     You will need to execute this command every time your application upgrades
     the version it is using of any of its dependency roles, in order to get the
     current version of the role.
 
-    If you run into an issue where https://vault-1.test.kfupm.edu.sa:8200 is not
-    responding, then edit the files `application.yml` and `database.yml`, and
-    replace Change the lines with https://vault-1.test.kfupm.edu.sa:8200 with
-    https://vault-2.test.kfupm.edu.sa:8200
+    NOTE: `ansible-galaxy install -f -r requirements.yml` is not enough; you
+    must remove all installed roles and reinstall them using the two commands
+    listed above.
 
 3. Create the application database by running the database playbook:
 
