@@ -150,6 +150,10 @@ class Instructor(Person):
         """
         return True if Instructor.objects.filter(user_profile=user) else False
 
+    @staticmethod
+    def is_instructor_exists(email):
+        return Instructor.objects.filter(personal_email__exact=email).exists()
+
 
 class Semester(models.Model):
     start_date = models.DateTimeField(_('start date'))
@@ -297,6 +301,7 @@ class Coordinator(models.Model):
 class Enrollment(models.Model):
     class Meta:
         unique_together = ('student', 'section')
+        ordering = ['student__university_id']
 
     student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)

@@ -1,7 +1,9 @@
 import requests, json
 from django.conf import settings
 from django.contrib.auth.models import User
-from enrollment.models import Section, Enrollment, Student, CourseOffering, UserProfile
+from django.utils.dateparse import parse_time
+from enrollment.models import Section, Enrollment, Student, CourseOffering, UserProfile, Instructor
+from attendance.models import ScheduledPeriod
 from django.db import transaction
 
 
@@ -148,7 +150,7 @@ def initial_roster_creation(course_offering, commit=False):
                 register_date=result['reg_date'],
                 letter_grade=result['grade']
             )
-            move_enrollment = Enrollment.objects.get(student=student, section__course_offering=course_offering)
+            move_enrollment = Enrollment.objects.filter(student=student, section__course_offering=course_offering).first()
             if move_enrollment:
                 if commit:
                     move_enrollment.active = False
@@ -199,3 +201,77 @@ def initial_roster_creation(course_offering, commit=False):
                 inactive_sections.update(active=False)
 
     return sections, students, enrollments, inactive_sections_count
+
+
+def initial_faculty_teaching_creation(course_offering, commit=False):
+    json_data = open('/home/malnajdi/Projects/Django/darajati/darajati/banner_integration/faculty.json')
+    results = json.load(json_data)
+
+    instructors = []
+    scheduled_periods = []
+
+    course_offering = CourseOffering.get_course_offering(course_offering)
+
+    # Instructor Initialization
+    for result in results['data']:
+        section_code = str(result['course_section']).split('-')
+        section_code = '{}-{}'.format(section_code[0], section_code[2])
+        section = Section.objects.get(course_offering__exact=course_offering,
+                                      code__exact=section_code)
+
+        if not Instructor.is_instructor_exists(result['fac_email']):
+            user, created = User.objects.get_or_create(username=result['fac_user'])
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            instructor, created = Instructor.objects.get_or_create(
+                user_profile=profile,
+                university_id=result['fac_id'],
+                government_id=result['fac_id'],
+                english_name=result['fac_name'],
+                arabic_name=result['fac_name'],
+                personal_email=result['fac_email'],
+                active=True)
+
+            instructors.append(instructor)
+        else:
+            instructor = Instructor.objects.get(personal_email__exact=result['fac_email'])
+
+        for day in map(str, result['class_days']):
+            current_day = None
+
+            if day == 'U':
+                current_day = ScheduledPeriod.Days.SUNDAY
+            if day == 'M':
+                current_day = ScheduledPeriod.Days.MONDAY
+            if day == 'T':
+                current_day = ScheduledPeriod.Days.TUESDAY
+            if day == 'W':
+                current_day = ScheduledPeriod.Days.WEDNESDAY
+            if day == 'R':
+                current_day = ScheduledPeriod.Days.THURSDAY
+
+            start_time = list(map(str, result['start_time']))
+            start_time = start_time[0] + start_time[1] + ':' + start_time[2] + start_time[3]
+            end_time = list(map(str, result['end_time']))
+            end_time = end_time[0] + end_time[1] + ':' + end_time[2] + end_time[3]
+
+            # TODO: check if period exists .
+            scheduled_period = ScheduledPeriod(
+                section=section,
+                instructor_assigned=instructor,
+                day=current_day,
+                title=result['activity'],
+                start_time=start_time,
+                end_time=end_time,
+                location=result['bldg'] + ' ' + result['room'],
+                late_deduction=1,
+                absence_deduction=1
+            )
+
+            scheduled_periods.append(scheduled_period)
+
+    if commit:
+        ScheduledPeriod.objects.bulk_create(
+            scheduled_periods
+        )
+
+    return instructors, scheduled_periods

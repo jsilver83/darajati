@@ -1,19 +1,18 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
-
 from enrollment.models import Section, Enrollment
 from grade.models import GradeFragment, StudentGrade
 
 
 # @shared_task()
-def get_students_enrollment_grades(now):
+def get_students_enrollment_grades():
     """
     :return:
     """
 
     count = 0
     enrollments = []
-    sections = Section.get_sections(now)
+    sections = Section.get_sections()
     messages = []
     if not sections:
         return "There is no sections available to create grades for - 'Scheduled Task - get_students_enrollment_grades'"

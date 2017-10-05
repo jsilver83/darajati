@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 from .forms import CourseOfferingForm
-from .utils import initial_roster_creation
+from .utils import initial_roster_creation, initial_faculty_teaching_creation
 
 from enrollment.models import CourseOffering
 
@@ -20,6 +20,9 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
     student_report = None
     enrollment_report = None
     inactive_sections_count = None
+
+    instructors = None
+    periods = None
 
     def get_form_kwargs(self):
         """
@@ -41,6 +44,10 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
             form.cleaned_data['course_offering'],
             form.cleaned_data['commit_changes'])
 
+        self.instructors, self.periods = initial_faculty_teaching_creation(
+            form.cleaned_data['course_offering'],
+            form.cleaned_data['commit_changes'])
+
         context = self.get_context_data(**kwargs)
 
         context['report'] = False
@@ -53,8 +60,11 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
             context['enrollment_report'] = self.enrollment_report
             context['inactive_sections_count'] = self.inactive_sections_count
             context['detail_report'] = False
-
             if form.cleaned_data['detail_report']:
                 context['detail_report'] = True
+
+        if self.instructors or self.periods:
+            context['instructors'] = self.instructors
+            context['periods'] = self.periods
 
         return self.render_to_response(context)
