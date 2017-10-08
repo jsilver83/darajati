@@ -54,10 +54,16 @@ def initial_roster_creation(course_offering, commit=False):
     inactive_enrollments = Enrollment.objects.filter(section__course_offering=course_offering)
     inactive_sections_count = 0
 
-    # Bulk Lists to report and to commit
+    # Bulk Lists to commit
     students = []
     sections = []
     enrollments = []
+
+    # Reports
+    section_report = []
+    student_report = []
+    enrollment_report = []
+
     crn = []
 
     for result in results['data']:
@@ -70,13 +76,17 @@ def initial_roster_creation(course_offering, commit=False):
                               active=True)
             if section.crn not in crn:
                 sections.append(section)
+                section_report.append({'section': section, 'code': 'CREATE', 'message': 'New section to be created.'})
                 crn.append(section.crn)
         else:
             section = Section.objects.get(course_offering__exact=course_offering,
                                           code__exact=section_code)
             if not section.active:
                 section.active = True
-                section.save()
+                if commit:
+                    section.save()
+                section_report.append(
+                    {'section': section, 'code': 'ACTIVE', 'message': 'Existing section to re-activate'})
 
         # Initialize non students sections
         if not Student.is_student_exists(result['stu_email']):
@@ -91,6 +101,7 @@ def initial_roster_creation(course_offering, commit=False):
                 mobile=result['stu_mobile'],
                 personal_email=result['stu_email'],
                 active=True)
+            student_report.append({'section': student, 'code': 'CREATE', 'message': 'New student to be created'})
             students.append(student)
 
         # Remove active sections from inactive list
@@ -150,13 +161,19 @@ def initial_roster_creation(course_offering, commit=False):
                 register_date=result['reg_date'],
                 letter_grade=result['grade']
             )
-            move_enrollment = Enrollment.objects.filter(student=student, section__course_offering=course_offering).first()
+            code = 'CREATED'
+            message = 'Enrollment to be created'
+            # This is to check if this student has any enrollment in any section in this course offering
+            move_enrollment = Enrollment.objects.filter(student=student,
+                                                        section__course_offering=course_offering).first()
+
             if move_enrollment:
                 if commit:
                     move_enrollment.active = False
                     move_enrollment.comment = "Moved to section {}".format(section.code)
                     move_enrollment.letter_grade = "MOVED"
                     move_enrollment.save()
+
                 enrollment = Enrollment(
                     section=section,
                     student=student,
@@ -164,6 +181,10 @@ def initial_roster_creation(course_offering, commit=False):
                     letter_grade=result['grade'],
                     comment="Moved from section {}".format(move_enrollment.section.code)
                 )
+                code = 'MOVED'
+                message = 'Moved from section {} to section {}'.format(
+                                              move_enrollment.section.code,
+                                              section.code)
 
             if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
                 comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
@@ -175,21 +196,48 @@ def initial_roster_creation(course_offering, commit=False):
                     comment=comment,
                     active=False
                 )
+                code = 'DROP'
+                message = 'Dropped with grade {}'.format(str(result['grade']).lower())
+
             enrollments.append(enrollment)
+            enrollment_report.append({'enrollment': enrollment, 'code': code, 'message': message})
         else:
             enrollment = Enrollment.objects.get(student=student, section=section)
+            if not enrollment.active:
+                enrollment.active = True
+
             if enrollment.letter_grade != result['grade']:
                 if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
                     enrollment.comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
                     enrollment.active = False
-                enrollment.letter_grade = result['grade']
-                if commit:
-                    enrollment.save()
+                    enrollment_report.append({'enrollment': enrollment,
+                                              'code': 'DROP',
+                                              'message': 'Dropped with grade {}'.format(str(result['grade']).lower())})
+                else:
+                    enrollment_report.append({'enrollment': enrollment,
+                                              'code': 'Grade Changed',
+                                              'message': 'Grade changed from {} to {}'.format(
+                                                  enrollment.letter_grade,
+                                                  str(result['grade']).lower())})
+                    enrollment.letter_grade = result['grade']
+            if commit:
+                enrollment.save()
 
             inactive_enrollments = inactive_enrollments.exclude(student=student, section=section)
 
+    inactive_enrollments = inactive_enrollments.exclude(letter_grade="MOVED")
+
+    for inactive_enrollment in inactive_enrollments:
+        enrollment_report.append(
+            {'enrollment': inactive_enrollment, 'code': 'INACTIVE', 'message': 'enrollment will be de-activated'}
+        )
+
+    for inactive_section in inactive_sections:
+        section_report.append(
+            {'section': inactive_section, 'code': 'INACTIVE', 'message': 'section will be de-activated'}
+        )
+
     if commit:
-        inactive_enrollments = inactive_enrollments.exclude(letter_grade="MOVED")
         inactive_enrollments.update(comment="Deleted without grade", active=False)
         with transaction.atomic():
             # # 1.3. Create enrollment or get it if exists
@@ -200,7 +248,7 @@ def initial_roster_creation(course_offering, commit=False):
             if inactive_sections_count:
                 inactive_sections.update(active=False)
 
-    return sections, students, enrollments, inactive_sections_count
+    return section_report, student_report, enrollment_report
 
 
 def initial_faculty_teaching_creation(course_offering, commit=False):
@@ -209,31 +257,51 @@ def initial_faculty_teaching_creation(course_offering, commit=False):
 
     instructors = []
     scheduled_periods = []
-
+    periods_report = []
+    inactive_periods = None
     course_offering = CourseOffering.get_course_offering(course_offering)
-
-    # Instructor Initialization
+    # Instructor and Periods Initialization
     for result in results['data']:
         section_code = str(result['course_section']).split('-')
         section_code = '{}-{}'.format(section_code[0], section_code[2])
-        section = Section.objects.get(course_offering__exact=course_offering,
-                                      code__exact=section_code)
+
+        if not Section.is_section_exists(course_offering, section_code):
+            section = Section(
+                course_offering=course_offering,
+                code=section_code,
+                active=True
+            )
+        else:
+            section = Section.objects.get(course_offering__exact=course_offering,
+                                          code__exact=section_code)
 
         if not Instructor.is_instructor_exists(result['fac_email']):
             user, created = User.objects.get_or_create(username=result['fac_user'])
             profile, created = UserProfile.objects.get_or_create(user=user)
-            instructor, created = Instructor.objects.get_or_create(
-                user_profile=profile,
-                university_id=result['fac_id'],
-                government_id=result['fac_id'],
-                english_name=result['fac_name'],
-                arabic_name=result['fac_name'],
-                personal_email=result['fac_email'],
-                active=True)
+            if commit:
+                instructor, created = Instructor.objects.get_or_create(
+                    user_profile=profile,
+                    university_id=result['fac_id'],
+                    government_id=result['fac_id'],
+                    english_name=result['fac_name'],
+                    arabic_name=result['fac_name'],
+                    personal_email=result['fac_email'],
+                    active=True)
+            else:
+                instructor = Instructor(
+                    user_profile=profile,
+                    university_id=result['fac_id'],
+                    government_id=result['fac_id'],
+                    english_name=result['fac_name'],
+                    arabic_name=result['fac_name'],
+                    personal_email=result['fac_email'],
+                    active=True)
 
             instructors.append(instructor)
         else:
             instructor = Instructor.objects.get(personal_email__exact=result['fac_email'])
+
+        # inactive_periods += ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor)
 
         for day in map(str, result['class_days']):
             current_day = None
@@ -254,24 +322,30 @@ def initial_faculty_teaching_creation(course_offering, commit=False):
             end_time = list(map(str, result['end_time']))
             end_time = end_time[0] + end_time[1] + ':' + end_time[2] + end_time[3]
 
-            # TODO: check if period exists .
-            scheduled_period = ScheduledPeriod(
-                section=section,
-                instructor_assigned=instructor,
-                day=current_day,
-                title=result['activity'],
-                start_time=start_time,
-                end_time=end_time,
-                location=result['bldg'] + ' ' + result['room'],
-                late_deduction=1,
-                absence_deduction=1
-            )
+            if not ScheduledPeriod.is_period_exists(section, instructor, current_day, start_time, end_time):
+                scheduled_period = ScheduledPeriod(
+                    section=section,
+                    instructor_assigned=instructor,
+                    day=current_day,
+                    title=result['activity'],
+                    start_time=start_time,
+                    end_time=end_time,
+                    location=result['bldg'] + ' ' + result['room'],
+                    late_deduction=1,
+                    absence_deduction=1
+                )
 
-            scheduled_periods.append(scheduled_period)
+                scheduled_periods.append(scheduled_period)
+                periods_report.append({
+                    'period': scheduled_period, 'code': 'CREATE', 'message': 'New period to be created'
+                })
+            else:
+                # TODO: If period
+                pass
 
     if commit:
         ScheduledPeriod.objects.bulk_create(
             scheduled_periods
         )
 
-    return instructors, scheduled_periods
+    return instructors, periods_report
