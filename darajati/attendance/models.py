@@ -45,7 +45,11 @@ class ScheduledPeriod(models.Model):
                                             decimal_places=settings.MAX_DECIMAL_POINT)
 
     def __str__(self):
-        return to_string(self.section.code, self.instructor_assigned.english_name, self.day, self.start_time,
+        return to_string(self.section.course_offering,
+                         self.section.code,
+                         self.instructor_assigned.english_name,
+                         self.day,
+                         self.start_time,
                          self.end_time)
 
     @staticmethod
@@ -120,6 +124,12 @@ class ScheduledPeriod(models.Model):
 
         return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
                                                                 instructor_assigned=instructor)
+
+    @staticmethod
+    def is_period_exists(section, instructor, day, start_time, end_time):
+        return ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor, day=day,
+                                              start_time=start_time,
+                                              end_time=end_time).exists()
 
 
 class AttendanceInstance(models.Model):
