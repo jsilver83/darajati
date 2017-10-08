@@ -143,7 +143,7 @@ class StudentGrade(models.Model):
             grades = StudentGrade.objects.filter(
                 grade_fragment=grade_fragment,
                 grade_fragment__course_offering=section.course_offering
-            ).values().aggregate(
+            ).exclude(grade_quantity=None).values().aggregate(
                 sum=Sum('grade_quantity'),
                 count=Count('id'),
             )
