@@ -18,6 +18,8 @@
     admins:
       - name: abdullah joud
         email: joud@kfupm.edu.sa
+      - name: mohammed alnajdi
+        email: malnajdi@kfupm.edu.sa
     uwsgi_processes: 2
 
   vars_prompt:
