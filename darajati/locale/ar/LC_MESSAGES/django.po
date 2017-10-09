@@ -1,0 +1,225 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-04-23 14:59+0300\n"
+"PO-Revision-Date: 2017-04-23 15:00+0300\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"X-Generator: Poedit 1.8.11\n"
+
+#: attendance/models.py:18
+msgid "Sunday"
+msgstr ""
+
+#: attendance/models.py:19
+msgid "Monday"
+msgstr ""
+
+#: attendance/models.py:20
+msgid "Tuesday"
+msgstr ""
+
+#: attendance/models.py:21
+msgid "Wednesday"
+msgstr ""
+
+#: attendance/models.py:22
+msgid "Thursday"
+msgstr ""
+
+#: attendance/models.py:23
+msgid "Friday"
+msgstr ""
+
+#: attendance/models.py:24
+msgid "Saturday"
+msgstr ""
+
+#: attendance/models.py:33
+msgid "start time"
+msgstr ""
+
+#: attendance/models.py:34
+msgid "end time"
+msgstr ""
+
+#: attendance/models.py:36
+msgid "late deduction"
+msgstr ""
+
+#: attendance/models.py:37
+msgid "absence deduction"
+msgstr ""
+
+#: darajati/settings.py:126 enrollment/models.py:19
+msgid "Arabic"
+msgstr ""
+
+#: darajati/settings.py:127 enrollment/models.py:20
+msgid "English"
+msgstr ""
+
+#: darajati/templates/base.html:14
+msgid "Darajati - King Fahd University of Petroleum and Minerals"
+msgstr ""
+
+#: darajati/templates/base.html:44
+msgid "Loading..."
+msgstr ""
+
+#: darajati/templates/base.html:53
+msgid "Darajati"
+msgstr ""
+
+#: darajati/templates/base.html:66
+msgid "Logout"
+msgstr ""
+
+#: darajati/templates/base.html:87
+msgid "2017 © All rights reserved"
+msgstr ""
+
+#: darajati/templates/base.html:88
+msgid "King Fahd University of Petroleum & Minerals"
+msgstr ""
+
+#: darajati/templates/login.html:17
+msgid "Login"
+msgstr ""
+
+#: darajati/templates/unauthorized.html:6
+msgid "You are not authorized to access this website"
+msgstr ""
+
+#: enrollment/admin.py:6
+msgid "Darajati Admin"
+msgstr ""
+
+#: enrollment/admin.py:7
+msgid "Darajati Administration"
+msgstr ""
+
+#: enrollment/models.py:10
+msgid "UserProfile"
+msgstr "الملف الشخصي"
+
+#: enrollment/models.py:26
+msgid "preferred language"
+msgstr ""
+
+#: enrollment/models.py:52
+msgid "university id"
+msgstr ""
+
+#: enrollment/models.py:53
+msgid "government id"
+msgstr ""
+
+#: enrollment/models.py:54 enrollment/models.py:114 enrollment/models.py:123
+msgid "english name"
+msgstr ""
+
+#: enrollment/models.py:55 enrollment/models.py:115 enrollment/models.py:124
+msgid "arabic name"
+msgstr ""
+
+#: enrollment/models.py:56
+msgid "mobile"
+msgstr ""
+
+#: enrollment/models.py:57
+msgid "personal email"
+msgstr ""
+
+#: enrollment/models.py:58
+msgid "is_active"
+msgstr ""
+
+#: enrollment/models.py:104
+msgid "start date"
+msgstr ""
+
+#: enrollment/models.py:105
+msgid "end date"
+msgstr ""
+
+#: enrollment/models.py:126
+msgid "attendance window"
+msgstr ""
+
+#: enrollment/models.py:177
+msgid "letter grade"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:6
+msgid "Welcome, You will find your current enrolled sections"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:11
+#: enrollment/templates/enrollment/period_details.html:11
+msgid "Semester Code"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:12
+#: enrollment/templates/enrollment/period_details.html:12
+msgid "Course Code"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:13
+#: enrollment/templates/enrollment/period_details.html:13
+msgid "Course Name"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:14
+#: enrollment/templates/enrollment/period_details.html:14
+msgid "Section Code"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:15
+msgid "Attendances"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:16
+msgid "Students"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:26
+msgid "View/Edit"
+msgstr ""
+
+#: enrollment/templates/enrollment/instructor_sections.html:27
+msgid "View"
+msgstr ""
+
+#: enrollment/templates/enrollment/period_details.html:6
+#: enrollment/templates/enrollment/section_students.html:6
+msgid "Welcome"
+msgstr ""
+
+#: enrollment/templates/enrollment/period_details.html:15
+msgid "Class Times"
+msgstr ""
+
+#: enrollment/templates/enrollment/section_students.html:11
+msgid "Name"
+msgstr ""
+
+#: enrollment/templates/enrollment/section_students.html:12
+msgid "ID"
+msgstr ""
+
+#: enrollment/templates/enrollment/section_students.html:13
+msgid "Active"
+msgstr ""
