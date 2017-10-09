@@ -21,12 +21,17 @@
                 </div>
                 <div class="btn-group avail-attend-days">
                     {% for period in periods %}
-                        {% if period.day|lower == current_day|lower %}
-                            <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-                               class="btn green days active-period" role="button"> {{ period.day }} <span class="attend-date">20-07-2017</span></a>
+                        {% if period.date == current_date %}
+                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.period.section_id %}"
+                               class="btn green days active-period" role="button"> {{ period.period.day }}
+                            <span class="attend-date">{{ period.date }}</span>
+                            </a>
+
                         {% else %}
-                            <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-                               class="btn green days" role="button"> {{ period.day }} <span class="attend-date">20-07-2017</span></a>
+                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.period.section_id %}"
+                               class="btn green days" role="button"> {{ period.period.day }}
+                            <span class="attend-date">{{ period.date }}</span>
+                            </a>
                         {% endif %}
                     {% endfor %}
                 </div>

@@ -2,22 +2,40 @@ from extra_views import FormSetView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.dateparse import parse_date, parse_datetime
 from .forms import AttendanceForm
-from .models import ScheduledPeriod, Attendance
+from .models import ScheduledPeriod, Attendance, AttendanceInstance
 
-from enrollment.utils import today, now
+from enrollment.utils import today, day_string, get_offset_day, now
 from enrollment.models import Enrollment, Section
 from enrollment.views import InstructorBaseView
 
 
 class AttendanceBaseView(InstructorBaseView):
+    year = None
+    month = None
     day = None
+    date = None
 
     def dispatch(self, request, *args, **kwargs):
-        if self.kwargs.get('day'):
+        self.date = today()
+        if self.kwargs.get('year') and self.kwargs.get('month') and self.kwargs.get('day'):
+            self.year = self.kwargs['year']
+            self.month = self.kwargs['month']
             self.day = self.kwargs['day']
+            self.date = parse_date('{}-{}-{}'.format(self.year, self.month, self.day))
         return super(AttendanceBaseView, self).dispatch(request, *args, **kwargs)
+
+    def test_func(self, **kwargs):
+        rule = super(AttendanceBaseView, self).test_func(**kwargs)
+        periods = ScheduledPeriod.is_allowed_section_periods(self.section_id,
+                                                             self.request.user.profile.instructor,
+                                                             day_string(self.date),
+                                                             self.date)
+        if periods and rule and self.date <= today():
+            return True
+        messages.error(self.request, _('You can not access this day'))
+        return False
 
 
 class AttendanceView(AttendanceBaseView, FormSetView):
@@ -26,9 +44,9 @@ class AttendanceView(AttendanceBaseView, FormSetView):
     extra = 0
 
     def get_initial(self):
-        return Enrollment.get_students_enrollment(self.section_id, today(),
+        return Enrollment.get_students_enrollment(self.section_id,
                                                   self.request.user.profile.instructor,
-                                                  self.day)
+                                                  self.date)
 
     def formset_valid(self, formset):
         for form in formset:
@@ -41,14 +59,19 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
-        context['periods'] = ScheduledPeriod.get_section_periods(self.section_id,
-                                                                 self.request.user.profile.instructor)
+        offset_date, day = get_offset_day(today(), -6)
+        context['periods'] = AttendanceInstance.objects.filter(
+            period__section=self.section,
+            period__instructor_assigned=self.request.user.profile.instructor,
+            date__lte=today(),
+            date__gte=offset_date,
+        ).distinct('date').order_by('date')
+
         day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
             self.section_id,
             self.request.user.profile.instructor,
-            today(),
-            self.day)
-        context['current_day'] = day
+            self.date)
+        context['current_date'] = period_date
         context['enrollments'] = Attendance.get_student_attendance(self.section_id)
         return context
 
@@ -60,8 +83,8 @@ class AttendanceView(AttendanceBaseView, FormSetView):
     def get_success_url(self):
         if self.day:
             return reverse_lazy('attendance:section_day_attendance',
-                                kwargs={'section_id': self.section_id, 'day': self.day})
+                                kwargs={'section_id': self.section_id, 'year': self.year, 'month': self.month,
+                                        'day': self.day})
 
         return reverse_lazy('attendance:section_attendance',
                             kwargs={'section_id': self.section_id})
-

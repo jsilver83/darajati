@@ -50,7 +50,7 @@ def initial_roster_creation(course_offering, commit=False):
 
     # Course offering
     course_offering = CourseOffering.get_course_offering(course_offering)
-    inactive_sections = Section.objects.filter(course_offering__exact=course_offering)
+    inactive_sections = Section.objects.filter(course_offering=course_offering)
     inactive_enrollments = Enrollment.objects.filter(section__course_offering=course_offering)
     inactive_sections_count = 0
 
@@ -183,8 +183,8 @@ def initial_roster_creation(course_offering, commit=False):
                 )
                 code = 'MOVED'
                 message = 'Moved from section {} to section {}'.format(
-                                              move_enrollment.section.code,
-                                              section.code)
+                    move_enrollment.section.code,
+                    section.code)
 
             if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
                 comment = 'Dropped with grade {}'.format(str(result['grade']).lower())

@@ -7,6 +7,7 @@ from .types import RoundTypes
 from .utils import to_string, now
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
+
 User = settings.AUTH_USER_MODEL
 
 
@@ -156,10 +157,10 @@ class Instructor(Person):
 
 
 class Semester(models.Model):
-    start_date = models.DateTimeField(_('start date'))
-    end_date = models.DateTimeField(_('end date'))
-    grade_fragment_deadline = models.DateTimeField(_('Grade Break Down Deadline Date'),
-                                                   null=True, blank=False)
+    start_date = models.DateField(_('start date'))
+    end_date = models.DateField(_('end date'))
+    grade_fragment_deadline = models.DateField(_('Grade Break Down Deadline Date'),
+                                               null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
@@ -307,7 +308,7 @@ class Enrollment(models.Model):
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     active = models.BooleanField(_('Active'), blank=False, default=True)
     comment = models.CharField(_('Comment'), max_length=200, blank=True)
-    letter_grade = models.CharField(_('letter grade'), max_length=10, null=True, blank=False, default='UD')
+    letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=False, default='UD')
     register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
 
     def __str__(self):
@@ -333,7 +334,7 @@ class Enrollment(models.Model):
         )
 
     @staticmethod
-    def get_students_enrollment(section_id, date, instructor, given_day=None):
+    def get_students_enrollment(section_id, instructor, date):
         """
         :param section_id: 
         :param date:
@@ -345,8 +346,7 @@ class Enrollment(models.Model):
 
         enrollments = []
         index = 1
-        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date,
-                                                                                       given_day)
+        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date)
         enrollment_list = Enrollment.get_students(section_id)
         for enrollment in enrollment_list:
             for period in periods:

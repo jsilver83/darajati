@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from enrollment.utils import to_string, get_offset_day
+from enrollment.utils import to_string, get_offset_day, now
 
 User = settings.AUTH_USER_MODEL
 
@@ -94,7 +94,7 @@ class ScheduledPeriod(models.Model):
         return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
 
     @staticmethod
-    def get_section_periods_of_nearest_day(section_id, instructor, date, giving_day=None):
+    def get_section_periods_of_nearest_day(section_id, instructor, date):
         """
         :param section_id: 
         :param giving_day: 
@@ -105,22 +105,13 @@ class ScheduledPeriod(models.Model):
         days_offset = 0
         period_date = None
         day = None
-        if giving_day:
-            while days_offset <= 7:
-                period_date, day = get_offset_day(date, -days_offset)
-                if str(day).lower() == str(giving_day).lower():
-                    days_offset = 8
-                days_offset += 1
-            """
-            When a day is not giving, we provide the attendance of the nearest day.
-            """
-        else:
-            while days_offset <= 7:
-                period_date, day = get_offset_day(date, -days_offset)
-                periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
-                if periods:
-                    days_offset = 8
-                days_offset += 1
+
+        while days_offset <= 7:
+            period_date, day = get_offset_day(date, -days_offset)
+            periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
+            if periods:
+                days_offset = 8
+            days_offset += 1
 
         return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
                                                                 instructor_assigned=instructor)
@@ -130,6 +121,16 @@ class ScheduledPeriod(models.Model):
         return ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor, day=day,
                                               start_time=start_time,
                                               end_time=end_time).exists()
+
+    @staticmethod
+    def is_allowed_section_periods(section, instructor, day, date):
+        return ScheduledPeriod.objects.filter(
+            section=section,
+            instructor_assigned=instructor,
+            day=str(day).upper(),
+            section__course_offering__semester__start_date__lte=date,
+            section__course_offering__semester__end_date__gte=date
+        ).exists()
 
 
 class AttendanceInstance(models.Model):
@@ -157,6 +158,9 @@ class AttendanceInstance(models.Model):
         :return: 
         """
         return AttendanceInstance.objects.filter(period=period, date=date)
+
+    class Meta:
+        ordering = ['-date']
 
 
 class Attendance(models.Model):
