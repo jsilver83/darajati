@@ -1503,7 +1503,7 @@ body {
   font-size: 14px;
   line-height: 16px;
   margin: 0;
-  padding: 10px 20px;
+  padding: 5px 20px;
 }
 .avail-attend-days .days:hover {
   background-color: #333333;
@@ -1512,6 +1512,13 @@ body {
 .avail-attend-days .days.active-period {
   background-color: #333333;
   color: #fff;
+}
+.avail-attend-days .attend-date {
+  display: block;
+  font-size: 12px;
+  line-height: 14px;
+  margin-top: 3px;
+  color: #C5C5C5;
 }
 
 .thm-table {

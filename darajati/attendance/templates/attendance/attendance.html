@@ -23,10 +23,10 @@
                     {% for period in periods %}
                         {% if period.day|lower == current_day|lower %}
                             <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-                               class="btn green days active-period" role="button"> {{ period.day }} </a>
+                               class="btn green days active-period" role="button"> {{ period.day }} <span class="attend-date">20-07-2017</span></a>
                         {% else %}
                             <a href="{% url 'attendance:section_day_attendance' day=period.day|lower section_id=period.section_id %}"
-                               class="btn green days" role="button"> {{ period.day }} </a>
+                               class="btn green days" role="button"> {{ period.day }} <span class="attend-date">20-07-2017</span></a>
                         {% endif %}
                     {% endfor %}
                 </div>
