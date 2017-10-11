@@ -2,7 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from enrollment.utils import to_string, get_offset_day, now
+from enrollment.utils import to_string, get_offset_day, get_dates_in_between, day_string, \
+    get_start_end_dates_of_the_week, get_previous_week, get_next_week
 
 User = settings.AUTH_USER_MODEL
 
@@ -108,13 +109,46 @@ class ScheduledPeriod(models.Model):
 
         while days_offset <= 7:
             period_date, day = get_offset_day(date, -days_offset)
-            periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor)
+            periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor).values_list(
+                'day').distinct('day')
             if periods:
                 days_offset = 8
             days_offset += 1
 
         return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
                                                                 instructor_assigned=instructor)
+
+    @staticmethod
+    def get_section_periods_week_days(section, instructor, current_date, today):
+        dates = get_dates_in_between(current_date)
+        period_dates = []
+        previous_week = None
+        next_week = None
+        last_accessible_date, last_accessible_day = get_offset_day(today,
+                                                                   -section.course_offering.attendance_entry_window)
+
+        for date in dates:
+            day = day_string(date)
+            if last_accessible_date <= date and \
+                    ScheduledPeriod.objects.filter(section=section.id,
+                                                   day__iexact=day,
+                                                   instructor_assigned=instructor
+                                                   ).distinct('day').exists():
+                period_dates.append({'date': date, 'day': day, 'section_id': section.id})
+
+        if current_date > last_accessible_date and not any(
+                        item.get('date', None) == last_accessible_date for item in period_dates):
+            previous_week = get_previous_week(current_date)
+            day = day_string(previous_week)
+            previous_week = {'date': previous_week, 'day': day, 'section_id': section.id}
+
+        if current_date < today and not any(
+                        item.get('date', None) == today for item in period_dates):
+            next_week = get_next_week(current_date)
+            day = day_string(next_week)
+            next_week = {'date': next_week, 'day': day, 'section_id': section.id}
+
+        return period_dates, previous_week, next_week
 
     @staticmethod
     def is_period_exists(section, instructor, day, start_time, end_time):

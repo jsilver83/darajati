@@ -2,12 +2,12 @@ from extra_views import FormSetView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
-from django.utils.dateparse import parse_date, parse_datetime
+from django.utils.dateparse import parse_date
 from .forms import AttendanceForm
-from .models import ScheduledPeriod, Attendance, AttendanceInstance
+from .models import ScheduledPeriod, Attendance
 
-from enrollment.utils import today, day_string, get_offset_day, now
-from enrollment.models import Enrollment, Section
+from enrollment.utils import today, day_string, get_offset_day
+from enrollment.models import Enrollment
 from enrollment.views import InstructorBaseView
 
 
@@ -32,10 +32,24 @@ class AttendanceBaseView(InstructorBaseView):
                                                              self.request.user.profile.instructor,
                                                              day_string(self.date),
                                                              self.date)
-        if periods and rule and self.date <= today():
-            return True
-        messages.error(self.request, _('You can not access this day'))
-        return False
+
+        offset_date, day = get_offset_day(today(), -self.section.course_offering.attendance_entry_window)
+
+        if periods and rule:
+            if self.date <= today():
+                if offset_date <= self.date:
+                    return True
+                else:
+                    messages.error(self.request,
+                                   _('You have passed the allowed time to be able to get to this day'))
+                    return False
+            else:
+                messages.error(self.request,
+                               _('You are trying to access a day in the future'))
+                return False
+        else:
+            messages.error(self.request, _('You can not access this date.'.format(self.section.code)))
+            return False
 
 
 class AttendanceView(AttendanceBaseView, FormSetView):
@@ -59,19 +73,19 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
-        offset_date, day = get_offset_day(today(), -6)
-        context['periods'] = AttendanceInstance.objects.filter(
-            period__section=self.section,
-            period__instructor_assigned=self.request.user.profile.instructor,
-            date__lte=today(),
-            date__gte=offset_date,
-        ).distinct('date').order_by('date')
+        context['periods'], context['previous_week'], context[
+            'next_week'] = ScheduledPeriod.get_section_periods_week_days(
+            self.section,
+            self.request.user.profile.instructor,
+            self.date,
+            today())
 
         day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
             self.section_id,
             self.request.user.profile.instructor,
             self.date)
         context['current_date'] = period_date
+        context['today'] = today()
         context['enrollments'] = Attendance.get_student_attendance(self.section_id)
         return context
 

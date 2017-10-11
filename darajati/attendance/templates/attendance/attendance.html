@@ -20,20 +20,31 @@
                     </div>
                 </div>
                 <div class="btn-group avail-attend-days">
+                    {% if previous_week %}
+                        <a href="{% url 'attendance:section_day_attendance' year=previous_week.date.year month=previous_week.date.month day=previous_week.date.day section_id=previous_week.section_id %}"
+                           class="btn green days" role="button">{% trans 'Previous Week' %}
+                            <span class="attend-date">{{ previous_week.day }}, {{ previous_week.date }}</span>
+                        </a>
+                    {% endif %}
                     {% for period in periods %}
                         {% if period.date == current_date %}
-                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.period.section_id %}"
-                               class="btn green days active-period" role="button"> {{ period.period.day }}
-                            <span class="attend-date">{{ period.date }}</span>
+                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
+                               class="btn green days active-period" role="button"> {{ period.day }}
+                                <span class="attend-date">{{ period.date }}</span>
                             </a>
-
                         {% else %}
-                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.period.section_id %}"
-                               class="btn green days" role="button"> {{ period.period.day }}
-                            <span class="attend-date">{{ period.date }}</span>
+                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
+                               class="btn green days" role="button"> {{ period.day }}
+                                <span class="attend-date">{{ period.date }}</span>
                             </a>
                         {% endif %}
                     {% endfor %}
+                    {% if next_week %}
+                        <a href="{% url 'attendance:section_day_attendance' year=next_week.date.year month=next_week.date.month day=next_week.date.day section_id=next_week.section_id %}"
+                           class="btn green days" role="button">{% trans 'Next Week' %}
+                            <span class="attend-date">{{ next_week.day }}, {{ next_week.date }}</span>
+                        </a>
+                    {% endif %}
                 </div>
                 <div class="thm-table odd period-cntnt">
                     <table class="table">
