@@ -192,7 +192,7 @@ class Course(models.Model):
 class CourseOffering(models.Model):
     semester = models.ForeignKey(Semester, related_name='offering', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offering', null=True, blank=False)
-    attendance_entry_window = models.IntegerField(_('attendance window'), null=True, blank=False, default=7)
+    attendance_entry_window = models.PositiveIntegerField(_('attendance window'), null=True, blank=False, default=7)
     coordinated = models.BooleanField(blank=False, default=1)
     total_rounding_type = models.CharField(_('Total Rounding Type'), max_length=50, choices=RoundTypes.choices(),
                                            null=True,
