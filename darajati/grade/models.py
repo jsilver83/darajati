@@ -42,11 +42,18 @@ class GradeFragment(models.Model):
     show_student_report = models.BooleanField(_('Show in Student Report'), null=False, blank=False, default=True)
     boundary_type = models.CharField(_('Boundary Type'), max_length=24, choices=GradesBoundaries.choices(),
                                      null=True, blank=False, default=GradesBoundaries.SUBJECTIVE_FREE)
-    boundary_range = models.DecimalField(_('Boundary Range'), null=True, blank=True,
-                                         help_text=_('When the type is subjective and it is not free, give a range +-'),
-                                         max_digits=settings.MAX_DIGITS,
-                                         decimal_places=settings.MAX_DECIMAL_POINT
-                                         )
+    boundary_range_upper = models.DecimalField(_('Boundary Range Upper'), null=True, blank=True,
+                                               help_text=_(
+                                                   'When the type is subjective and it is not free, give a positive range'),
+                                               max_digits=settings.MAX_DIGITS,
+                                               decimal_places=settings.MAX_DECIMAL_POINT
+                                               )
+    boundary_range_lower = models.DecimalField(_('Boundary Range Lower'), null=True, blank=True,
+                                               help_text=_(
+                                                   'When the type is subjective and it is not free, give a negative range'),
+                                               max_digits=settings.MAX_DIGITS,
+                                               decimal_places=settings.MAX_DECIMAL_POINT
+                                               )
     boundary_fixed_average = models.DecimalField(_('Boundary Fixed Average'), null=True, blank=True,
                                                  max_digits=settings.MAX_DIGITS,
                                                  decimal_places=settings.MAX_DECIMAL_POINT
@@ -54,6 +61,12 @@ class GradeFragment(models.Model):
     allow_change = models.BooleanField(_('Allow Change After Submission'), null=False, blank=False, default=True)
     allow_subjective_marking = models.BooleanField(_('Allow Subjective Marking'), null=False, blank=False,
                                                    default=False)
+    student_total_grading = models.BooleanField(
+        _('Calculate In Student Grading?'),
+        default=False,
+        help_text=_('If this is checked, It will be calculated in the total mark')
+    )
+
     entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False,
                                                help_text=_('Checked when the course entered grades are in %'))
     updated_by = models.ForeignKey('enrollment.UserProfile', related_name='GradeFragment')
@@ -108,30 +121,37 @@ class StudentGrade(models.Model):
                                          decimal_places=settings.MAX_DECIMAL_POINT,
                                          max_digits=settings.MAX_DIGITS)
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
-    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='grades', default=0)
+    updated_by = models.ForeignKey('enrollment.UserProfile', null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=True)
 
     @staticmethod
     def get_section_grades(section_id, grade_fragment_id):
-        return StudentGrade.objects.filter(enrollment__section=section_id, grade_fragment=grade_fragment_id)
+        return StudentGrade.objects.filter(enrollment__section=section_id,
+                                           grade_fragment=grade_fragment_id,
+                                           enrollment__active=True)
 
     @staticmethod
     def get_section_average(section, grade_fragment):
         grades = StudentGrade.objects.filter(
-            grade_fragment=grade_fragment, enrollment__section=section
-        ).values().aggregate(
+            grade_fragment=grade_fragment,
+            enrollment__section=section,
+            grade_fragment__student_total_grading=True,
+            enrollment__active=True
+        ).exclude(grade_quantity=None).values().aggregate(
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
         return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
-        # TODO: There are different type of round should it be apply here ?
+        # TODO: There are different type of round should it be apply here ? Only when calculating the letter grade
 
     @staticmethod
     def get_section_objective_average(section):
         grades = StudentGrade.objects.filter(
             grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
-            enrollment__section=section
-        ).values().aggregate(
+            enrollment__section=section,
+            grade_fragment__student_total_grading=True,
+            enrollment__active=True
+        ).exclude(grade_quantity=None).values().aggregate(
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
@@ -142,7 +162,9 @@ class StudentGrade(models.Model):
         if section.course_offering.coordinated:
             grades = StudentGrade.objects.filter(
                 grade_fragment=grade_fragment,
-                grade_fragment__course_offering=section.course_offering
+                grade_fragment__course_offering=section.course_offering,
+                grade_fragment__student_total_grading=True,
+                enrollment__active=True
             ).exclude(grade_quantity=None).values().aggregate(
                 sum=Sum('grade_quantity'),
                 count=Count('id'),
