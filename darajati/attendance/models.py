@@ -258,7 +258,3 @@ class Attendance(models.Model):
         return Attendance.objects.filter(enrollment__section=section_id).values('enrollment', 'status').annotate(
             total=models.Count('status')
         )
-
-    @property
-    def get_status(self):
-        return "Hello"
