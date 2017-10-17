@@ -5,5 +5,7 @@ from django.conf.urls import url
 app_name = 'banner_integration'
 
 urlpatterns = [
-    url(r'^$', views.PopulationRosterView.as_view(), name='home'),
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^synchronization/$', views.PopulationRosterView.as_view(), name='synchronization'),
+    url(r'^grades/$', views.ImportGradesView.as_view(), name='import_grade'),
 ]

@@ -3,13 +3,14 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
+            <a href="{% url 'banner_integration:home' %}">{% trans 'Go Back' %}</a>
+            <form method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input class="thm-btn small-btn save-btn" type="submit" name="create_grade"
+                       value="{% trans 'Generate Report' %}">
+            </form>
             <div class="title-sec text-center">
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form }}
-                    <input class="thm-btn small-btn save-btn" type="submit" name="create_grade"
-                           value="{% trans 'Generate Report' %}">
-                </form>
                 {% if report %}
                     {% if detail_report %}
                         {% if sections_report %}

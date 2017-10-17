@@ -18,3 +18,22 @@ class CourseOfferingForm(forms.Form):
             label=_('Detail report'),
             required=False,
         )
+
+
+class GradesImportForm(forms.Form):
+
+    def __init__(self, choices, *args, **kwargs):
+        super(GradesImportForm, self).__init__(*args, **kwargs)
+        self.fields['grade_fragment'] = forms.ChoiceField(
+            label=_('Grade Fragment'),
+            required=True,
+            choices=choices,
+            widget=forms.Select(attrs={'class': 'thm-field'})
+        )
+        self.fields['grade'] = forms.CharField(
+            widget=forms.Textarea()
+        )
+        self.fields['commit'] = forms.BooleanField(
+            label=_('Commit Changes'),
+            required=False
+        )
