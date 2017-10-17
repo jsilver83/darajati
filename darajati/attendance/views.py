@@ -87,11 +87,12 @@ class AttendanceView(AttendanceBaseView, FormSetView):
         context['current_date'] = period_date
         context['today'] = today()
         context['enrollments'] = Attendance.get_student_attendance(self.section_id)
+        context['section'] = self.section
         return context
 
     def get_extra_form_kwargs(self):
         kwargs = super(AttendanceView, self).get_extra_form_kwargs()
-        kwargs.update({'request': self.request})
+        kwargs.update({'request': self.request, 'section': self.section})
         return kwargs
 
     def get_success_url(self):

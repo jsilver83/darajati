@@ -26,7 +26,8 @@ class AttendanceForm(forms.ModelForm):
 
     - add classes for css and re-order the list
     """
-
+    enrollment_id = forms.CharField(
+        widget=PlainTextWidget)
     student_name = forms.CharField(
         widget=PlainTextWidget)
     student_university_id = forms.CharField(
@@ -43,12 +44,16 @@ class AttendanceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request')
+        self.section = kwargs.pop('section')
         self.permissions = self.request.user.get_all_permissions()
         super(AttendanceForm, self).__init__(*args, **kwargs)
         self.order_fields(self.ORDER)
         if self.initial['status'] == Attendance.Types.EXCUSED \
-                and 'attendance.can_give_excused_status' in self.permissions:
-            self.fields['status'].widget.attrs['readonly'] = True
+                and 'attendance.can_give_excused_status' not in self.permissions:
+            self.fields['status'].disabled = True
+
+        if self.initial['updated_on'] and not self.section.course_offering.allow_change:
+            self.fields['status'].disabled = True
 
     class Meta:
         model = Attendance
@@ -63,7 +68,7 @@ class AttendanceForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-
+        
         if self.cleaned_data['id']:
             self.instance.id = self.cleaned_data['id']
 

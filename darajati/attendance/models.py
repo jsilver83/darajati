@@ -116,7 +116,7 @@ class ScheduledPeriod(models.Model):
             days_offset += 1
 
         return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
-                                                                instructor_assigned=instructor)
+                                                                instructor_assigned=instructor).order_by('start_time')
 
     @staticmethod
     def get_section_periods_week_days(section, instructor, current_date, today):
@@ -124,31 +124,45 @@ class ScheduledPeriod(models.Model):
         period_dates = []
         previous_week = None
         next_week = None
+        result_previous_week = None
+        result_next_week = None
         last_accessible_date, last_accessible_day = get_offset_day(today,
                                                                    -section.course_offering.attendance_entry_window)
-
+        # Get Periods Dates
         for date in dates:
             day = day_string(date)
             if last_accessible_date <= date and \
-                    ScheduledPeriod.objects.filter(section=section.id,
-                                                   day__iexact=day,
-                                                   instructor_assigned=instructor
-                                                   ).distinct('day').exists():
+                    ScheduledPeriod.is_period_within_range(section, day, instructor) and \
+                            date <= today:
                 period_dates.append({'date': date, 'day': day, 'section_id': section.id})
 
-        if current_date > last_accessible_date and not any(
-                        item.get('date', None) == last_accessible_date for item in period_dates):
+        # Get Previous Week Periods Dates
+        if current_date > last_accessible_date and \
+                not any(item.get('date', None) == last_accessible_date for item in period_dates):
             previous_week = get_previous_week(current_date)
-            day = day_string(previous_week)
-            previous_week = {'date': previous_week, 'day': day, 'section_id': section.id}
+            previous_week = get_dates_in_between(previous_week)
+            for date in previous_week:
+                day = day_string(date)
+                if last_accessible_date <= date and \
+                        ScheduledPeriod.is_period_within_range(section, day, instructor) and \
+                                date <= today:
+                    day = day_string(date)
+                    result_previous_week = {'date': date, 'day': day, 'section_id': section.id}
 
         if current_date < today and not any(
                         item.get('date', None) == today for item in period_dates):
             next_week = get_next_week(current_date)
-            day = day_string(next_week)
-            next_week = {'date': next_week, 'day': day, 'section_id': section.id}
+            next_week = get_dates_in_between(next_week)
+            for date in next_week:
+                day = day_string(date)
+                if last_accessible_date <= date and \
+                        ScheduledPeriod.is_period_within_range(section, day, instructor) and \
+                                date <= today:
+                    day = day_string(date)
+                    result_next_week = {'date': date, 'day': day, 'section_id': section.id}
+                    break
 
-        return period_dates, previous_week, next_week
+        return period_dates, result_previous_week, result_next_week
 
     @staticmethod
     def is_period_exists(section, instructor, day, start_time, end_time):
@@ -165,6 +179,13 @@ class ScheduledPeriod(models.Model):
             section__course_offering__semester__start_date__lte=date,
             section__course_offering__semester__end_date__gte=date
         ).exists()
+
+    @staticmethod
+    def is_period_within_range(section, day, instructor):
+        return ScheduledPeriod.objects.filter(section=section.id,
+                                              day__iexact=day,
+                                              instructor_assigned=instructor
+                                              ).distinct('day').exists()
 
 
 class AttendanceInstance(models.Model):
@@ -237,3 +258,7 @@ class Attendance(models.Model):
         return Attendance.objects.filter(enrollment__section=section_id).values('enrollment', 'status').annotate(
             total=models.Count('status')
         )
+
+    @property
+    def get_status(self):
+        return "Hello"
