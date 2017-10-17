@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="title-sec text-center">
+                <a class="thm-btn small-btn save-btn" href="{% url 'banner_integration:import_grade' %}">
+                    {% trans 'Import Grades' %}
+                </a>
+                <a class="thm-btn small-btn save-btn" href="{% url 'banner_integration:synchronization' %}">
+                    {% trans 'Synchronization' %}
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
