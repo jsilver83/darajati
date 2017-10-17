@@ -1,5 +1,8 @@
 from django.db import models
+from django.db import transaction
+from django.db.models import Value
 from django.db.models import Sum, Count
+from django.db.models.functions import Concat
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
@@ -91,6 +94,12 @@ class GradeFragment(models.Model):
     def __str__(self):
         return to_string(self.course_offering, self.category, self.description)
 
+    @staticmethod
+    def get_all_fragments_choices():
+        return GradeFragment.objects.all().annotate(
+            value=Concat('course_offering__course__code', Value(' '), 'description', output_field=models.CharField())
+        ).values_list('id', 'value')
+
 
 class LetterGrade(models.Model):
     course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="letter_grades", null=True,
@@ -171,6 +180,98 @@ class StudentGrade(models.Model):
             )
             return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
         return False
+
+    @staticmethod
+    def get_student_old_grade(fragment, student_id):
+        return StudentGrade.objects.get(grade_fragment=fragment,
+                                        enrollment__student__university_id__exact=student_id,
+                                        enrollment__active=True)
+
+    @staticmethod
+    def is_student_exists(fragment, student_id):
+        return StudentGrade.objects.filter(
+            grade_fragment=fragment,
+            enrollment__student__university_id__exact=student_id,
+            enrollment__active=True,
+        ).exists()
+
+    @staticmethod
+    def import_grades_by_admin(lines, fragment, commit=False):
+        changes_list = []
+        students_objects = []
+        errors = []
+        for line in lines.splitlines():
+            line = str(line)
+            lines_length = len(line.split())
+            if line and lines_length == 2:
+                student_id, new_grade = line.split(' ')
+                new_grade = round(Decimal(new_grade), 2)
+                if not StudentGrade.is_student_exists(fragment, student_id):
+                    changes_list.append({'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
+                    continue
+
+                grade_object = StudentGrade.get_student_old_grade(fragment, student_id)
+                not_same_grade = new_grade != grade_object.grade_quantity
+                if fragment.entry_in_percentages:
+                    new_grade = (grade_object.grade_fragment.weight / 100) * new_grade
+                    not_same_grade = new_grade != grade_object.grade_quantity
+                    if Decimal(100) >= new_grade >= Decimal(0.00) and not_same_grade:
+                        changes_list.append({'id': student_id,
+                                             'old_grade': grade_object.grade_quantity,
+                                             'new_grade': new_grade,
+                                             'status': _('change grade from {} to {}'.format(
+                                                 (
+                                                     grade_object.grade_fragment.weight / 100) * grade_object.grade_quantity,
+                                                 new_grade)),
+                                             'code': 'new_grade'})
+                        students_objects.append({'grade_object': grade_object, 'new_grade': new_grade})
+                    else:
+                        changes_list.append({'id': student_id,
+                                             'old_grade': grade_object.grade_quantity,
+                                             'new_grade': new_grade,
+                                             'status': _('grade should be between 100 and 0'),
+                                             'code': 'invalid_grade'})
+                        continue
+
+                if not fragment.entry_in_percentages:
+                    if not_same_grade:
+                        if grade_object.grade_fragment.weight >= new_grade >= Decimal(0.00):
+                            changes_list.append({'id': student_id,
+                                                 'old_grade': grade_object.grade_quantity,
+                                                 'new_grade': new_grade,
+                                                 'status': _(
+                                                     'change grade from {} to {}'.format(
+                                                         str(grade_object.grade_quantity),
+                                                         new_grade)),
+                                                 'code': 'new_grade'})
+                            students_objects.append({'grade_object': grade_object, 'new_grade': new_grade})
+                        else:
+                            changes_list.append({'id': student_id,
+                                                 'old_grade': grade_object.grade_quantity,
+                                                 'new_grade': new_grade,
+                                                 'status': _('grade should be between {} and 0'.format(
+                                                     str(grade_object.grade_fragment.weight))),
+                                                 'code': 'invalid_grade'})
+                            continue
+                    else:
+                        changes_list.append({'id': student_id,
+                                             'old_grade': grade_object.grade_quantity,
+                                             'new_grade': new_grade,
+                                             'status': _(
+                                                 'same grade from {} to {}'.format(str(grade_object.grade_quantity),
+                                                                                   new_grade)),
+                                             'code': 'same_grade'})
+            else:
+                errors.append(
+                    {'line': line, 'status': _('There is something wrong in this line'), 'code': 'invalid_line'})
+
+        if commit:
+            with transaction.atomic():
+                for item in students_objects:
+                    item['grade_object'].grade_quantity = item['new_grade']
+                    item['grade_object'].save()
+
+        return changes_list, errors
 
     def __str__(self):
         return to_string(self.enrollment, self.grade_fragment, self.remarks)

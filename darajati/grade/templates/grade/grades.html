@@ -24,6 +24,7 @@
                 <table class="table">
                     <thead>
                     <tr>
+                        <th>{% trans 'No.' %}</th>
                         <th>{% trans 'Student ID' %}</th>
                         <th>{% trans 'Full Name' %}</th>
                         <th>{% trans 'Student Grade'%}</th>
@@ -40,6 +41,7 @@
                     {% for enrollment in enrollments %}
                     {% ifequal enrollment.id|stringformat:"s" form.enrollment.value|stringformat:"s" %}
                     <tr>
+                        <td>{{ enrollment.id }}</td>
                         <td>{{ enrollment.student.university_id }}</td>
                         <td>{{ enrollment.student.english_name }}</td>
                         <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>

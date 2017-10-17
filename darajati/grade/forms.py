@@ -137,15 +137,15 @@ class BaseGradesFormSet(BaseModelFormSet):
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
 
-            if self.fragment.boundary_range:
+            if self.fragment.boundary_range_upper or self.fragment.boundary_range_lower:
 
-                less_objective_average = self.average_boundary - self.fragment.boundary_range
-                more_objective_average = self.average_boundary + self.fragment.boundary_range
+                less_objective_average = self.average_boundary - self.fragment.boundary_range_lower
+                more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
 
                 if self.fragment.entry_in_percentages:
                     average_base_percent = round((self.average_boundary * 100) / self.fragment.weight, 2)
-                    less_objective_average = average_base_percent - self.fragment.boundary_range
-                    more_objective_average = average_base_percent + self.fragment.boundary_range
+                    less_objective_average = average_base_percent - self.fragment.boundary_range_lower
+                    more_objective_average = average_base_percent + self.fragment.boundary_range_upper
 
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
