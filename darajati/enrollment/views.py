@@ -88,7 +88,7 @@ class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         if self.request.POST.get('create_grade'):
-            get_students_enrollment_grades()
+            get_students_enrollment_grades(self.request.user.profile)
             # get_students_enrollment_grades.apply_async(args=[now()], eta=now())
         return render(request, self.template_name)
 

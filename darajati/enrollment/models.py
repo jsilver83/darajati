@@ -194,6 +194,12 @@ class CourseOffering(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offering', null=True, blank=False)
     attendance_entry_window = models.PositiveIntegerField(_('attendance window'), null=True, blank=False, default=7)
     coordinated = models.BooleanField(blank=False, default=1)
+    allow_change = models.BooleanField(_('Allow changing after submitting attendance?'),
+                                       blank=False,
+                                       default=1,
+                                       help_text=
+                                       _('This if checked will allow the instructors'
+                                         ' to change the attendances after submitting'))
     total_rounding_type = models.CharField(_('Total Rounding Type'), max_length=50, choices=RoundTypes.choices(),
                                            null=True,
                                            blank=False,
@@ -339,7 +345,6 @@ class Enrollment(models.Model):
         :param section_id: 
         :param date:
         :param instructor:
-        :param given_day
         :return: list of enrollments for a giving section_id and a day and instructor
            If the giving day is not exist get the nearest one
         """
@@ -347,8 +352,13 @@ class Enrollment(models.Model):
         enrollments = []
         index = 1
         day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date)
-        enrollment_list = Enrollment.get_students(section_id)
+        enrollment_list = Enrollment.get_students(section_id)[:20]
+        count_index = 0
         for enrollment in enrollment_list:
+            count_index += 1
+            if enrollment.active is False:
+                count_index += 1
+
             for period in periods:
                 id = 0
                 updated_by = None
@@ -365,6 +375,7 @@ class Enrollment(models.Model):
 
                 enrollments.append(dict(enrollment=enrollment,
                                         student_name=enrollment.student.english_name,
+                                        enrollment_id=count_index,
                                         student_university_id=enrollment.student.university_id,
                                         period=period,
                                         attendance_instance=attendance_instance,
