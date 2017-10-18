@@ -22,6 +22,7 @@ from django.contrib.auth import views
 urlpatterns = i18n_patterns(
     url(r'^login/$', views.login, {'template_name': 'login.html', 'redirect_authenticated_user': True}, name='login'),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^impersonate/', include('impersonate.urls')),
     url(r'^logout/$', views.logout, {'template_name': 'logout.html'}, name='logout'),
 )
 
