@@ -28,28 +28,29 @@ class AttendanceBaseView(InstructorBaseView):
 
     def test_func(self, **kwargs):
         rule = super(AttendanceBaseView, self).test_func(**kwargs)
-        periods = ScheduledPeriod.is_allowed_section_periods(self.section_id,
-                                                             self.request.user.profile.instructor,
-                                                             day_string(self.date),
-                                                             self.date)
+        if rule:
+            periods = ScheduledPeriod.is_allowed_section_periods(self.section_id,
+                                                                 self.request.user.profile.instructor,
+                                                                 day_string(self.date),
+                                                                 self.date)
 
-        offset_date, day = get_offset_day(today(), -self.section.course_offering.attendance_entry_window)
+            offset_date, day = get_offset_day(today(), -self.section.course_offering.attendance_entry_window)
 
-        if periods and rule:
-            if self.date <= today():
-                if offset_date <= self.date:
-                    return True
+            if periods:
+                if self.date <= today():
+                    if offset_date <= self.date:
+                        return True
+                    else:
+                        messages.error(self.request,
+                                       _('You have passed the allowed time to be able to get to this day'))
+                        return False
                 else:
                     messages.error(self.request,
-                                   _('You have passed the allowed time to be able to get to this day'))
+                                   _('You are trying to access a day in the future'))
                     return False
             else:
-                messages.error(self.request,
-                               _('You are trying to access a day in the future'))
+                messages.error(self.request, _('You can not access this date.'.format(self.section.code)))
                 return False
-        else:
-            messages.error(self.request, _('You can not access this date.'.format(self.section.code)))
-            return False
 
 
 class AttendanceView(AttendanceBaseView, FormSetView):
