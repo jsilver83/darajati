@@ -41,7 +41,7 @@ def initial_roster_creation(course_offering, commit=False):
     inactive_sections_count = 0
 
     # Web-service retrieval
-    semester_code, semester_period = course_offering.semester.code.split('-')
+    semester_code = course_offering.semester.code
     results = request_class_roaster(semester_code, course_offering.course.code)
     # Bulk Lists to commit
     students = []
@@ -252,7 +252,7 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
     instructors = []
     periods_report = []
     inactive_periods = None
-    semester_code, semester_period = course_offering.semester.code.split('-')
+    semester_code = course_offering.semester.code
     for section in sections:
         results = request_faculty_teaching(semester_code, section.crn)
         # Instructor and Periods Initialization
