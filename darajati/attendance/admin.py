@@ -16,7 +16,7 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
 
 
 class AttendanceAdmin(admin.ModelAdmin):
-    exclude = ('updated_by', )
+    readonly_fields = ('updated_by',)
     list_filter = ('status', )
     list_display = ('attendance_instance', 'enrollment', 'status')
     search_fields = ('attendance_instance', 'enrollment', 'status')
