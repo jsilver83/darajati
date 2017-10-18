@@ -71,6 +71,7 @@
                                     <th class="text-center">{% trans 'Start Time' %}</th>
                                     <th class="text-center">{% trans 'End Time' %}</th>
                                     <th class="text-center">{% trans 'Instructor' %}</th>
+                                    <th class="text-center">{% trans 'Section' %}</th>
                                     <th class="text-center">{% trans 'code' %}</th>
                                     <th class="text-center">{% trans 'message' %}</th>
                                 </tr>
@@ -81,8 +82,9 @@
                                         <td>{{ forloop.counter }}</td>
                                         <td>{{ item.period.day }}</td>
                                         <td>{{ item.period.start_time }}</td>
-                                        <td>{{ item.period.start_time }}</td>
+                                        <td>{{ item.period.end_time }}</td>
                                         <td>{{ item.period.instructor_assigned }}</td>
+                                        <td>{{ item.period.section.code }}</td>
                                         <td>{{ item.code }}</td>
                                         <td>{{ item.message }}</td>
                                     </tr>

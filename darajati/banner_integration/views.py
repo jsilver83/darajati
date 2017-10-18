@@ -27,7 +27,7 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
 
     instructors = None
     periods = None
-
+    sections = None
     def get_form_kwargs(self):
         """
         Passing the only current semester's Offering Courses List 
@@ -41,13 +41,13 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         This will consist of the creation of the sections and assigning students to these section
           From there Faculty will be assigned to that section.
         """
-        self.section_report, self.student_report, self.enrollment_report, = initial_roster_creation(
+        self.section_report, self.student_report, self.enrollment_report, self.sections = initial_roster_creation(
             form.cleaned_data['course_offering'],
             form.cleaned_data['commit_changes'])
 
         self.instructors, self.periods = initial_faculty_teaching_creation(
             form.cleaned_data['course_offering'],
-            self.section_report,
+            self.sections,
             form.cleaned_data['commit_changes'])
 
         context = self.get_context_data(**kwargs)

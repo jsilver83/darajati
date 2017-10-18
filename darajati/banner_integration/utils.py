@@ -46,6 +46,7 @@ def initial_roster_creation(course_offering, commit=False):
     # Bulk Lists to commit
     students = []
     sections = []
+    all_sections = []
     enrollments = []
 
     # Reports
@@ -64,17 +65,22 @@ def initial_roster_creation(course_offering, commit=False):
                               active=True)
             if section.crn not in crn:
                 sections.append(section)
+                all_sections.append(section)
                 section_report.append({'section': section, 'code': 'CREATE', 'message': 'New section to be created.'})
                 crn.append(section.crn)
         else:
             section = Section.objects.get(course_offering__exact=course_offering,
-                                          code__exact=section_code)
+                                          code__exact=section_code,
+                                          crn=result['crn'])
             if not section.active:
                 section.active = True
                 if commit:
                     section.save()
                 section_report.append(
                     {'section': section, 'code': 'ACTIVE', 'message': 'Existing section to re-activate'})
+            if section.crn not in crn:
+                all_sections.append(section)
+                crn.append(section.crn)
 
         # Initialize non students sections
         if not Student.is_student_exists(result['email']):
@@ -118,6 +124,7 @@ def initial_roster_creation(course_offering, commit=False):
         # Initialize non existing enrollments
         section_code = '{}-{}'.format(course_offering.course.code, result['sec'])
         if not Section.is_section_exists(course_offering, section_code):
+
             section = Section(course_offering=course_offering,
                               code=section_code,
                               crn=result['crn'],
@@ -236,37 +243,20 @@ def initial_roster_creation(course_offering, commit=False):
             if inactive_sections_count:
                 inactive_sections.update(active=False)
 
-    return section_report, student_report, enrollment_report
+    return section_report, student_report, enrollment_report, all_sections
 
 
 def initial_faculty_teaching_creation(course_offering, sections, commit=False):
 
-    current_sections = []
-    for section in sections:
-        if section['code'] in ['ACTIVE', 'CREATE']:
-            current_sections.append(section['section'])
-
     course_offering = CourseOffering.get_course_offering(course_offering)
     instructors = []
-    scheduled_periods = []
     periods_report = []
     inactive_periods = None
     semester_code, semester_period = course_offering.semester.code.split('-')
-    for section in current_sections:
+    for section in sections:
         results = request_faculty_teaching(semester_code, section.crn)
         # Instructor and Periods Initialization
         for result in results['data']:
-            section_code = result['sec_code']
-            if not Section.is_section_exists(course_offering, section_code):
-                section = Section(
-                    course_offering=course_offering,
-                    code=section_code,
-                    active=True
-                )
-            else:
-                section = Section.objects.get(course_offering__exact=course_offering,
-                                              code__exact=section_code)
-
             if not Instructor.is_instructor_exists(result['email']):
                 user, created = User.objects.get_or_create(username=result['user'])
                 profile, created = UserProfile.objects.get_or_create(user=user)
@@ -294,7 +284,6 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                 instructor = Instructor.objects.get(personal_email__exact=result['email'])
 
             # inactive_periods += ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor)
-
             for day in map(str, result['class_days']):
                 current_day = None
 
@@ -313,7 +302,6 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                 start_time = start_time[0] + start_time[1] + ':' + start_time[2] + start_time[3]
                 end_time = list(map(str, result['end_time']))
                 end_time = end_time[0] + end_time[1] + ':' + end_time[2] + end_time[3]
-
                 if not ScheduledPeriod.is_period_exists(section, instructor, current_day, start_time, end_time):
                     scheduled_period = ScheduledPeriod(
                         section=section,
@@ -326,19 +314,13 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                         late_deduction=1,
                         absence_deduction=1
                     )
-
-                    scheduled_periods.append(scheduled_period)
+                    if commit:
+                        with transaction.atomic():
+                            scheduled_period.save()
                     periods_report.append({
                         'period': scheduled_period, 'code': 'CREATE', 'message': 'New period to be created'
                     })
                 else:
-                    # TODO: If period
-                    pass
-
-        if commit:
-            with transaction.atomic():
-                ScheduledPeriod.objects.bulk_create(
-                    scheduled_periods
-                )
+                    continue
 
     return instructors, periods_report
