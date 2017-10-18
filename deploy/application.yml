@@ -77,7 +77,7 @@
         django_project_local_settings: "{{ lookup('template', 'local_settings.py.j2') }}"
 
   roles:
-    - django-project banner_api_password
+    - django-project
 
   # tasks to be performed after role tasks, if any
   # post_tasks:
