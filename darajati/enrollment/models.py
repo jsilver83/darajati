@@ -352,7 +352,7 @@ class Enrollment(models.Model):
         enrollments = []
         index = 1
         day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date)
-        enrollment_list = Enrollment.get_students(section_id)[:20]
+        enrollment_list = Enrollment.get_students(section_id)
         count_index = 0
         for enrollment in enrollment_list:
             count_index += 1
