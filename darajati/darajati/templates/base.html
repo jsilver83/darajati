@@ -64,6 +64,9 @@
             {% else %}
             <a href="{% url 'login' %}" class="login-btn">{% trans 'Login' %}</a>
             {% endcomment %}
+                <span>
+                {% trans 'Welcome, '%}{{request.user.username}}
+                </span>
             {% endif %}
 
 

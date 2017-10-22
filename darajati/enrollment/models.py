@@ -51,6 +51,13 @@ class UserProfile(models.Model):
         return Instructor.get_instructor(user=self)
 
     @property
+    def is_coordinator(self):
+        """
+        :return: True if the current user profile is an instructor else False
+        """
+        return Coordinator.get_coordinator(user=self)
+
+    @property
     def is_active(self):
         """
         :return: True if the user is active else is False
@@ -129,7 +136,7 @@ class Instructor(Person):
     user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
-        return to_string(self.english_name, self.university_id)
+        return to_string(self.english_name)
 
         # :TODO Function to get the email ID from the USER_AUTH_MODEL.
 
@@ -165,7 +172,7 @@ class Semester(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.code, self.description)
+        return to_string(self.description, self.code)
 
 
 class Department(models.Model):
@@ -232,7 +239,7 @@ class Section(models.Model):
     active = models.BooleanField(_('Active'), default=False)
 
     def __str__(self):
-        return to_string(self.course_offering.semester.code, self.course_offering.course.code, self.code)
+        return to_string(self.course_offering, self.code)
 
     @property
     def attendance_entry_window(self):
@@ -298,11 +305,24 @@ class Section(models.Model):
 class Coordinator(models.Model):
     course_offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='coordinators',
                                         null=True, blank=False)
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='coordinators',
-                                   null=True, blank=False)
+    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE, related_name='coordinators',
+                                      null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.course_offering.semester, self.course_offering, self.instructor)
+        return to_string(self.course_offering, self.instructor)
+
+    @staticmethod
+    def get_coordinator(user=None):
+        return Coordinator.objects.filter(instructor__user_profile=user).exists()
+
+    @staticmethod
+    def is_coordinator_course_offering(instructor, course_offering):
+        return Coordinator.objects.filter(
+            course_offering=course_offering,
+            instructor=instructor,
+            course_offering__semester__start_date__lte=now(),
+            course_offering__semester__end_date__gte=now(),
+        ).distinct().exists()
 
 
 class Enrollment(models.Model):
