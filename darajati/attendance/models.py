@@ -92,10 +92,13 @@ class ScheduledPeriod(models.Model):
         :param instructor
         :return: all periods for a giving section and date and instructor
         """
-        return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
+        if instructor:
+            return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
+
+        return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day)
 
     @staticmethod
-    def get_section_periods_of_nearest_day(section_id, instructor, date):
+    def get_section_periods_of_nearest_day(section_id, date, instructor):
         """
         :param section_id: 
         :param giving_day: 
@@ -115,8 +118,14 @@ class ScheduledPeriod(models.Model):
                 days_offset = 8
             days_offset += 1
 
-        return day, period_date, ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
-                                                                instructor_assigned=instructor).order_by('start_time')
+        if instructor:
+            return day, \
+                   period_date, \
+                   ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
+                                                  instructor_assigned=instructor).order_by('start_time')
+        return day, \
+               period_date, \
+               ScheduledPeriod.objects.filter(section=section_id, day__iexact=day).order_by('start_time')
 
     @staticmethod
     def get_section_periods_week_days(section, instructor, current_date, today):
@@ -182,10 +191,14 @@ class ScheduledPeriod(models.Model):
 
     @staticmethod
     def is_period_within_range(section, day, instructor):
+        if instructor:
+            return ScheduledPeriod.objects.filter(section=section.id,
+                                                  day__iexact=day,
+                                                  instructor_assigned=instructor
+                                                  ).distinct('day').exists()
+
         return ScheduledPeriod.objects.filter(section=section.id,
-                                              day__iexact=day,
-                                              instructor_assigned=instructor
-                                              ).distinct('day').exists()
+                                              day__iexact=day).distinct('day').exists()
 
 
 class AttendanceInstance(models.Model):

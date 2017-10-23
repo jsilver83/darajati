@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <a href="{% url 'grade:section_grade' section_id=section.id %}">{% trans 'Go Back' %}</a>
+        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
 
         {% if formset.forms %}
         <form method="post">

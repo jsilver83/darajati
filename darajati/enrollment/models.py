@@ -11,60 +11,6 @@ from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 User = settings.AUTH_USER_MODEL
 
 
-class UserProfile(models.Model):
-    class Language:
-        ARABIC = 'ar'
-        ENGLISH = 'en'
-
-        @classmethod
-        def choices(cls):
-            return (
-                (cls.ARABIC, _('Arabic')),
-                (cls.ENGLISH, _('English')),
-            )
-
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='profile')
-    preferred_language = models.CharField(
-        _('preferred language'), max_length=2, choices=Language.choices(),
-        default=Language.ARABIC)
-
-    def __str__(self):
-        return self.user.get_full_name() or self.user.username
-
-    @property
-    def in_student(self):
-        """
-        :return: True if the current user profile is a student else False
-        """
-        pass
-
-    @property
-    def has_access(self):
-        return Instructor.is_active(user=self) or Student.is_active(user=self)
-
-    @property
-    def is_instructor(self):
-        """
-        :return: True if the current user profile is an instructor else False
-        """
-        return Instructor.get_instructor(user=self)
-
-    @property
-    def is_coordinator(self):
-        """
-        :return: True if the current user profile is an instructor else False
-        """
-        return Coordinator.get_coordinator(user=self)
-
-    @property
-    def is_active(self):
-        """
-        :return: True if the user is active else is False
-        """
-        pass
-
-
 class Person(models.Model):
     """
     an abstract class that will be inherited by Student and Instructor
@@ -78,12 +24,44 @@ class Person(models.Model):
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
 
+    @property
+    def in_student(self):
+        """
+        :return: True if the current user is a student else False
+        """
+        pass
+
+    @staticmethod
+    def has_access(user):
+        return Instructor.is_active(user=user) or Student.is_active(user=user)
+
+    @staticmethod
+    def is_instructor(user):
+        """
+        :return: True if the current user is an instructor else False
+        """
+        return Instructor.get_instructor(user=user)
+
+    @staticmethod
+    def is_coordinator(instructor):
+        """
+        :return: True if the current user is an instructor else False
+        """
+        return Coordinator.get_coordinator(instructor=instructor)
+
+    @property
+    def is_active(self):
+        """
+        :return: True if the user is active else is False
+        """
+        pass
+
     class Meta:
         abstract = True
 
 
 class Student(Person):
-    user_profile = models.OneToOneField(UserProfile, related_name='student', null=True, blank=True)
+    user = models.OneToOneField(User, related_name='student', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name, self.university_id)
@@ -94,7 +72,7 @@ class Student(Person):
         :return: True if the user is active else is False
         """
         try:
-            return Student.objects.get(user_profile=user).active
+            return Student.objects.get(user=user).active
         except:
             return False
 
@@ -105,7 +83,7 @@ class Student(Person):
         :return: True if student else False
         """
         try:
-            return Student.objects.get(user_profile=user)
+            return Student.objects.get(user=user)
         except:
             return False
 
@@ -117,11 +95,8 @@ class Student(Person):
     def get_create_student(username, university_id, government_id, english_name, arabic_name, mobile, personal_email):
         user, created = User_model.objects.get_or_create(username=username)
 
-        profile, created = UserProfile.objects.get_or_create(
-            user=user
-        )
         return Student.objects.get_or_create(
-            user_profile=profile,
+            user=user,
             university_id=university_id,
             government_id=government_id,
             english_name=english_name,
@@ -133,7 +108,7 @@ class Student(Person):
 
 
 class Instructor(Person):
-    user_profile = models.OneToOneField(UserProfile, related_name='instructor', null=True, blank=True)
+    user = models.OneToOneField(User, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name)
@@ -146,7 +121,7 @@ class Instructor(Person):
         :return: True if the user is active else is False
         """
         try:
-            return Instructor.objects.get(user_profile=user).active
+            return Instructor.objects.get(user=user).active
         except:
             return False
 
@@ -156,7 +131,7 @@ class Instructor(Person):
         :param user: current login user
         :return: True if instructor else False
         """
-        return True if Instructor.objects.filter(user_profile=user) else False
+        return Instructor.objects.filter(user=user).exists()
 
     @staticmethod
     def is_instructor_exists(email):
@@ -281,12 +256,24 @@ class Section(models.Model):
     def is_instructor_section(self, instructor):
         """
         :param instructor: current login user
-        :return: a unique list of section objects for the login user and for the current semester
+        :return: return true if this is the instructor of this section
         """
-        return True if Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
-                                              scheduled_periods__section__course_offering__semester__start_date__lte=now(),
-                                              scheduled_periods__section__course_offering__semester__end_date__gte=now()
-                                              ).distinct().first() else False
+        return Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
+                                      scheduled_periods__section__course_offering__semester__start_date__lte=now(),
+                                      scheduled_periods__section__course_offering__semester__end_date__gte=now()
+                                      ).distinct().exists()
+
+    def is_coordinator_section(self, instructor):
+        """
+        :param instructor: current login user
+        :return: 
+        """
+        return Coordinator.objects.filter(
+            instructor=instructor,
+            course_offering=self.course_offering,
+            course_offering__semester__start_date__lte=now(),
+            course_offering__semester__end_date__gte=now()
+        ).exists()
 
     @staticmethod
     def is_section_exists(course_offering, section_code):
@@ -305,15 +292,15 @@ class Section(models.Model):
 class Coordinator(models.Model):
     course_offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='coordinators',
                                         null=True, blank=False)
-    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE, related_name='coordinators',
-                                      null=True, blank=False)
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='coordinators',
+                                   null=True, blank=False)
 
     def __str__(self):
         return to_string(self.course_offering, self.instructor)
 
     @staticmethod
-    def get_coordinator(user=None):
-        return Coordinator.objects.filter(instructor__user_profile=user).exists()
+    def get_coordinator(instructor=None):
+        return Coordinator.objects.filter(instructor=instructor).exists()
 
     @staticmethod
     def is_coordinator_course_offering(instructor, course_offering):
@@ -360,7 +347,7 @@ class Enrollment(models.Model):
         )
 
     @staticmethod
-    def get_students_enrollment(section_id, instructor, date):
+    def get_students_enrollment(section_id, date, instructor):
         """
         :param section_id: 
         :param date:
@@ -371,7 +358,7 @@ class Enrollment(models.Model):
 
         enrollments = []
         index = 1
-        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, instructor, date)
+        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, date, instructor)
         enrollment_list = Enrollment.get_students(section_id)
         count_index = 0
         for enrollment in enrollment_list:

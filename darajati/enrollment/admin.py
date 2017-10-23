@@ -30,7 +30,6 @@ admin.site.register(Section, SectionAdmin)
 admin.site.register(Enrollment, EnrollmentAdmin)
 admin.site.register(CourseOffering, CourseOfferingAdmin)
 
-admin.site.register(UserProfile)
 admin.site.register(Student)
 admin.site.register(Instructor)
 admin.site.register(Department)

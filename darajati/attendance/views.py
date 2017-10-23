@@ -51,9 +51,13 @@ class AttendanceView(AttendanceBaseView, FormSetView):
     extra = 0
 
     def get_initial(self):
+        # TODO: needs to be enhanced, Can be ignored if this date was created already
+        if self.coordinator:
+            return Enrollment.get_students_enrollment(self.section_id, self.date, None)
+
         return Enrollment.get_students_enrollment(self.section_id,
-                                                  self.request.user.profile.instructor,
-                                                  self.date)
+                                                  self.date,
+                                                  self.request.user.instructor)
 
     def formset_valid(self, formset):
         for form in formset:
@@ -66,21 +70,37 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
-        context['periods'], context['previous_week'], context[
-            'next_week'] = ScheduledPeriod.get_section_periods_week_days(
-            self.section,
-            self.request.user.profile.instructor,
-            self.date,
-            today())
+        # TODO: needs to be enhanced
 
-        day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
-            self.section_id,
-            self.request.user.profile.instructor,
-            self.date)
+        if self.coordinator:
+            context['periods'], context['previous_week'], context[
+                'next_week'] = ScheduledPeriod.get_section_periods_week_days(
+                self.section,
+                None,
+                self.date,
+                today())
+
+            day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
+                self.section_id,
+                self.date,
+                None)
+        else:
+
+            context['periods'], context['previous_week'], context[
+                'next_week'] = ScheduledPeriod.get_section_periods_week_days(
+                self.section,
+                self.request.user.instructor,
+                self.date,
+                today())
+
+            day, period_date, context['current_periods'] = ScheduledPeriod.get_section_periods_of_nearest_day(
+                self.section_id,
+                self.date,
+                self.request.user.instructor)
+
         context['current_date'] = period_date
         context['today'] = today()
         context['enrollments'] = Attendance.get_student_attendance(self.section_id)
-        context['section'] = self.section
         return context
 
     def get_extra_form_kwargs(self):

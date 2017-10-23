@@ -1,7 +1,8 @@
 import requests, json
 from django.conf import settings
 from django.contrib.auth.models import User
-from enrollment.models import Section, Enrollment, Student, CourseOffering, UserProfile, Instructor
+from django.core import serializers
+from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from attendance.models import ScheduledPeriod
 from django.db import transaction
 
@@ -85,9 +86,8 @@ def initial_roster_creation(course_offering, commit=False):
         # Initialize non students sections
         if not Student.is_student_exists(result['email']):
             user, created = User.objects.get_or_create(username=result['email'][:10])
-            profile, created = UserProfile.objects.get_or_create(user=user)
             student = Student(
-                user_profile=profile,
+                user=user,
                 university_id=result['stu_id'],
                 government_id=result['stu_id'],
                 english_name=result['name_en'],
@@ -135,9 +135,8 @@ def initial_roster_creation(course_offering, commit=False):
 
         if not Student.is_student_exists(result['email']):
             user, created = User.objects.get_or_create(username=result['email'][:10])
-            profile, created = UserProfile.objects.get_or_create(user=user)
             student = Student(
-                user_profile=profile,
+                user=user,
                 university_id=result['stu_id'],
                 government_id=result['stu_id'],
                 english_name=result['name_en'],
@@ -147,6 +146,10 @@ def initial_roster_creation(course_offering, commit=False):
                 active=True)
         else:
             student = Student.objects.get(personal_email__exact=result['email'])
+            user, created = User.objects.get_or_create(username=result['email'][:10])
+            if not student.user:
+                student.user = user
+                student.save()
 
         # Enrollments
         if not Enrollment.is_enrollment_exists(student, section):
@@ -259,10 +262,9 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
         for result in results['data']:
             if not Instructor.is_instructor_exists(result['email']):
                 user, created = User.objects.get_or_create(username=result['user'])
-                profile, created = UserProfile.objects.get_or_create(user=user)
                 if commit:
                     instructor, created = Instructor.objects.get_or_create(
-                        user_profile=profile,
+                        user=user,
                         university_id=result['fac_id'],
                         government_id=result['fac_id'],
                         english_name=result['name'],
@@ -271,7 +273,7 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                         active=True)
                 else:
                     instructor = Instructor(
-                        user_profile=profile,
+                        user=user,
                         university_id=result['fac_id'],
                         government_id=result['fac_id'],
                         english_name=result['name'],
@@ -282,6 +284,10 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                 instructors.append(instructor)
             else:
                 instructor = Instructor.objects.get(personal_email__exact=result['email'])
+                user, created = User.objects.get_or_create(username=result['user'])
+                if not instructor.user:
+                    instructor.user = user
+                    instructor.save()
 
             # inactive_periods += ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor)
             for day in map(str, result['class_days']):

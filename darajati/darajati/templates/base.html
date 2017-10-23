@@ -1,9 +1,9 @@
 {% load static i18n %}
 <!DOCTYPE html>
 {% if LANGUAGE_CODE == 'ar' %}
-<html lang="en" dir="rtl">
+    <html lang="en" dir="rtl">
 {% else %}
-<html lang="en" dir="ltr">
+    <html lang="en" dir="ltr">
 {% endif %}
 <head>
     <meta charset="utf-8">
@@ -27,9 +27,9 @@
 
 </head>
 {% if LANGUAGE_CODE == 'ar' %}
-<body class="arabic">
+    <body class="arabic">
 {% else %}
-<body>
+    <body>
 {% endif %}
 <div class="preloader">
     <div class="loading"><img src="{% static 'images/kfupm-loading.gif' %}"/><h6>{% trans 'Loading...' %}</h6></div>
@@ -47,25 +47,31 @@
         <div class="rgt-head">
             <!-- nav bar-->
             {% if LANGUAGE_CODE == 'ar' %}
-            <a href="/en{{ request.get_full_path|slice:'3:' }}" class="lang en en-font">English</a>
+                <a href="/en{{ request.get_full_path|slice:'3:' }}" class="lang en en-font">English</a>
             {% endif %}
             {% if LANGUAGE_CODE == 'en' %}
-            <a href="/ar{{ request.get_full_path|slice:'3:' }}" class="lang ar ar-font">عربى</a>
-            {% endif %}
-
-            {% if user.is_superuser and user.is_authenticated %}
-                <a href="{% url 'enrollment:controls' %}" class="login-btn">{% trans 'Admin Controls' %}</a>
-                <a href="{% url 'banner_integration:home' %}" class="login-btn">{% trans 'Banner Integration' %}</a>
+                <a href="/ar{{ request.get_full_path|slice:'3:' }}" class="lang ar ar-font">عربى</a>
             {% endif %}
 
             {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="login-btn">{% trans 'Logout' %}</a>
-            {% comment %}
+                {% if user.is_superuser %}
+                    <a href="{% url 'enrollment:controls' %}" class="login-btn">{% trans 'Admin Controls' %}</a>
+                    <a href="{% url 'banner_integration:home' %}" class="login-btn">{% trans 'Banner Integration' %}</a>
+                {% endif %}
+                {% if coordinator %}
+                    <a href="{% url 'enrollment:coordinator' %}" class="login-btn">{% trans 'Coordinator Controls' %}</a>
+                    <a href="{% url 'enrollment:instructor' %}" class="login-btn">{% trans 'Instructor Controls' %}</a>
+                {% endif %}
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="login-btn">{% trans 'Logout' %}</a>
+                {% comment %}
             {% else %}
             <a href="{% url 'login' %}" class="login-btn">{% trans 'Login' %}</a>
             {% endcomment %}
                 <span>
-                {% trans 'Welcome, '%}{{request.user.username}}
+                {% trans 'Welcome, ' %}{{ request.user.username }}
                 </span>
             {% endif %}
 
@@ -77,23 +83,23 @@
 <div class="main-cntnt text-center">
     <div class="max-container fit-window">
         {% if messages %}
-        <div class="mess-sec">
-            <ul class="messages">
-                {% for message in messages %}
-                <li
-                        {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+            <div class="mess-sec">
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li
+                                {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% endif %}
 
         {% for error in formset.non_form_errors %}
-        <div class="mess-sec">
-            <ul class="messages error-mess">
-                <li>{{error}}</li>
-            </ul>
-        </div>
+            <div class="mess-sec">
+                <ul class="messages error-mess">
+                    <li>{{ error }}</li>
+                </ul>
+            </div>
         {% endfor %}
 
 

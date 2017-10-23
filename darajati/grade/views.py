@@ -30,12 +30,6 @@ class GradeFragmentView(AttendanceBaseView, ListView):
     def get_queryset(self):
         return GradeFragment.get_section_grade_fragments(self.section)
 
-    def get_context_data(self):
-        context = super(GradeFragmentView, self).get_context_data()
-        context['section_id'] = self.section_id
-        context['section'] = self.section
-        return context
-
 
 class GradesView(AttendanceBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
@@ -68,12 +62,11 @@ class GradesView(AttendanceBaseView, ModelFormSetView):
         context['section_objective_average'] = StudentGrade.get_section_objective_average(self.section)
         context['course_average'] = StudentGrade.get_course_average(self.section, self.grade_fragment)
         context['grade_fragment'] = self.grade_fragment
-        context['section'] = self.section
         return context
 
     def formset_valid(self, formset):
         for form in formset:
-            form.user = self.request.user.profile
+            form.user = self.request.user
             form.save(commit=False)
         messages.success(self.request, _('Grades were saved successfully'))
         return super(GradesView, self).formset_valid(formset)
@@ -106,7 +99,7 @@ class CreateGradeFragmentView(AttendanceBaseView, CreateView):
             form.section = self.section
 
         form.course_offering = self.section.course_offering
-        form.updated_by = self.request.user.profile
+        form.updated_by = self.request.user
         form.save()
         messages.success(self.request, _('Grade plan created successfully'))
         return super(CreateGradeFragmentView, self).form_valid(form)

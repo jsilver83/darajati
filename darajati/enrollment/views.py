@@ -1,27 +1,30 @@
 from django.contrib import messages
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Section, Enrollment, Coordinator, CourseOffering
+from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
+
+from grade.models import GradeFragment
 
 
 class HomeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        # TODO: redirect the new users to fill their information
-        if request.user.profile.is_instructor:
-            if request.user.profile.is_coordinator:
+
+        if Instructor.is_instructor(self.request.user):
+            if Instructor.is_coordinator(self.request.user.instructor):
                 return redirect('enrollment:coordinator')
-            if request.user.profile.is_instructor & request.user.profile.has_access:
+            if Instructor.has_access(self.request.user):
                 return redirect('enrollment:instructor')
         else:
             return redirect('enrollment:unauthorized')
 
 
-class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
+class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
     """
     :InstructorBaseView:
     - check if the current user is instructor or superuser
@@ -31,6 +34,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
 
     section_id = None
     section = None
+    coordinator = None
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -39,6 +43,8 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
         if self.kwargs.get('section_id'):
             self.section_id = self.kwargs['section_id']
             self.section = Section.get_section(self.section_id)
+        if Instructor.is_coordinator(self.request.user.instructor):
+            self.coordinator = self.request.user.instructor.coordinators
         return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self, **kwargs):
@@ -47,14 +53,21 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin):
             messages.error(self.request, _('This is not a valid section'))
             return False
 
-        is_instructor_section = self.section.is_instructor_section(
-            self.request.user.profile.instructor)
-        if not is_instructor_section:
-            messages.error(self.request,
-                           _('The requested section do not belong to you, or it is out of this semester'))
-            return False
+        is_instructor_section = self.section.is_instructor_section(self.request.user.instructor)
+        is_coordinator = self.section.is_coordinator_section(self.request.user.instructor)
 
-        return True
+        if is_instructor_section or is_coordinator:
+            return True
+        messages.error(self.request,
+                       _('The requested section do not belong to you, or it is out of this semester'))
+        return False
+
+    def get_context_data(self, **kwargs):
+        context = super(InstructorBaseView, self).get_context_data(**kwargs)
+        context['section'] = self.section
+        context['section_id'] = self.section_id
+        context['coordinator'] = self.coordinator
+        return context
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -67,10 +80,10 @@ class InstructorView(InstructorBaseView, ListView):
     model = Section
 
     def test_func(self, **kwargs):
-        return self.request.user.profile.is_instructor
+        return True if Instructor.is_instructor(self.request.user) else False
 
     def get_queryset(self):
-        return Section.get_instructor_sections(self.request.user.profile.instructor)
+        return Section.get_instructor_sections(self.request.user.instructor)
 
 
 class SectionStudentView(InstructorBaseView, ListView):
@@ -82,19 +95,15 @@ class SectionStudentView(InstructorBaseView, ListView):
         query = Enrollment.get_students(self.section_id)
         return query
 
-    def get_context_data(self, **kwargs):
-        context = super(SectionStudentView, self).get_context_data(**kwargs)
-        context['section'] = self.section
-        return context
 
-
-class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin):
+class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
     coordinator = None
     course_offering_id = None
     course_offering = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.coordinator = self.request.user.profile.instructor.coordinators
+        if Coordinator.objects.filter(instructor=request.user.instructor).exists():
+            self.coordinator = request.user
         return super(CoordinatorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -103,6 +112,11 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin):
                            _('You can not access this page'))
             return False
         return True
+
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorBaseView, self).get_context_data(**kwargs)
+        context['coordinator'] = self.coordinator
+        return context
 
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
@@ -134,7 +148,7 @@ class CoordinatorSectionView(CoordinatorBaseView, ListView):
             if not self.course_offering:
                 messages.error(self.request, _('No course offering found'))
                 return False
-            if not Coordinator.is_coordinator_course_offering(self.request.user.profile.instructor, self.course_offering):
+            if not Coordinator.is_coordinator_course_offering(self.request.user.instructor, self.course_offering):
                 messages.error(self.request, _('You can not access this page'))
                 return False
 
@@ -143,6 +157,16 @@ class CoordinatorSectionView(CoordinatorBaseView, ListView):
 
     def get_queryset(self):
         queryset = super(CoordinatorSectionView, self).get_queryset()
+        return queryset.filter(course_offering=self.course_offering)
+
+
+class CoordinatorGradeFragmentView(CoordinatorBaseView, ListView):
+    template_name = 'enrollment/coordinator_grade_fragment.html'
+    model = GradeFragment
+    context_object_name = 'fragments'
+
+    def get_queryset(self):
+        queryset = super(CoordinatorGradeFragmentView, self).get_queryset()
         return queryset.filter(course_offering=self.course_offering)
 
 
@@ -155,7 +179,7 @@ class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         if self.request.POST.get('create_grade'):
-            get_students_enrollment_grades(self.request.user.profile)
+            get_students_enrollment_grades(self.request.user)
             # get_students_enrollment_grades.apply_async(args=[now()], eta=now())
         return render(request, self.template_name)
 

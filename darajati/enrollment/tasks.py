@@ -5,7 +5,7 @@ from grade.models import GradeFragment, StudentGrade
 
 
 # @shared_task()
-def get_students_enrollment_grades(profile):
+def get_students_enrollment_grades(user):
     """
     :return:
     """
