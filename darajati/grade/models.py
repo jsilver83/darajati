@@ -72,7 +72,7 @@ class GradeFragment(models.Model):
 
     entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False,
                                                help_text=_('Checked when the course entered grades are in %'))
-    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='GradeFragment')
+    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='GradeFragment', null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
     class Meta:
@@ -109,7 +109,7 @@ class LetterGrade(models.Model):
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
                                         max_digits=settings.MAX_DIGITS,
                                         decimal_places=settings.MAX_DECIMAL_POINT)
-    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='letter_grade', default=0)
+    updated_by = models.ForeignKey('enrollment.UserProfile', related_name='letter_grade', null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
     # TODO: Ordering of letter grade
