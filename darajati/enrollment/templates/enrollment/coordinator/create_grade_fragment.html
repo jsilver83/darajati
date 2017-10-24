@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="title-sec text-center">
+                <h3>{% trans 'Find your current enrolled sections' %}</h3>
+            </div>
+            <br>
+            <form method="post">
+                {{ form }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -14,7 +14,8 @@
                 <th class="text-center">{% trans 'Semester Code' %}</th>
                 <th class="text-center">{% trans 'Course Code' %}</th>
                 <th class="text-center">{% trans 'Course Name' %}</th>
-                <th></th>
+                <th class="text-center">{% trans 'Sections' %}</th>
+                <th class="text-center">{% trans 'Grade Fragments' %}</th>
             </tr>
             </thead>
             <tbody>
@@ -24,7 +25,8 @@
                     <td {% if course.course_offering.coordinated %} style="color:red" {% endif %}>
                         {{ course.course_offering.course.code }}</td>
                     <td>{{ course.course_offering.course.name }}</td>
-                    <td><a href="{% url 'enrollment:course_coordinator' course_offering_id=course.course_offering.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit/Access' %}</a></td>
+                    <td><a href="{% url 'enrollment:course_coordinator' course_offering_id=course.course_offering.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
+                    <td><a href="{% url 'enrollment:grade_fragment_coordinator' course_offering_id=course.course_offering.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
                 </tr>
              {% endfor %}
             </tbody>

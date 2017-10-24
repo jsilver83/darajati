@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.views.generic import View, ListView
+from django.views.generic import View, ListView, UpdateView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
@@ -75,9 +75,9 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
 
 
 class InstructorView(InstructorBaseView, ListView):
-    context_object_name = 'sections'
-    template_name = 'enrollment/instructor_sections.html'
+    template_name = 'enrollment/sections_list.html'
     model = Section
+    context_object_name = 'sections'
 
     def test_func(self, **kwargs):
         return True if Instructor.is_instructor(self.request.user) else False
@@ -87,15 +87,16 @@ class InstructorView(InstructorBaseView, ListView):
 
 
 class SectionStudentView(InstructorBaseView, ListView):
-    context_object_name = 'enrollments'
-    template_name = 'enrollment/section_students.html'
+    template_name = 'enrollment/instructor/section_students.html'
     model = Enrollment
+    context_object_name = 'enrollments'
 
     def get_queryset(self):
         query = Enrollment.get_students(self.section_id)
         return query
 
 
+# Coordinator views
 class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
     coordinator = None
     course_offering_id = None
@@ -123,24 +124,9 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin)
             return reverse_lazy('enrollment:home')
 
 
-# Coordinator views
-class CoordinatorView(CoordinatorBaseView, ListView):
-    template_name = 'enrollment/coordinator_courses_list.html'
-    model = Coordinator
-    context_object_name = 'courses'
-
-    def get_queryset(self):
-        queryset = super(CoordinatorView, self).get_queryset()
-        return queryset.filter(instructor=self.coordinator.instructor)
-
-
-class CoordinatorSectionView(CoordinatorBaseView, ListView):
-    template_name = 'enrollment/coordinator_course_sections_list.html'
-    model = Section
-    context_object_name = 'sections'
-
+class CoordinatorEditBaseView(CoordinatorBaseView):
     def test_func(self):
-        rules = super(CoordinatorSectionView, self).test_func()
+        rules = super(CoordinatorEditBaseView, self).test_func()
         if rules:
             self.course_offering_id = self.kwargs['course_offering_id']
             self.course_offering = CourseOffering.objects.get(id=self.course_offering_id)
@@ -155,19 +141,56 @@ class CoordinatorSectionView(CoordinatorBaseView, ListView):
             return True
         return False
 
+
+class CoordinatorView(CoordinatorBaseView, ListView):
+    template_name = 'enrollment/coordinator/courses_list.html'
+    model = Coordinator
+    context_object_name = 'courses'
+
+    def get_queryset(self):
+        queryset = super(CoordinatorView, self).get_queryset()
+        return queryset.filter(instructor=self.coordinator.instructor)
+
+
+class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
+    template_name = 'enrollment/sections_list.html'
+    model = Section
+    context_object_name = 'sections'
+
     def get_queryset(self):
         queryset = super(CoordinatorSectionView, self).get_queryset()
         return queryset.filter(course_offering=self.course_offering)
 
 
-class CoordinatorGradeFragmentView(CoordinatorBaseView, ListView):
-    template_name = 'enrollment/coordinator_grade_fragment.html'
+class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
+    template_name = 'enrollment/coordinator/grades_fragment_list.html'
     model = GradeFragment
     context_object_name = 'fragments'
 
     def get_queryset(self):
         queryset = super(CoordinatorGradeFragmentView, self).get_queryset()
         return queryset.filter(course_offering=self.course_offering)
+
+
+class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
+    template_name = 'enrollment/coordinator/create_grade_fragment.html'
+    model = GradeFragment
+    fields = '__all__'
+
+
+class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
+    template_name = 'enrollment/coordinator/update_grade_fragment.html'
+    model = GradeFragment
+    fields = '__all__'
+
+    def test_func(self):
+        rules = super(CoordinatorEditGradeFragmentView, self).test_func()
+        if rules:
+            if GradeFragment.get_grade_fragment(self.kwargs['pk']):
+                return True
+            messages.error(self.request, _('Invalid grade fragment'))
+            return False
+        return False
 
 
 # Admin with superuser can access this only
