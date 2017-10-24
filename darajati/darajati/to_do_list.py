@@ -32,4 +32,14 @@
 #DONE - 12. Add Serial Number for enrollments
 
 #DONE - 13. Order periods based on the start_time in attendance page.
+
+14 - Coordinator create/edit/delete grade fragment deleting with CASCADE
+15 - Allow changing countable grade fragment only before the grade_fragment_deadline
+16 - Excused Status should be given by Student Affairs with implementing a single page for them to select student and
+period and excused that student.
+
+17 - Automate Jobs with celery
+18 - Fix the look and field of the website
+19 - exporting grade fragments from other semester.
+
 """
