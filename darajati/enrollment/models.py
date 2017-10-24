@@ -325,7 +325,7 @@ class Enrollment(models.Model):
     register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.student.english_name, self.section.code)
+        return to_string(self.student, self.section.code)
 
     @staticmethod
     def get_students(section_id):
