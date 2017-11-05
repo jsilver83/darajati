@@ -208,6 +208,8 @@ def initial_roster_creation(course_offering, commit=False):
                 if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
                     enrollment.comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
                     enrollment.active = False
+                    enrollment.letter_grade = result['grade']
+
                     enrollment_report.append({'enrollment': enrollment,
                                               'code': 'DROP',
                                               'message': 'Dropped with grade {}'.format(str(result['grade']).lower())})
