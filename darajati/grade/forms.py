@@ -186,8 +186,9 @@ class GradeFragmentForm(forms.ModelForm):
     class Meta:
         model = GradeFragment
         fields = '__all__'
-        exclude = ['updated_by', 'updated_on', 'course_offering', 'section']
+        exclude = ['updated_by', 'updated_on', 'course_offering']
         widgets = {
+            'section': forms.Select(attrs={'class': 'thm-field'}),
             'category': forms.TextInput(attrs={'class': 'thm-field'}),
             'description': forms.TextInput(attrs={'class': 'thm-field'}),
             'weight': forms.NumberInput(attrs={'class': 'thm-field'}),
