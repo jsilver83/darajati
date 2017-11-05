@@ -184,7 +184,7 @@ def initial_roster_creation(course_offering, commit=False):
                     move_enrollment.section.code,
                     section.code)
 
-            if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
+            if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic', 'dn']:
                 comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
                 enrollment = Enrollment(
                     section=section,
@@ -205,7 +205,7 @@ def initial_roster_creation(course_offering, commit=False):
                 enrollment.active = True
 
             if enrollment.letter_grade != result['grade']:
-                if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic']:
+                if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic', 'dn']:
                     enrollment.comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
                     enrollment.active = False
                     enrollment.letter_grade = result['grade']
@@ -221,7 +221,7 @@ def initial_roster_creation(course_offering, commit=False):
                                                   str(result['grade']).lower())})
                     enrollment.letter_grade = result['grade']
             else:
-                if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic'] and enrollment.active:
+                if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic', 'dn'] and enrollment.active:
                     enrollment.comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
                     enrollment.active = False
                     enrollment.letter_grade = result['grade']
