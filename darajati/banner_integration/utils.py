@@ -201,7 +201,7 @@ def initial_roster_creation(course_offering, commit=False):
             enrollment_report.append({'enrollment': enrollment, 'code': code, 'message': message})
         else:
             enrollment = Enrollment.objects.get(student=student, section=section)
-            if not enrollment.active:
+            if not enrollment.active and str(result['grade']).lower() not in ['w', 'wp', 'wf', 'ic']:
                 enrollment.active = True
 
             if enrollment.letter_grade != result['grade']:
@@ -220,6 +220,15 @@ def initial_roster_creation(course_offering, commit=False):
                                                   enrollment.letter_grade,
                                                   str(result['grade']).lower())})
                     enrollment.letter_grade = result['grade']
+            else:
+                if str(result['grade']).lower() in ['w', 'wp', 'wf', 'ic'] and enrollment.active:
+                    enrollment.comment = 'Dropped with grade {}'.format(str(result['grade']).lower())
+                    enrollment.active = False
+                    enrollment.letter_grade = result['grade']
+
+                    enrollment_report.append({'enrollment': enrollment,
+                                              'code': 'DROP',
+                                              'message': 'Dropped with grade {}'.format(str(result['grade']).lower())})
             if commit:
                 enrollment.save()
 
@@ -252,7 +261,6 @@ def initial_roster_creation(course_offering, commit=False):
 
 
 def initial_faculty_teaching_creation(course_offering, sections, commit=False):
-
     course_offering = CourseOffering.get_course_offering(course_offering)
     instructors = []
     periods_report = []
