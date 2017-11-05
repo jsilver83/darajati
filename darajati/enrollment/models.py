@@ -365,6 +365,7 @@ class Enrollment(models.Model):
             count_index += 1
             if enrollment.active is False:
                 count_index += 1
+                continue
 
             for period in periods:
                 id = 0
