@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
+from grade.forms import GradeFragmentForm
 
 from grade.models import GradeFragment
 
@@ -92,7 +93,7 @@ class SectionStudentView(InstructorBaseView, ListView):
     context_object_name = 'enrollments'
 
     def get_queryset(self):
-        query = Enrollment.get_students(self.section_id)
+        query = Enrollment.get_students(self.section_id).filter(active=True)
         return query
 
 
@@ -103,8 +104,9 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin)
     course_offering = None
 
     def dispatch(self, request, *args, **kwargs):
-        if Coordinator.objects.filter(instructor=request.user.instructor).exists():
-            self.coordinator = request.user
+        if request.user.is_authenticated:
+            if Coordinator.objects.filter(instructor=request.user.instructor).exists():
+                self.coordinator = request.user
         return super(CoordinatorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -122,6 +124,7 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin)
     def get_login_url(self):
         if self.request.user != "AnonymousUser":
             return reverse_lazy('enrollment:home')
+        return super(CoordinatorBaseView, self).get_login_url()
 
 
 class CoordinatorEditBaseView(CoordinatorBaseView):
@@ -175,13 +178,13 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
 class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
     template_name = 'enrollment/coordinator/create_grade_fragment.html'
     model = GradeFragment
-    fields = '__all__'
+    form_class = GradeFragmentForm
 
 
 class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
     template_name = 'enrollment/coordinator/update_grade_fragment.html'
     model = GradeFragment
-    fields = '__all__'
+    form_class = GradeFragmentForm
 
     def test_func(self):
         rules = super(CoordinatorEditGradeFragmentView, self).test_func()
