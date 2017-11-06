@@ -26,6 +26,8 @@ urlpatterns += [
         views.CoordinatorCreateGradeFragmentView.as_view(),
         name='create_grade_fragment_coordinator'),
     url(r'^coordinator/section/(?P<section_id>[0-9]+)/$', views.CoordinatorView.as_view(), name='section_coordinator'),
+    url(r'^coordinator/grades/(?P<course_offering_id>[0-9]+)/(?P<grade_fragment_id>[0-9]+)/import-grade/$',
+        views.ImportGradesView.as_view(), name='import_grade'),
 
 ]
 

@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.views.generic import View, ListView, UpdateView, CreateView
+from django.views.generic import View, ListView, UpdateView, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
@@ -8,9 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
+from .forms import GradesImportForm
+
 from grade.forms import GradeFragmentForm
 
-from grade.models import GradeFragment
+from grade.models import GradeFragment, StudentGrade
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -207,6 +209,23 @@ class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
                                 'course_offering_id': self.course_offering_id,
                                 'pk': self.kwargs['pk']
                             })
+
+
+class ImportGradesView(CoordinatorEditBaseView, FormView):
+    form_class = GradesImportForm
+    template_name = 'enrollment/coordinator/import_grades.html'
+    success_url = reverse_lazy('enrollment:home')
+
+    def form_valid(self, form, **kwargs):
+        fragment = self.kwargs.get('grade_fragment_id')
+        fragment = GradeFragment.objects.get(id=fragment)
+        context = self.get_context_data(**kwargs)
+        context['list'], context['errors'] = StudentGrade.import_grades_by_admin(
+            form.cleaned_data['grade'],
+            fragment,
+            form.cleaned_data['commit']
+        )
+        return self.render_to_response(context)
 
 
 # Admin with superuser can access this only

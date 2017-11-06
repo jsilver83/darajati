@@ -200,7 +200,8 @@ def initial_roster_creation(course_offering, commit=False):
             enrollment_report.append({'enrollment': enrollment, 'code': code, 'message': message})
         else:
             enrollment = Enrollment.objects.get(student=student, section=section)
-            if not enrollment.active and str(result['grade']).lower() not in ['w', 'wp', 'wf', 'ic']:
+
+            if not enrollment.active and str(result['grade']).lower() not in ['w', 'wp', 'wf', 'ic', 'dn']:
                 enrollment.active = True
 
             if enrollment.letter_grade != result['grade']:

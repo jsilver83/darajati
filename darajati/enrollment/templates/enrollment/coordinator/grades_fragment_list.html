@@ -19,6 +19,7 @@
                 <th class="text-center">{% trans 'Type' %}</th>
                 <th class="text-center">{% trans 'Weight' %}</th>
                 <th class="text-center">{% trans 'Edit' %}</th>
+                <th class="text-center">{% trans 'Grades' %}</th>
             </tr>
             </thead>
             <tbody>
@@ -33,6 +34,7 @@
                     <td>{{ fragment.boundary_type }}</td>
                     <td>{{ fragment.weight }}</td>
                     <td><a href="{% url 'enrollment:update_grade_fragment_coordinator' course_offering_id=fragment.course_offering.id pk=fragment.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+                    <td><a href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Import grade' %}</a></td>
                 </tr>
              {% endfor %}
             </tbody>
