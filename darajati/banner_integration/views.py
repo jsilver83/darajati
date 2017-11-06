@@ -1,9 +1,6 @@
-from decimal import Decimal
-from django.contrib import messages
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
 
 from .forms import CourseOfferingForm, GradesImportForm
 from .utils import initial_roster_creation, initial_faculty_teaching_creation
@@ -28,6 +25,7 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
     instructors = None
     periods = None
     sections = None
+
     def get_form_kwargs(self):
         """
         Passing the only current semester's Offering Courses List 

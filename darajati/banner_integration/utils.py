@@ -1,7 +1,6 @@
-import requests, json
+import requests
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core import serializers
 from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from attendance.models import ScheduledPeriod
 from django.db import transaction
