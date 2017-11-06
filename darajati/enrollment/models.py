@@ -327,6 +327,10 @@ class Enrollment(models.Model):
     def __str__(self):
         return to_string(self.student, self.section.code)
 
+    @property
+    def get_letter_grade(self):
+        return self.letter_grade if self.letter_grade else "UD"
+
     @staticmethod
     def get_students(section_id):
         """
@@ -362,10 +366,11 @@ class Enrollment(models.Model):
         enrollment_list = Enrollment.get_students(section_id)
         count_index = 0
         for enrollment in enrollment_list:
-            count_index += 1
             if enrollment.active is False:
                 count_index += 1
                 continue
+            else:
+                count_index += 1
 
             for period in periods:
                 id = 0

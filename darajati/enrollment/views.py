@@ -95,7 +95,7 @@ class SectionStudentView(InstructorBaseView, ListView):
     context_object_name = 'enrollments'
 
     def get_queryset(self):
-        query = Enrollment.get_students(self.section_id).filter(active=True)
+        query = Enrollment.get_students(self.section_id)
         return query
 
 

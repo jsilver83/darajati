@@ -3,8 +3,11 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
-
+        <div class="back-btn">
+            <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
+        </div>
+    </div>
+    <div class="cntnt-sec">
         {% if formset.forms %}
         <form method="post">
             <div class="title-sec row">
@@ -41,7 +44,7 @@
                     {% for enrollment in enrollments %}
                     {% ifequal enrollment.id|stringformat:"s" form.enrollment.value|stringformat:"s" %}
                     <tr>
-                        <td>{{ enrollment.id }}</td>
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ enrollment.student.university_id }}</td>
                         <td>{{ enrollment.student.english_name }}</td>
                         <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
