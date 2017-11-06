@@ -44,12 +44,12 @@ INSTALLED_APPS = [
     'banner_integration',
     'django_celery_results',
     'impersonate',
-    'crispy_forms',
-    'debug_toolbar',
+    # 'crispy_forms',
+    # 'debug_toolbar',
 ]
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -162,7 +162,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'US/Eastern'
 
-CRISPY_TEMPLATE_PACK = 'bootstrap'
+# CRISPY_TEMPLATE_PACK = 'bootstrap'
 
 # Decimal max digits
 MAX_DIGITS = 5  # 10000.00
