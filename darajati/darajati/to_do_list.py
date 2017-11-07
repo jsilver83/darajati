@@ -21,9 +21,9 @@
 
 #DONE  - 7. Fix the days of the attendances.
 
-8. Grades Fragment Import.
+#DONE - 8. Grades Fragment Import.
 
-9. WebService 
+#DONE - 9. WebService
 
 10. Absent & Late Deduction (Complex)
  
@@ -33,7 +33,7 @@
 
 #DONE - 13. Order periods based on the start_time in attendance page.
 
-14 - Coordinator create/edit/delete grade fragment deleting with CASCADE
+14 - Coordinator create/edit/delete grade fragment deleting with CASCADE - (Create - Delete needs to be discussed with Joud)
 15 - Allow changing countable grade fragment only before the grade_fragment_deadline
 16 - Excused Status should be given by Student Affairs with implementing a single page for them to select student and
 period and excused that student.
