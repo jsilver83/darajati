@@ -8,7 +8,7 @@
             </div>
             <br>
             <form method="post">
-                {{ form }}
+                {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
             </form>
         </div>
     </div>

@@ -5,65 +5,65 @@
         <div class="cntnt-sec">
             <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
             <div class="title-sec text-center">
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form }}
-                    <input class="thm-btn small-btn save-btn" type="submit" name="submit"
-                           value="{% trans 'Import grades' %}">
-                </form>
-                {% if list %}
-                    <h3>{% trans 'Grades Report' %}</h3>
-                    <table class="table table-condensed text-center">
-                        <thead>
-                        <tr>
-                            <th class="text-center">{% trans 'No.' %}</th>
-                            <th class="text-center">{% trans 'Student ID' %}</th>
-                            <th class="text-center">{% trans 'Old Grade' %}</th>
-                            <th class="text-center">{% trans 'New Grade' %}</th>
-                            <th class="text-center">{% trans 'Status' %}</th>
-                            <th class="text-center">{% trans 'code' %}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for item in list %}
-
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ item.id }}</td>
-                                <td>{{ item.old_grade }}</td>
-                                <td>{{ item.new_grade }}</td>
-                                <td>{{ item.status }}</td>
-                                <td>{{ item.code }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                {% endif %}
-                {% if errors %}
-                    <h3>{% trans 'Errors Report' %}</h3>
-                    <table class="table table-condensed text-center">
-                        <thead>
-                        <tr>
-                            <th class="text-center">{% trans 'No.' %}</th>
-                            <th class="text-center">{% trans 'Line' %}</th>
-                            <th class="text-center">{% trans 'Status' %}</th>
-                            <th class="text-center">{% trans 'code' %}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for item in errors %}
-
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ item.line }}</td>
-                                <td>{{ item.status }}</td>
-                                <td>{{ item.code }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                {% endif %}
+                <h3>{% trans 'Import Grades' %}</h3>
             </div>
+            <form method="post">
+                {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+
+                <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
+            </form>
+            {% if list %}
+                <h3>{% trans 'Grades Report' %}</h3>
+                <table class="table table-condensed text-center">
+                    <thead>
+                    <tr>
+                        <th class="text-center">{% trans 'No.' %}</th>
+                        <th class="text-center">{% trans 'Student ID' %}</th>
+                        <th class="text-center">{% trans 'Old Grade' %}</th>
+                        <th class="text-center">{% trans 'New Grade' %}</th>
+                        <th class="text-center">{% trans 'Status' %}</th>
+                        <th class="text-center">{% trans 'code' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in list %}
+
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.old_grade }}</td>
+                            <td>{{ item.new_grade }}</td>
+                            <td>{{ item.status }}</td>
+                            <td>{{ item.code }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            {% if errors %}
+                <h3>{% trans 'Errors Report' %}</h3>
+                <table class="table table-condensed text-center">
+                    <thead>
+                    <tr>
+                        <th class="text-center">{% trans 'No.' %}</th>
+                        <th class="text-center">{% trans 'Line' %}</th>
+                        <th class="text-center">{% trans 'Status' %}</th>
+                        <th class="text-center">{% trans 'code' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in errors %}
+
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.line }}</td>
+                            <td>{{ item.status }}</td>
+                            <td>{{ item.code }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

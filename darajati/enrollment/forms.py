@@ -12,6 +12,7 @@ class GradesImportForm(forms.Form):
                                         u'0000000000 10')})
         )
         self.fields['commit'] = forms.BooleanField(
-            label=_('Commit Changes'),
-            required=False
+            label=_('Commit changes'),
+            required=False,
+            help_text=_('This checkbox is for you to save the changes you viewed in the report.')
         )

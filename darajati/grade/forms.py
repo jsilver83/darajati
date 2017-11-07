@@ -188,18 +188,13 @@ class GradeFragmentForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['updated_by', 'updated_on', 'course_offering']
         widgets = {
-            'section': forms.Select(attrs={'class': 'thm-field'}),
-            'category': forms.TextInput(attrs={'class': 'thm-field'}),
-            'description': forms.TextInput(attrs={'class': 'thm-field'}),
-            'weight': forms.NumberInput(attrs={'class': 'thm-field'}),
-            'allow_entry': forms.CheckboxInput(attrs={'class': 'thm-field'}),
-            'order': forms.NumberInput(attrs={'class': 'thm-field'}),
-            'show_teacher_report': forms.CheckboxInput(attrs={'class': 'thm-field'}),
-            'show_student_report': forms.CheckboxInput(attrs={'class': 'thm-field'}),
-            'boundary_type': forms.Select(attrs={'class': 'thm-field'}),
-            'boundary_range': forms.NumberInput(attrs={'class': 'thm-field'}),
-            'boundary_fixed_average': forms.NumberInput(attrs={'class': 'thm-field'}),
-            'allow_change': forms.CheckboxInput(attrs={'class': 'thm-field'}),
-            'allow_subjective_marking': forms.CheckboxInput(attrs={'class': 'thm-field'}),
-            'entry_in_percentages': forms.CheckboxInput(attrs={'class': 'thm-field'}),
+            'section': forms.Select(attrs={'class': 'form-control'}),
+            'category': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'boundary_type': forms.Select(attrs={'class': 'form-control'}),
+            'boundary_range_upper': forms.NumberInput(attrs={'class': 'form-control'}),
+            'boundary_range_lower': forms.NumberInput(attrs={'class': 'form-control'}),
+            'boundary_fixed_average': forms.NumberInput(attrs={'class': 'form-control'}),
         }

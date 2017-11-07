@@ -8,19 +8,7 @@
             </div>
             <br>
             <form method="post">
-                {% csrf_token %}
-                {# Include the hidden fields #}
-                {% for hidden in form.hidden_fields %}
-                    {{ hidden }}
-                {% endfor %}
-                {# Include the visible fields #}
-                {% for field in form.visible_fields %}
-                    <div class="">
-                        {{ field.errors }}
-                        {{ field.label_tag }} {{ field }}<br>
-                        {{ field.help_text }}
-                    </div>
-                {% endfor %}
+                {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
                 <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
             </form>
         </div>
