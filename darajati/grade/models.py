@@ -6,7 +6,7 @@ from django.db.models.functions import Concat
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from enrollment.utils import to_string
+from enrollment.utils import to_string, now
 
 from decimal import *
 
@@ -29,51 +29,137 @@ class GradeFragment(models.Model):
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
-    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="GradeFragment", null=True,
-                                        blank=False)
-    section = models.ForeignKey('enrollment.Section', related_name="GradeFragment", null=True, blank=True)
-    category = models.CharField(_('Category'), max_length=100, null=True, blank=False,
-                                help_text='Categories are like: Quiz, Midterm, Final Exam etc..')
-    description = models.CharField(_('Description'), max_length=100, null=True, blank=False)
-    weight = models.DecimalField(_('Weight'), null=True, blank=False, default=0.0, max_digits=settings.MAX_DIGITS,
-                                 decimal_places=settings.MAX_DECIMAL_POINT)
-    allow_entry = models.BooleanField(_('Allow Entry'), null=False, blank=False, default=True,
-                                      help_text=_('Allowing instructor to enter the marks for this grade break down'))
-    order = models.PositiveSmallIntegerField(_('Display Order'), null=True, blank=False,
-                                             help_text=_('The order of which grade break down should show up first'))
-    show_teacher_report = models.BooleanField(_('Show in Teacher Report'), null=False, blank=False, default=True)
-    show_student_report = models.BooleanField(_('Show in Student Report'), null=False, blank=False, default=True)
-    boundary_type = models.CharField(_('Boundary Type'), max_length=24, choices=GradesBoundaries.choices(),
-                                     null=True, blank=False, default=GradesBoundaries.SUBJECTIVE_FREE)
-    boundary_range_upper = models.DecimalField(_('Boundary Range Upper'), null=True, blank=True,
-                                               help_text=_(
-                                                   'When the type is subjective and it is not free, give a positive range'),
-                                               max_digits=settings.MAX_DIGITS,
-                                               decimal_places=settings.MAX_DECIMAL_POINT
-                                               )
-    boundary_range_lower = models.DecimalField(_('Boundary Range Lower'), null=True, blank=True,
-                                               help_text=_(
-                                                   'When the type is subjective and it is not free, give a negative range'),
-                                               max_digits=settings.MAX_DIGITS,
-                                               decimal_places=settings.MAX_DECIMAL_POINT
-                                               )
-    boundary_fixed_average = models.DecimalField(_('Boundary Fixed Average'), null=True, blank=True,
-                                                 max_digits=settings.MAX_DIGITS,
-                                                 decimal_places=settings.MAX_DECIMAL_POINT
-                                                 )
-    allow_change = models.BooleanField(_('Allow Change After Submission'), null=False, blank=False, default=True)
-    allow_subjective_marking = models.BooleanField(_('Allow Subjective Marking'), null=False, blank=False,
-                                                   default=False)
+    course_offering = models.ForeignKey(
+        'enrollment.CourseOffering',
+        related_name="GradeFragment",
+        null=True,
+        blank=False
+    )
+    section = models.ForeignKey(
+        'enrollment.Section',
+        related_name="GradeFragment",
+        null=True,
+        blank=True)
+    category = models.CharField(
+        _('Category'),
+        max_length=100,
+        null=True,
+        blank=False,
+        help_text='Categories are like: Quiz, Midterm, Final Exam etc..'
+    )
+    description = models.CharField(
+        _('Description'), max_length=100,
+        null=True,
+        blank=False
+    )
+    weight = models.DecimalField(
+        _('Weight'),
+        null=True,
+        blank=False,
+        default=0.0,
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    allow_entry = models.BooleanField(
+        _('Allow Entry'),
+        null=False,
+        blank=False,
+        default=True,
+        help_text=_('Allowing instructor to enter the marks for this grade break down')
+    )
+    entry_start_date = models.DateTimeField(
+        _('Allowed entry start date'),
+        null=True,
+        blank=False,
+        help_text=_('Set the entry date and time to allow instructor to enter grades')
+    )
+    entry_end_date = models.DateTimeField(
+        _('Allowed entry end date'),
+        null=True,
+        blank=False,
+        help_text=_('Set the entry date and time to allow instructor to enter grades')
+    )
+    order = models.PositiveSmallIntegerField(
+        _('Display Order'),
+        null=True,
+        blank=False,
+        help_text=_('The order of which grade break down should show up first')
+    )
+    show_teacher_report = models.BooleanField(
+        _('Show in Teacher Report'),
+        null=False,
+        blank=False,
+        default=True
+    )
+    show_student_report = models.BooleanField(
+        _('Show in Student Report'),
+        null=False,
+        blank=False,
+        default=True
+    )
+    boundary_type = models.CharField(
+        _('Boundary Type'), max_length=24,
+        choices=GradesBoundaries.choices(),
+        null=True,
+        blank=False,
+        default=GradesBoundaries.SUBJECTIVE_FREE)
+    boundary_range_upper = models.DecimalField(
+        _('Boundary Range Upper'), null=True, blank=True,
+        help_text=_(
+            'When the type is subjective and it is not free, give a positive range'),
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    boundary_range_lower = models.DecimalField(
+        _('Boundary Range Lower'),
+        null=True,
+        blank=True,
+        help_text=_('When the type is subjective and it is not free, give a negative range'),
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    boundary_fixed_average = models.DecimalField(
+        _('Boundary Fixed Average'),
+        null=True,
+        blank=True,
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    allow_change = models.BooleanField(
+        _('Allow Change After Submission'),
+        null=False,
+        blank=False,
+        default=True
+    )
+    allow_subjective_marking = models.BooleanField(
+        _('Allow Subjective Marking'),
+        null=False,
+        blank=False,
+        default=False
+    )
     student_total_grading = models.BooleanField(
         _('Calculate In Student Grading?'),
         default=False,
         help_text=_('If this is checked, It will be calculated in the total mark')
     )
 
-    entry_in_percentages = models.BooleanField(_('Entry in Percentages'), null=False, blank=True, default=False,
-                                               help_text=_('Checked when the course entered grades are in %'))
-    updated_by = models.ForeignKey(User, related_name='GradeFragment', null=True, blank=True)
-    updated_on = models.DateField(_('Updated On'), auto_now=True)
+    entry_in_percentages = models.BooleanField(
+        _('Entry in Percentages'),
+        null=False,
+        blank=True,
+        default=False,
+        help_text=_('Checked when the course entered grades are in %')
+    )
+    updated_by = models.ForeignKey(
+        User,
+        related_name='GradeFragment',
+        null=True,
+        blank=True
+    )
+    updated_on = models.DateField(
+        _('Updated On'),
+        auto_now=True
+    )
 
     class Meta:
         ordering = ['order']
@@ -99,6 +185,12 @@ class GradeFragment(models.Model):
         return GradeFragment.objects.all().annotate(
             value=Concat('course_offering__course__code', Value(' '), 'description', output_field=models.CharField())
         ).values_list('id', 'value')
+
+    @property
+    def is_entry_allowed(self):
+        if self.entry_start_date >= now() >= self.entry_end_date:
+            return True
+        return False
 
 
 class LetterGrade(models.Model):
@@ -202,12 +294,25 @@ class StudentGrade(models.Model):
         errors = []
         for line in lines.splitlines():
             line = str(line)
-            lines_length = len(line.split())
-            if line and lines_length == 2:
-                student_id, new_grade = line.split(' ')
+            lines_length = len(line.split(' ', 2))
+            student_id = None
+            new_grade = None
+            remark = None
+            if line and (lines_length == 2 or lines_length == 3):
+                if lines_length == 2:
+                    student_id, new_grade = line.split(' ', 2)
+                if lines_length == 3:
+                    student_id, new_grade, remark = line.split(' ', 2)
+
+                if not str(new_grade).isdecimal():
+                    errors.append(
+                        {'line': line, 'id': student_id, 'status': _('grade ' + str(new_grade) + ' is invalid'),
+                         'code': 'invalid_grade'})
+                    continue
                 new_grade = round(Decimal(new_grade), 2)
                 if not StudentGrade.is_student_exists(fragment, student_id):
-                    changes_list.append({'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
+                    errors.append(
+                        {'line': line, 'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
                     continue
 
                 grade_object = StudentGrade.get_student_old_grade(fragment, student_id)
@@ -223,14 +328,17 @@ class StudentGrade(models.Model):
                                                  (
                                                      grade_object.grade_fragment.weight / 100) * grade_object.grade_quantity,
                                                  new_grade)),
-                                             'code': 'new_grade'})
-                        students_objects.append({'grade_object': grade_object, 'new_grade': new_grade})
+                                             'code': 'new_grade',
+                                             'remark': remark})
+                        students_objects.append(
+                            {'grade_object': grade_object, 'new_grade': new_grade, 'remark': remark})
                     else:
-                        changes_list.append({'id': student_id,
-                                             'old_grade': grade_object.grade_quantity,
-                                             'new_grade': new_grade,
-                                             'status': _('grade should be between 100 and 0'),
-                                             'code': 'invalid_grade'})
+                        errors.append({'line': line,
+                                       'id': student_id,
+                                       'old_grade': grade_object.grade_quantity,
+                                       'new_grade': new_grade,
+                                       'status': _('grade should be between 0 and 100'),
+                                       'code': 'invalid_grade'})
                         continue
 
                 if not fragment.entry_in_percentages:
@@ -243,15 +351,18 @@ class StudentGrade(models.Model):
                                                      'change grade from {} to {}'.format(
                                                          str(grade_object.grade_quantity),
                                                          new_grade)),
-                                                 'code': 'new_grade'})
-                            students_objects.append({'grade_object': grade_object, 'new_grade': new_grade})
+                                                 'code': 'new_grade',
+                                                 'remark': remark})
+                            students_objects.append(
+                                {'grade_object': grade_object, 'new_grade': new_grade, 'remark': remark})
                         else:
-                            changes_list.append({'id': student_id,
-                                                 'old_grade': grade_object.grade_quantity,
-                                                 'new_grade': new_grade,
-                                                 'status': _('grade should be between {} and 0'.format(
-                                                     str(grade_object.grade_fragment.weight))),
-                                                 'code': 'invalid_grade'})
+                            errors.append({'line': line,
+                                           'id': student_id,
+                                           'old_grade': grade_object.grade_quantity,
+                                           'new_grade': new_grade,
+                                           'status': _('grade should be between 0 and {}'.format(
+                                               str(grade_object.grade_fragment.weight))),
+                                           'code': 'invalid_grade'})
                             continue
                     else:
                         changes_list.append({'id': student_id,

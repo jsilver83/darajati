@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import BaseModelFormSet
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -166,9 +167,9 @@ class BaseGradesFormSet(BaseModelFormSet):
                 more_objective_average = self.average_boundary + self.fragment.boundary_range
 
                 # if self.fragment.entry_in_percentages:
-                    # average_base_percent = round((self.average_boundary * 100) / self.fragment.weight, 2)
-                    # less_objective_average = average_base_percent - self.fragment.boundary_range
-                    # more_objective_average = average_base_percent + self.fragment.boundary_range
+                # average_base_percent = round((self.average_boundary * 100) / self.fragment.weight, 2)
+                # less_objective_average = average_base_percent - self.fragment.boundary_range
+                # more_objective_average = average_base_percent + self.fragment.boundary_range
 
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
@@ -186,15 +187,27 @@ class GradeFragmentForm(forms.ModelForm):
     class Meta:
         model = GradeFragment
         fields = '__all__'
-        exclude = ['updated_by', 'updated_on', 'course_offering']
+        exclude = ['updated_by', 'updated_on', 'course_offering', 'section']
         widgets = {
-            'section': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.TextInput(attrs={'class': 'form-control'}),
             'weight': forms.NumberInput(attrs={'class': 'form-control'}),
             'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'entry_start_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
+            'entry_end_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
             'boundary_type': forms.Select(attrs={'class': 'form-control'}),
             'boundary_range_upper': forms.NumberInput(attrs={'class': 'form-control'}),
             'boundary_range_lower': forms.NumberInput(attrs={'class': 'form-control'}),
             'boundary_fixed_average': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+    def clean(self):
+        semester_start_date = self.instance.course_offering.semester.start_date
+        semester_end_date = self.instance.course_offering.semester.end_date
+        if not (semester_start_date <= self.cleaned_data['entry_start_date'].date() <=
+                    self.cleaned_data['entry_end_date'].date() <= semester_end_date):
+            raise ValidationError([
+                ValidationError(
+                    _('entry dates should be between {} and {}'.format(semester_start_date, semester_end_date)))
+            ])
+        return self.cleaned_data

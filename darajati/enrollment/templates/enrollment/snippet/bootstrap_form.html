@@ -8,7 +8,16 @@
     <div class="form-group row">
         <label for="{{ field.id_for_label }}" class="col-3 col-form-label">{{ field.label }}</label>
         <div class="col-9">
-            {{ field }}
+{#            {% if "datetimepicker3" in field.field.widget.attrs.class %}#}
+{#                <div class='input-group date datetimepicker3'>#}
+{#                    {{ field }}#}
+{#                    <span class="input-group-addon">#}
+{#                        <span class="glyphicon glyphicon-time"></span>#}
+{#                    </span>#}
+{#                </div>#}
+{#            {% else %}#}
+                {{ field }}
+{#            {% endif %}#}
             {% if field.help_text %}
                 <small class="form-text text-muted">
                     {{ field.help_text|safe }}

@@ -20,7 +20,6 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     <!-- Js Files -->
     <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
-
     <!-- Custom Files -->
     <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/load_more.js' %}"></script>
@@ -59,7 +58,8 @@
                     <a href="{% url 'banner_integration:home' %}" class="login-btn">{% trans 'Banner Integration' %}</a>
                 {% endif %}
                 {% if coordinator %}
-                    <a href="{% url 'enrollment:coordinator' %}" class="login-btn">{% trans 'Coordinator Controls' %}</a>
+                    <a href="{% url 'enrollment:coordinator' %}"
+                       class="login-btn">{% trans 'Coordinator Controls' %}</a>
                     <a href="{% url 'enrollment:instructor' %}" class="login-btn">{% trans 'Instructor Controls' %}</a>
                 {% endif %}
             {% endif %}
@@ -101,6 +101,16 @@
                 </ul>
             </div>
         {% endfor %}
+
+        {% if form.non_field_errors %}
+            <div class="mess-sec">
+            <ul class="messages error-mess">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </ul>
+            </div>
+        {% endif %}
 
 
         {% block content %}

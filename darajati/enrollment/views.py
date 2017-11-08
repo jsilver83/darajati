@@ -200,6 +200,7 @@ class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
     def form_valid(self, form):
         form.course_offering = self.course_offering
         form.updated_by = self.request.user
+        form.save()
         messages.success(self.request, _('Grade fragment updated successfully'))
         return super(CoordinatorEditGradeFragmentView, self).form_valid(form)
 
