@@ -231,7 +231,7 @@ class ImportGradesView(CoordinatorEditBaseView, FormView):
 
 # Admin with superuser can access this only
 class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
-    template_name = 'enrollment/admin_controls.html'
+    template_name = 'enrollment/admin/controls.html'
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
