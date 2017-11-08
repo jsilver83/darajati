@@ -2,6 +2,9 @@ from django.contrib import admin
 from .models import *
 from django.utils.translation import ugettext_lazy as _
 
+from simple_history.admin import SimpleHistoryAdmin
+
+
 admin.site.site_header = _('Darajati Admin')
 admin.site.index_title = _('Darajati Administration')
 
@@ -16,7 +19,8 @@ class SectionAdmin(admin.ModelAdmin):
     list_filter = ('active', )
 
 
-class EnrollmentAdmin(admin.ModelAdmin):
+class EnrollmentAdmin(SimpleHistoryAdmin):
+    history_list_display = ['letter_grade', 'section', 'active', 'comment', 'updated_by']
     list_filter = ('active', 'letter_grade', 'section')
     list_display = ('id', 'student', 'section', 'register_date', 'letter_grade', 'active')
 

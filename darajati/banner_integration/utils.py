@@ -20,7 +20,7 @@ def request_class_roaster(semester_code, course_code):
     return response
 
 
-def initial_roster_creation(course_offering, commit=False):
+def initial_roster_creation(course_offering, current_user, commit=False):
     """
     Method Summary: 
     :param course_offering: an ID of the course offering
@@ -155,6 +155,7 @@ def initial_roster_creation(course_offering, commit=False):
             enrollment = Enrollment(
                 section=section,
                 student=student,
+                updated_by=current_user,
                 register_date=result['reg_date'],
                 letter_grade=result['grade']
             )
@@ -176,6 +177,7 @@ def initial_roster_creation(course_offering, commit=False):
                     student=student,
                     register_date=result['reg_date'],
                     letter_grade=result['grade'],
+                    updated_by=current_user,
                     comment="Moved from section {}".format(move_enrollment.section.code)
                 )
                 code = 'MOVED'
@@ -191,6 +193,7 @@ def initial_roster_creation(course_offering, commit=False):
                     register_date=result['reg_date'],
                     letter_grade=result['grade'],
                     comment=comment,
+                    updated_by=current_user,
                     active=False
                 )
                 code = 'DROP'
@@ -230,6 +233,7 @@ def initial_roster_creation(course_offering, commit=False):
                                               'code': 'DROP',
                                               'message': 'Dropped with grade {}'.format(str(result['grade']).lower())})
             if commit:
+                enrollment.updated_by = current_user
                 enrollment.save()
 
             inactive_enrollments = inactive_enrollments.exclude(student=student, section=section)

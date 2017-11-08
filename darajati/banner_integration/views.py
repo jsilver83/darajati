@@ -41,6 +41,7 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         """
         self.section_report, self.student_report, self.enrollment_report, self.sections = initial_roster_creation(
             form.cleaned_data['course_offering'],
+            self.request.user,
             form.cleaned_data['commit_changes'])
 
         self.instructors, self.periods = initial_faculty_teaching_creation(

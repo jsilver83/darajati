@@ -3,10 +3,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import User as User_model
+
 from .types import RoundTypes
 from .utils import to_string, now
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
+
+from simple_history.models import HistoricalRecords
 
 User = settings.AUTH_USER_MODEL
 
@@ -323,9 +326,28 @@ class Enrollment(models.Model):
     comment = models.CharField(_('Comment'), max_length=200, blank=True)
     letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=False, default='UD')
     register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
+    updated_by = models.ForeignKey(User, related_name='enrollment_creator', null=True, blank=False)
+    updated_on = models.DateTimeField(_('Updated on'), auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return to_string(self.student, self.section.code)
+
+    @property
+    def _history_user(self):
+        return self.updated_by
+
+    @_history_user.setter
+    def _history_user(self, value):
+        self.updated_by = value
+
+    @property
+    def _history_date(self):
+        return self.updated_on
+
+    @_history_date.setter
+    def _history_date(self, value):
+        self.updated_on = value
 
     @property
     def get_letter_grade(self):

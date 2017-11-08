@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'attendance',
     'grade',
     'banner_integration',
+    'simple_history',
     'django_celery_results',
     'impersonate',
     # 'crispy_forms',
@@ -60,6 +61,8 @@ MIDDLEWARE = [
     'impersonate.middleware.ImpersonateMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
+
 ]
 
 ROOT_URLCONF = 'darajati.urls'
