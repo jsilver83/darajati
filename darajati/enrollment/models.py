@@ -5,7 +5,7 @@ from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import User as User_model
 
 from .types import RoundTypes
-from .utils import to_string, now
+from .utils import to_string, now, today
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 
@@ -152,6 +152,10 @@ class Semester(models.Model):
     def __str__(self):
         return to_string(self.description, self.code)
 
+    @property
+    def can_create_grade_fragment(self):
+        return True if self.grade_fragment_deadline >= today() else False
+    
 
 class Department(models.Model):
     name = models.CharField(_('english name'), max_length=50, null=True, blank=False)

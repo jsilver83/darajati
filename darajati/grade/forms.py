@@ -211,3 +211,22 @@ class GradeFragmentForm(forms.ModelForm):
                     _('entry dates should be between {} and {}'.format(semester_start_date, semester_end_date)))
             ])
         return self.cleaned_data
+
+
+class CreateGradeFragmentForm(forms.ModelForm):
+    class Meta:
+        model = GradeFragment
+        fields = '__all__'
+        exclude = ['updated_by', 'updated_on', 'course_offering', 'section']
+        widgets = {
+            'category': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'entry_start_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
+            'entry_end_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
+            'boundary_type': forms.Select(attrs={'class': 'form-control'}),
+            'boundary_range_upper': forms.NumberInput(attrs={'class': 'form-control'}),
+            'boundary_range_lower': forms.NumberInput(attrs={'class': 'form-control'}),
+            'boundary_fixed_average': forms.NumberInput(attrs={'class': 'form-control'}),
+        }

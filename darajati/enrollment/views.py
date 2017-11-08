@@ -10,7 +10,7 @@ from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
 from .forms import GradesImportForm
 
-from grade.forms import GradeFragmentForm
+from grade.forms import GradeFragmentForm, CreateGradeFragmentForm
 
 from grade.models import GradeFragment, StudentGrade
 
@@ -176,11 +176,44 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
         queryset = super(CoordinatorGradeFragmentView, self).get_queryset()
         return queryset.filter(course_offering=self.course_offering)
 
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorGradeFragmentView, self).get_context_data(**kwargs)
+        context['course_offering'] = self.course_offering
+        context['can_create_fragment'] = self.course_offering.semester.can_create_grade_fragment
+        return context
+
 
 class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
     template_name = 'enrollment/coordinator/create_grade_fragment.html'
     model = GradeFragment
-    form_class = GradeFragmentForm
+    form_class = CreateGradeFragmentForm
+    grade_fragment_id = None
+
+    def test_func(self):
+        rules = super(CoordinatorCreateGradeFragmentView, self).test_func()
+        if rules:
+            return self.course_offering.semester.can_create_grade_fragment
+        messages.error(self.request, _('You can not create grade fragment at this time'))
+        return False
+
+    def form_valid(self, form):
+        form_saved = form.save(commit=False)
+        form_saved.course_offering = self.course_offering
+        form_saved.updated_by = self.request.user
+        form_saved.save()
+        messages.success(self.request, _('Grade fragment updated successfully'))
+        return super(CoordinatorCreateGradeFragmentView, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorCreateGradeFragmentView, self).get_context_data(**kwargs)
+        context['course_offering'] = self.course_offering
+        return context
+
+    def get_success_url(self, **kwargs):
+        return reverse_lazy('enrollment:grade_fragment_coordinator',
+                            kwargs={
+                                'course_offering_id': self.course_offering_id,
+                            })
 
 
 class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
@@ -227,6 +260,11 @@ class ImportGradesView(CoordinatorEditBaseView, FormView):
             form.cleaned_data['commit']
         )
         return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        context = super(ImportGradesView, self).get_context_data(**kwargs)
+        context['gradefragment'] = GradeFragment.get_grade_fragment(self.kwargs.get('grade_fragment_id'))
+        return context
 
 
 # Admin with superuser can access this only

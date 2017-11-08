@@ -1,48 +1,59 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-<div class="content-panel">
-    <div class="cntnt-sec">
-        <div class="title-sec text-center">
-            <h3>{% trans 'Find your current enrolled sections' %}</h3>
-        </div>
-        <br>
-        {% if fragments %}
-        <table class="table table-condensed text-center">
-            <thead>
-            <tr>
-                <th class="text-center">{% trans 'Semester Code' %}</th>
-                <th class="text-center">{% trans 'Course Code' %}</th>
-                <th class="text-center">{% trans 'Course Name' %}</th>
-                <th class="text-center">{% trans 'Category' %}</th>
-                <th class="text-center">{% trans 'Description' %}</th>
-                <th class="text-center">{% trans 'Type' %}</th>
-                <th class="text-center">{% trans 'Weight' %}</th>
-                <th class="text-center">{% trans 'Edit' %}</th>
-                <th class="text-center">{% trans 'Grades' %}</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for fragment in fragments %}
-                <tr>
-                    <td>{{ fragment.course_offering.semester.code }}</td>
-                    <td {% if fragment.course_offering.coordinated %} style="color:red" {% endif %}>
-                        {{ fragment.course_offering.course.code }}</td>
-                    <td>{{ fragment.course_offering.course.name }}</td>
-                    <td>{{ fragment.category }}</td>
-                    <td>{{ fragment.description }}</td>
-                    <td>{{ fragment.boundary_type }}</td>
-                    <td>{{ fragment.weight }}</td>
-                    <td><a href="{% url 'enrollment:update_grade_fragment_coordinator' course_offering_id=fragment.course_offering.id pk=fragment.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
-                    <td><a href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Import grade' %}</a></td>
-                </tr>
-             {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+            <div class="title-sec text-center">
+                <h3>{% trans 'List of Grade Fragments' %}</h3>
+            </div>
+            <div class="card card-outline-secondary mb-3">
+                <div class="card-block">
+                    <blockquote class="card-blockquote">
+                        <p>{% trans 'Semester: ' %}<span style="color:red">{{ course_offering.semester.description }}</span></p>
+                        <p>{% trans 'Course: ' %}<span style="color:red">{{ course_offering.course }}</span></p>
+                        <p>{% trans 'Coordinated: ' %}<span style="color:red">{{ course_offering.coordinated }}</span>
+                        </p>
+                    </blockquote>
+                </div>
+            </div>
+            {% if can_create_fragment %}
+            <a href="{% url 'enrollment:create_grade_fragment_coordinator' course_offering_id=course_offering.id %}"
+               class="thm-btn small-btn outline-btn-dgrey float-right">{% trans 'Create Grade Fragment' %}</a>
+            {% endif  %}
+            {% if fragments %}
+                <table class="table table-condensed text-center">
+                    <thead>
+                    <tr>
+                        <th class="text-center">{% trans 'Category' %}</th>
+                        <th class="text-center">{% trans 'Description' %}</th>
+                        <th class="text-center">{% trans 'Type' %}</th>
+                        <th class="text-center">{% trans 'Weight' %}</th>
+                        <th class="text-center">{% trans 'Edit' %}</th>
+                        <th class="text-center">{% trans 'Grades' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for fragment in fragments %}
+                        <tr>
+                            <td>{{ fragment.category }}</td>
+                            <td>{{ fragment.description }}</td>
+                            <td>{{ fragment.boundary_type }}</td>
+                            <td>{{ fragment.weight }}</td>
+                            <td>
+                                <a href="{% url 'enrollment:update_grade_fragment_coordinator' course_offering_id=fragment.course_offering.id pk=fragment.id %}"
+                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+                            <td>
+                                <a href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}"
+                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Import grade' %}</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
                 {% trans 'There are no results' %}
-        {% endif %}
+            {% endif %}
 
+        </div>
     </div>
-</div>
 {% endblock %}

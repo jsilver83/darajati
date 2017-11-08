@@ -3,9 +3,18 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
+            <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
                 <h3>{% trans 'Import Grades' %}</h3>
+            </div>
+            <div class="card card-outline-secondary mb-3">
+                <div class="card-block">
+                    <blockquote class="card-blockquote">
+                        <p>{% trans 'Semester: ' %}<span style="color:red">{{ gradefragment.course_offering.semester.description }}</span></p>
+                        <p>{% trans 'Course: ' %}<span style="color:red">{{ gradefragment.course_offering.course }}</span></p>
+                        <p>{% trans 'Grade Fragment: ' %}<span style="color:red">{{ gradefragment.description }}</span></p>
+                    </blockquote>
+                </div>
             </div>
             <form method="post">
                 {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
