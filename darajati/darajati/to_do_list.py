@@ -42,4 +42,18 @@ period and excused that student.
 18 - Fix the look and field of the website
 19 - exporting grade fragments from other semester.
 
+7/nov
+
+#Done - Grade Fragment should allow entry should be by datetime
+#Done - Needs to check the import grades a mark should not have characters
+#Done - Grade imports report - errors should be first. also add one more column where accept a remark
+#Done - Apply history for enrollments.
+- Grade fragment should only be allowed to create, delete them before the deadline and editing them should
+be allowed for specific things not all of the fields.
+- Mathematical formulas for late and absent deduction using eval()
+- Auto sent emails or sms to students when they are near a set of numbers of absences.
+- If course is coordinated do not show section as a field.
+- sticky save button in grades and attendance.
+
 """
+
