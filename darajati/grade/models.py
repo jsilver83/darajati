@@ -294,40 +294,40 @@ class StudentGrade(models.Model):
         errors = []
         for line in lines.splitlines():
             line = str(line)
-            lines_length = len(line.split(' ', 2))
+            lines_length = len(line.split())
             student_id = None
             new_grade = None
-            remark = None
-            if line and (lines_length == 2 or lines_length == 3):
-                if lines_length == 2:
-                    student_id, new_grade = line.split(' ', 2)
-                if lines_length == 3:
-                    student_id, new_grade, remark = line.split(' ', 2)
+            remark = ""
+            if line and lines_length >= 2:
+                student_id = line.split()[0]
+                new_grade = line.split()[1]
+                if lines_length >= 3:
+                    for word in line.split()[2:]:
+                        remark += " " + word
 
                 if not str(new_grade).isdecimal():
                     errors.append(
                         {'line': line, 'id': student_id, 'status': _('grade ' + str(new_grade) + ' is invalid'),
                          'code': 'invalid_grade'})
                     continue
-                new_grade = round(Decimal(new_grade), 2)
                 if not StudentGrade.is_student_exists(fragment, student_id):
                     errors.append(
                         {'line': line, 'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
                     continue
 
                 grade_object = StudentGrade.get_student_old_grade(fragment, student_id)
-                not_same_grade = new_grade != grade_object.grade_quantity
                 if fragment.entry_in_percentages:
-                    new_grade = (grade_object.grade_fragment.weight / 100) * new_grade
+                    percent_new_grade = Decimal(new_grade)
+                    new_grade = (grade_object.grade_fragment.weight / 100) * Decimal(new_grade)
                     not_same_grade = new_grade != grade_object.grade_quantity
-                    if Decimal(100) >= new_grade >= Decimal(0.00) and not_same_grade:
+                    old_percent_grade = (grade_object.grade_quantity * 100 / grade_object.grade_fragment.weight)
+                    if Decimal(100) >= percent_new_grade >= Decimal(0.00) and not_same_grade:
                         changes_list.append({'id': student_id,
-                                             'old_grade': grade_object.grade_quantity,
-                                             'new_grade': new_grade,
-                                             'status': _('change grade from {} to {}'.format(
-                                                 (
-                                                     grade_object.grade_fragment.weight / 100) * grade_object.grade_quantity,
-                                                 new_grade)),
+                                             'old_grade': old_percent_grade,
+                                             'new_grade': percent_new_grade,
+                                             'status': _(
+                                                 'change grade from {} to {}'.format(grade_object.grade_quantity,
+                                                                                     new_grade)),
                                              'code': 'new_grade',
                                              'remark': remark})
                         students_objects.append(
@@ -335,13 +335,15 @@ class StudentGrade(models.Model):
                     else:
                         errors.append({'line': line,
                                        'id': student_id,
-                                       'old_grade': grade_object.grade_quantity,
-                                       'new_grade': new_grade,
-                                       'status': _('grade should be between 0 and 100'),
+                                       'old_grade': old_percent_grade,
+                                       'new_grade': percent_new_grade,
+                                       'status': _('grade should be between 1 and 100'),
                                        'code': 'invalid_grade'})
                         continue
 
                 if not fragment.entry_in_percentages:
+                    new_grade = round(Decimal(new_grade), 2)
+                    not_same_grade = new_grade != grade_object.grade_quantity
                     if not_same_grade:
                         if grade_object.grade_fragment.weight >= new_grade >= Decimal(0.00):
                             changes_list.append({'id': student_id,
