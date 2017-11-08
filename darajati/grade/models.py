@@ -305,11 +305,11 @@ class StudentGrade(models.Model):
                     for word in line.split()[2:]:
                         remark += " " + word
 
-                if not str(new_grade).isdecimal():
-                    errors.append(
-                        {'line': line, 'id': student_id, 'status': _('grade ' + str(new_grade) + ' is invalid'),
-                         'code': 'invalid_grade'})
-                    continue
+                # if not str(new_grade).isnumeric():
+                #     errors.append(
+                #         {'line': line, 'id': student_id, 'status': _('grade ' + str(new_grade) + ' is invalid'),
+                #          'code': 'invalid_grade'})
+                #     continue
                 if not StudentGrade.is_student_exists(fragment, student_id):
                     errors.append(
                         {'line': line, 'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
