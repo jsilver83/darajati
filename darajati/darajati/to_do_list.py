@@ -40,7 +40,10 @@ period and excused that student.
 #Done - Grade fragment should only be allowed to create, delete them before the deadline and editing them should
 be allowed for specific things not all of the fields.
 
-- Mathematical formulas for late and absent deduction using eval()
+- Mathematical formulas for late and absent deduction using eval():
+Introduce deduction value, deduction calculated date.
+Late and Absent are dynamic variables for each periods generated at run time.
+
 - Auto sent emails or sms to students when they are near a set of numbers of absences.
 - If course is coordinated do not show section as a field.
 - sticky save button in grades and attendance.
