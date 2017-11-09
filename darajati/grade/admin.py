@@ -3,8 +3,9 @@ from .models import *
 
 
 class GradeFragmentAdmin(admin.ModelAdmin):
-    list_display = ('course_offering', 'section', 'category', 'description', 'weight', 'allow_entry', 'updated_on')
-    list_filter = ('course_offering', 'allow_entry', 'entry_in_percentages', 'allow_change')
+    list_display = ('course_offering', 'section', 'category', 'description', 'weight', 'entry_start_date',
+                    'entry_end_date', 'updated_on')
+    list_filter = ('course_offering', 'entry_start_date', 'entry_end_date', 'entry_in_percentages', 'allow_change')
 
 
 class LetterGradeAdmin(admin.ModelAdmin):

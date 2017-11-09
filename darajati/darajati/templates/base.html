@@ -16,13 +16,16 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
           integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
     <!-- Main CSS -->
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
     <!-- Js Files -->
     <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
     <!-- Custom Files -->
     <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/load_more.js' %}"></script>
+
 
 </head>
 {% if LANGUAGE_CODE == 'ar' %}
@@ -104,11 +107,11 @@
 
         {% if form.non_field_errors %}
             <div class="mess-sec">
-            <ul class="messages error-mess">
-                {% for error in form.non_field_errors %}
-                    {{ error }}
-                {% endfor %}
-            </ul>
+                <ul class="messages error-mess">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </ul>
             </div>
         {% endif %}
 

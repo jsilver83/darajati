@@ -184,6 +184,16 @@ class BaseGradesFormSet(BaseModelFormSet):
 
 
 class GradeFragmentForm(forms.ModelForm):
+    def __init__(self, semester, *args, **kwargs):
+        super(GradeFragmentForm, self).__init__(*args, **kwargs)
+        self.semester = semester
+        unchanged_fields = ['weight', 'boundary_type', 'boundary_range_upper', 'boundary_range_lower',
+                            'boundary_fixed_average']
+        if not self.semester.can_create_grade_fragment:
+            for field in self.fields:
+                if field in unchanged_fields:
+                    self.fields[field].disabled = True
+
     class Meta:
         model = GradeFragment
         fields = '__all__'
@@ -202,8 +212,8 @@ class GradeFragmentForm(forms.ModelForm):
         }
 
     def clean(self):
-        semester_start_date = self.instance.course_offering.semester.start_date
-        semester_end_date = self.instance.course_offering.semester.end_date
+        semester_start_date = self.semester.start_date
+        semester_end_date = self.semester.end_date
         if not (semester_start_date <= self.cleaned_data['entry_start_date'].date() <=
                     self.cleaned_data['entry_end_date'].date() <= semester_end_date):
             raise ValidationError([
@@ -211,22 +221,3 @@ class GradeFragmentForm(forms.ModelForm):
                     _('entry dates should be between {} and {}'.format(semester_start_date, semester_end_date)))
             ])
         return self.cleaned_data
-
-
-class CreateGradeFragmentForm(forms.ModelForm):
-    class Meta:
-        model = GradeFragment
-        fields = '__all__'
-        exclude = ['updated_by', 'updated_on', 'course_offering', 'section']
-        widgets = {
-            'category': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.TextInput(attrs={'class': 'form-control'}),
-            'weight': forms.NumberInput(attrs={'class': 'form-control'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
-            'entry_start_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
-            'entry_end_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
-            'boundary_type': forms.Select(attrs={'class': 'form-control'}),
-            'boundary_range_upper': forms.NumberInput(attrs={'class': 'form-control'}),
-            'boundary_range_lower': forms.NumberInput(attrs={'class': 'form-control'}),
-            'boundary_fixed_average': forms.NumberInput(attrs={'class': 'form-control'}),
-        }

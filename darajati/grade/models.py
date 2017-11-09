@@ -60,13 +60,13 @@ class GradeFragment(models.Model):
         max_digits=settings.MAX_DIGITS,
         decimal_places=settings.MAX_DECIMAL_POINT
     )
-    allow_entry = models.BooleanField(
-        _('Allow Entry'),
-        null=False,
-        blank=False,
-        default=True,
-        help_text=_('Allowing instructor to enter the marks for this grade break down')
-    )
+    # allow_entry = models.BooleanField(
+    #     _('Allow Entry'),
+    #     null=False,
+    #     blank=False,
+    #     default=True,
+    #     help_text=_('Allowing instructor to enter the marks for this grade break down')
+    # )
     entry_start_date = models.DateTimeField(
         _('Allowed entry start date'),
         null=True,
@@ -225,6 +225,9 @@ class StudentGrade(models.Model):
     updated_by = models.ForeignKey(User, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=True)
 
+    def __str__(self):
+        return to_string(self.grade_fragment, self.remarks)
+
     @staticmethod
     def get_section_grades(section_id, grade_fragment_id):
         return StudentGrade.objects.filter(enrollment__section=section_id,
@@ -290,6 +293,7 @@ class StudentGrade(models.Model):
     @staticmethod
     def import_grades_by_admin(lines, fragment, commit=False):
         changes_list = []
+        same_list = []
         students_objects = []
         errors = []
         for line in lines.splitlines():
@@ -304,7 +308,6 @@ class StudentGrade(models.Model):
                 if lines_length >= 3:
                     for word in line.split()[2:]:
                         remark += " " + word
-
                 part = str(new_grade).partition('.')
                 if part[1]:
                     if not part[0].isnumeric() and not part[2].isnumeric():
@@ -329,27 +332,38 @@ class StudentGrade(models.Model):
                     percent_new_grade = Decimal(new_grade)
                     new_grade = (grade_object.grade_fragment.weight / 100) * Decimal(new_grade)
                     not_same_grade = new_grade != grade_object.grade_quantity
-                    old_percent_grade = (grade_object.grade_quantity * 100 / grade_object.grade_fragment.weight)
-                    if Decimal(100) >= percent_new_grade >= Decimal(0.00) and not_same_grade:
-                        changes_list.append({'id': student_id,
+                    old_percent_grade = None
+                    if grade_object.grade_quantity:
+                        old_percent_grade = (grade_object.grade_quantity * 100 / grade_object.grade_fragment.weight)
+
+                    if not_same_grade:
+                        if Decimal(100) >= percent_new_grade >= Decimal(0.00) and not_same_grade:
+                            changes_list.append({'id': student_id,
+                                                 'old_grade': old_percent_grade,
+                                                 'new_grade': percent_new_grade,
+                                                 'status': _(
+                                                     'change grade from {} to {}'.format(grade_object.grade_quantity,
+                                                                                         new_grade)),
+                                                 'code': 'new_grade',
+                                                 'remark': remark})
+                            students_objects.append(
+                                {'grade_object': grade_object, 'new_grade': new_grade, 'remark': remark})
+                        else:
+                            errors.append({'line': line,
+                                           'id': student_id,
+                                           'old_grade': old_percent_grade,
+                                           'new_grade': percent_new_grade,
+                                           'status': _('grade should be between 1 and 100'),
+                                           'code': 'invalid_grade'})
+                            continue
+                    else:
+                        same_list.append({'id': student_id,
                                              'old_grade': old_percent_grade,
                                              'new_grade': percent_new_grade,
                                              'status': _(
-                                                 'change grade from {} to {}'.format(grade_object.grade_quantity,
-                                                                                     new_grade)),
-                                             'code': 'new_grade',
-                                             'remark': remark})
-                        students_objects.append(
-                            {'grade_object': grade_object, 'new_grade': new_grade, 'remark': remark})
-                    else:
-                        errors.append({'line': line,
-                                       'id': student_id,
-                                       'old_grade': old_percent_grade,
-                                       'new_grade': percent_new_grade,
-                                       'status': _('grade should be between 1 and 100'),
-                                       'code': 'invalid_grade'})
-                        continue
-
+                                                 'same grade from {} to {}'.format(str(grade_object.grade_quantity),
+                                                                                   new_grade)),
+                                             'code': 'same_grade'})
                 if not fragment.entry_in_percentages:
                     new_grade = round(Decimal(new_grade), 2)
                     not_same_grade = new_grade != grade_object.grade_quantity
@@ -376,7 +390,7 @@ class StudentGrade(models.Model):
                                            'code': 'invalid_grade'})
                             continue
                     else:
-                        changes_list.append({'id': student_id,
+                        same_list.append({'id': student_id,
                                              'old_grade': grade_object.grade_quantity,
                                              'new_grade': new_grade,
                                              'status': _(
@@ -394,6 +408,3 @@ class StudentGrade(models.Model):
                     item['grade_object'].save()
 
         return changes_list, errors
-
-    def __str__(self):
-        return to_string(self.enrollment, self.grade_fragment, self.remarks)

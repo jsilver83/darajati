@@ -155,7 +155,7 @@ class Semester(models.Model):
     @property
     def can_create_grade_fragment(self):
         return True if self.grade_fragment_deadline >= today() else False
-    
+
 
 class Department(models.Model):
     name = models.CharField(_('english name'), max_length=50, null=True, blank=False)
@@ -335,7 +335,7 @@ class Enrollment(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return to_string(self.student, self.section.code)
+        return to_string(self.id)
 
     @property
     def _history_user(self):

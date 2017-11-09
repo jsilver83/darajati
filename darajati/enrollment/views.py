@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.views.generic import View, ListView, UpdateView, CreateView, FormView
+from django.views.generic import View, ListView, UpdateView, CreateView, FormView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
@@ -10,7 +10,7 @@ from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
 from .forms import GradesImportForm
 
-from grade.forms import GradeFragmentForm, CreateGradeFragmentForm
+from grade.forms import GradeFragmentForm
 
 from grade.models import GradeFragment, StudentGrade
 
@@ -186,7 +186,7 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
 class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
     template_name = 'enrollment/coordinator/create_grade_fragment.html'
     model = GradeFragment
-    form_class = CreateGradeFragmentForm
+    form_class = GradeFragmentForm
     grade_fragment_id = None
 
     def test_func(self):
@@ -201,8 +201,13 @@ class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
         form_saved.course_offering = self.course_offering
         form_saved.updated_by = self.request.user
         form_saved.save()
-        messages.success(self.request, _('Grade fragment updated successfully'))
+        messages.success(self.request, _('Grade fragment created successfully'))
         return super(CoordinatorCreateGradeFragmentView, self).form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super(CoordinatorCreateGradeFragmentView, self).get_form_kwargs()
+        kwargs['semester'] = self.course_offering.semester
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super(CoordinatorCreateGradeFragmentView, self).get_context_data(**kwargs)
@@ -237,11 +242,40 @@ class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
         messages.success(self.request, _('Grade fragment updated successfully'))
         return super(CoordinatorEditGradeFragmentView, self).form_valid(form)
 
+    def get_form_kwargs(self):
+        kwargs = super(CoordinatorEditGradeFragmentView, self).get_form_kwargs()
+        kwargs['semester'] = self.course_offering.semester
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorEditGradeFragmentView, self).get_context_data(**kwargs)
+        context['can_delete_fragment'] = self.course_offering.semester.can_create_grade_fragment
+        return context
+
     def get_success_url(self, **kwargs):
         return reverse_lazy('enrollment:update_grade_fragment_coordinator',
                             kwargs={
                                 'course_offering_id': self.course_offering_id,
                                 'pk': self.kwargs['pk']
+                            })
+
+
+class CoordinatorDeleteGradeFragmentView(CoordinatorEditBaseView, DeleteView):
+    model = GradeFragment
+    template_name = 'enrollment/coordinator/delete_grade_fragment.html'
+
+    def test_func(self):
+        rules = super(CoordinatorDeleteGradeFragmentView, self).test_func()
+        if rules:
+            return self.course_offering.semester.can_create_grade_fragment
+        messages.error(self.request, _('You can not delete grade fragment at this time'))
+        return False
+
+    def get_success_url(self, **kwargs):
+        messages.success(self.request, _('Grade fragment deleted successfully'))
+        return reverse_lazy('enrollment:grade_fragment_coordinator',
+                            kwargs={
+                                'course_offering_id': self.course_offering_id,
                             })
 
 

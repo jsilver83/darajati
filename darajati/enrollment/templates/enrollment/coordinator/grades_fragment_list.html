@@ -42,7 +42,13 @@
                             <td>{{ fragment.weight }}</td>
                             <td>
                                 <a href="{% url 'enrollment:update_grade_fragment_coordinator' course_offering_id=fragment.course_offering.id pk=fragment.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+                                   class="thm-btn small-btn outline-btn-dgrey">
+                                    {% if can_create_fragment %}
+                                        {% trans 'Edit/Delete' %}
+                                    {% else %}
+                                        {% trans 'Edit' %}
+                                    {% endif %}
+                                </a></td>
                             <td>
                                 <a href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}"
                                    class="thm-btn small-btn outline-btn-dgrey">{% trans 'Import grade' %}</a></td>

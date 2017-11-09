@@ -8,8 +8,8 @@ class GradesImportForm(forms.Form):
         self.fields['grade'] = forms.CharField(
             widget=forms.Textarea(
                 attrs={'placeholder': _(u'Please follow the format:\n\n'
-                                        u'student_id  mark\n\n'
-                                        u'0000000000 10')})
+                                        u'student_id  mark  remark\n\n'
+                                        u'0000000000 9 -1 for not writing the name')})
         )
         self.fields['commit'] = forms.BooleanField(
             label=_('Commit changes'),
