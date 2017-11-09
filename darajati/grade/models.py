@@ -336,7 +336,7 @@ class StudentGrade(models.Model):
                     new_grade = (grade_object.grade_fragment.weight / 100) * Decimal(new_grade)
                     not_same_grade = new_grade != grade_object.grade_quantity
                     old_percent_grade = None
-                    if grade_object.grade_quantity:
+                    if grade_object.grade_quantity is not None:
                         old_percent_grade = (grade_object.grade_quantity * 100 / grade_object.grade_fragment.weight)
 
                     if not_same_grade:

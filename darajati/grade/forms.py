@@ -17,7 +17,7 @@ class GradesForm(forms.ModelForm):
         max_value = self.fragment.weight
 
         # IF entry in percent and there is grade value
-        if self.fragment.entry_in_percentages and self.initial['grade_quantity']:
+        if self.fragment.entry_in_percentages and self.initial['grade_quantity'] is not None:
             self.fields['actual_grade'] = forms.DecimalField(
                 decimal_places=settings.MAX_DECIMAL_POINT,
                 max_digits=settings.MAX_DIGITS,
