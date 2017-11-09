@@ -188,8 +188,11 @@ class GradeFragment(models.Model):
 
     @property
     def is_entry_allowed(self):
-        if self.entry_start_date >= now() >= self.entry_end_date:
-            return True
+        try:
+            if self.entry_start_date <= now() <= self.entry_end_date:
+                return True
+        except:
+            return False
         return False
 
 
