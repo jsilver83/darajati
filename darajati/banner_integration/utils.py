@@ -331,8 +331,6 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                         start_time=start_time,
                         end_time=end_time,
                         location=result['bldg'] + ' ' + result['room'],
-                        late_deduction=1,
-                        absence_deduction=1
                     )
                     if commit:
                         with transaction.atomic():

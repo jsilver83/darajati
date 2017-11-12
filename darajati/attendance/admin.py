@@ -5,9 +5,9 @@ from .models import *
 class ScheduledPeriodAdmin(admin.ModelAdmin):
     list_filter = ('day',)
     list_display = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
-                    'end_time', 'location', 'late_deduction', 'absence_deduction')
+                    'end_time', 'location')
     search_fields = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
-                     'end_time', 'location', 'late_deduction', 'absence_deduction')
+                     'end_time', 'location')
 
 
 class AttendanceInstanceAdmin(admin.ModelAdmin):

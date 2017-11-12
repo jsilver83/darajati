@@ -1,3 +1,5 @@
+from math import *
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -5,7 +7,7 @@ from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import User as User_model
 
 from .types import RoundTypes
-from .utils import to_string, now, today
+from .utils import to_string, now, today, attendance_boundary
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 
@@ -183,6 +185,8 @@ class CourseOffering(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offering', null=True, blank=False)
     attendance_entry_window = models.PositiveIntegerField(_('attendance window'), null=True, blank=False, default=7)
     coordinated = models.BooleanField(blank=False, default=1)
+    formula = models.CharField(_('Deduction formula'), max_length=200, null=True, blank=True,
+                               help_text=_('Formula to calculate the deduction value from students attendance'))
     allow_change = models.BooleanField(_('Allow changing after submitting attendance?'),
                                        blank=False,
                                        default=1,
@@ -425,3 +429,37 @@ class Enrollment(models.Model):
                                         updated_on=updated_on))
             index += 1
         return enrollments
+
+    def get_enrollment_period_total_absence(self, period_title):
+        return Attendance.objects.filter(
+            enrollment__id=self.id,
+            attendance_instance__period__title=period_title,
+            status=Attendance.Types.ABSENT).count()
+
+    def get_enrollment_period_total_late(self, period_title):
+        return Attendance.objects.filter(
+            enrollment__id=self.id,
+            attendance_instance__period__title=period_title,
+            status=Attendance.Types.LATE).count()
+
+    def get_enrollment_period_total_excused(self, period_title):
+        return Attendance.objects.filter(
+            enrollment__id=self.id,
+            attendance_instance__period__title=period_title,
+            status=Attendance.Types.EXCUSED).count()
+
+    @property
+    def get_enrollment_total_deduction(self):
+        result = 0
+        formula = self.section.course_offering.formula
+        if formula:
+            periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
+                'title'
+            )
+            for period in periods:
+                title = period.title
+                if title in formula:
+                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
+                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
+            result = eval(formula)
+        return result

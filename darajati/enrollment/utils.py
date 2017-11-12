@@ -63,3 +63,10 @@ def to_string(*args):
     for arg in args:
         sentence += str(arg) + ' '
     return sentence
+
+
+def attendance_boundary(value, boundary):
+    if value > boundary:
+        return value - boundary
+    else:
+        return 0

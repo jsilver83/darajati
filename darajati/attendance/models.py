@@ -39,11 +39,11 @@ class ScheduledPeriod(models.Model):
     start_time = models.TimeField(_('start time'))
     end_time = models.TimeField(_('end time'))
     location = models.CharField(max_length=50, null=True, blank=False)
-    late_deduction = models.DecimalField(_('late deduction'), null=True, blank=False, max_digits=settings.MAX_DIGITS,
-                                         decimal_places=settings.MAX_DECIMAL_POINT)
-    absence_deduction = models.DecimalField(_('absence deduction'), null=True, blank=False,
-                                            max_digits=settings.MAX_DIGITS,
-                                            decimal_places=settings.MAX_DECIMAL_POINT)
+    # late_deduction = models.DecimalField(_('late deduction'), null=True, blank=False, max_digits=settings.MAX_DIGITS,
+    #                                      decimal_places=settings.MAX_DECIMAL_POINT)
+    # absence_deduction = models.DecimalField(_('absence deduction'), null=True, blank=False,
+    #                                         max_digits=settings.MAX_DIGITS,
+    #                                         decimal_places=settings.MAX_DECIMAL_POINT)
 
     def __str__(self):
         return to_string(self.section.course_offering,
