@@ -5,7 +5,7 @@ from grade.models import GradeFragment, StudentGrade
 
 
 # @shared_task()
-def get_students_enrollment_grades(user):
+def get_students_enrollment_grades():
     """
     :return:
     """
@@ -24,7 +24,6 @@ def get_students_enrollment_grades(user):
             fragments = GradeFragment.get_section_grade_fragments(section)
             if not fragments:
                 messages.append('There are no grades fragments for section {}'.format(section))
-                return messages
             for enrollment in enrollment_list:
                 for fragment in fragments:
                     grade, created = StudentGrade.objects.get_or_create(enrollment=enrollment,
