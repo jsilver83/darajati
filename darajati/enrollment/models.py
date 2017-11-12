@@ -430,6 +430,18 @@ class Enrollment(models.Model):
             index += 1
         return enrollments
 
+    @property
+    def get_enrollment_total_absence(self):
+        return Attendance.objects.filter(
+            enrollment__id=self.id,
+            status=Attendance.Types.ABSENT).count()
+
+    @property
+    def get_enrollment_total_late(self):
+        return Attendance.objects.filter(
+            enrollment__id=self.id,
+            status=Attendance.Types.LATE).count()
+
     def get_enrollment_period_total_absence(self, period_title):
         return Attendance.objects.filter(
             enrollment__id=self.id,

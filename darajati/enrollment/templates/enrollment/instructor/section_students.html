@@ -19,6 +19,8 @@
                 <th>{% trans 'ID' %}</th>
                 <th>{% trans 'Active' %}</th>
                 <th>{% trans 'Letter Grade' %}</th>
+                <th>{% trans 'Absences' %}</th>
+                <th>{% trans 'Lates' %}</th>
                 <th>{% trans 'Deduction' %}</th>
             </tr>
             </thead>
@@ -30,6 +32,8 @@
                     <td>{{ enrollment.student.university_id }}</td>
                     <td>{{ enrollment.active }}</td>
                     <td>{{ enrollment.get_letter_grade }}</td>
+                    <td>{{ enrollment.get_enrollment_total_absence }}</td>
+                    <td>{{ enrollment.get_enrollment_total_late }}</td>
                     <td>{{ enrollment.get_enrollment_total_deduction }}</td>
                 </tr>
             {% endfor %}
