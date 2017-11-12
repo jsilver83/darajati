@@ -291,6 +291,7 @@ class ImportGradesView(CoordinatorEditBaseView, FormView):
         context['list'], context['errors'] = StudentGrade.import_grades_by_admin(
             form.cleaned_data['grade'],
             fragment,
+            self.request.user,
             form.cleaned_data['commit']
         )
         return self.render_to_response(context)

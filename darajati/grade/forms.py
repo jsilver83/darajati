@@ -76,8 +76,7 @@ class GradesForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.updated_by = self.user
-        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and \
-                (self.cleaned_data['updated_on'] is None or self.fragment.allow_change):
+        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and self.fragment.allow_change:
             self.instance.updated_on = today()
             if self.fragment.entry_in_percentages and self.cleaned_data['grade_quantity']:
                 self.instance.grade_quantity = (self.fragment.weight / 100) * self.cleaned_data['grade_quantity']

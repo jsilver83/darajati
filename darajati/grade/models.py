@@ -6,7 +6,7 @@ from django.db.models.functions import Concat
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from enrollment.utils import to_string, now
+from enrollment.utils import to_string, now, today
 
 from decimal import *
 
@@ -226,7 +226,7 @@ class StudentGrade(models.Model):
                                          max_digits=settings.MAX_DIGITS)
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
     updated_by = models.ForeignKey(User, null=True, blank=True)
-    updated_on = models.DateField(_('Updated On'), null=True, blank=True)
+    updated_on = models.DateField(_('Updated On'), null=True, blank=False)
 
     def __str__(self):
         return to_string(self.grade_fragment, self.remarks)
@@ -294,7 +294,7 @@ class StudentGrade(models.Model):
         ).exists()
 
     @staticmethod
-    def import_grades_by_admin(lines, fragment, commit=False):
+    def import_grades_by_admin(lines, fragment, current_user, commit=False):
         changes_list = []
         same_list = []
         students_objects = []
@@ -356,7 +356,7 @@ class StudentGrade(models.Model):
                                            'id': student_id,
                                            'old_grade': old_percent_grade,
                                            'new_grade': percent_new_grade,
-                                           'status': _('grade should be between 1 and 100'),
+                                           'status': _('grade should be between 0 and 100'),
                                            'code': 'invalid_grade'})
                             continue
                     else:
@@ -408,6 +408,9 @@ class StudentGrade(models.Model):
             with transaction.atomic():
                 for item in students_objects:
                     item['grade_object'].grade_quantity = item['new_grade']
+                    item['grade_object'].remarks = item['remark']
+                    item['grade_object'].updated_by = current_user
+                    item['grade_object'].updated_on = today()
                     item['grade_object'].save()
 
         return changes_list, errors
