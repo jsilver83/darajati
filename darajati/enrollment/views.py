@@ -80,6 +80,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
 class InstructorView(InstructorBaseView, ListView):
     template_name = 'enrollment/sections_list.html'
     model = Section
+    ordering = 'code'
     context_object_name = 'sections'
 
     def test_func(self, **kwargs):
@@ -160,6 +161,7 @@ class CoordinatorView(CoordinatorBaseView, ListView):
 class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
     template_name = 'enrollment/sections_list.html'
     model = Section
+    ordering = 'code'
     context_object_name = 'sections'
 
     def get_queryset(self):
