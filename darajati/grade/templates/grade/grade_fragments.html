@@ -25,8 +25,9 @@
                     <th class="text-center">{% trans 'Category' %}</th>
                     <th class="text-center">{% trans 'Description' %}</th>
                     <th class="text-center">{% trans 'Weight' %}</th>
+                    <th class="text-center">{% trans 'Entry Date' %}</th>
                     <th class="text-center">{% trans 'Type' %}</th>
-                    <th class="text-center">{% trans 'Edit' %}</th>
+                    <th class="text-center">{% trans 'Grades' %}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -35,7 +36,8 @@
                     <td>{{ grade_fragment.category }}</td>
                     <td>{{ grade_fragment.description }}</td>
                     <td>{{ grade_fragment.weight }}</td>
-                    <td>{{ grade_fragment.boundary_type }}</td>
+                    <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
+                    <td>{{ grade_fragment.get_boundary_type_display }}</td>
                     <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
                            class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
                 </tr>

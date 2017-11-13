@@ -339,7 +339,7 @@ class Enrollment(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return to_string(self.id)
+        return to_string(self.student)
 
     @property
     def _history_user(self):
