@@ -15,7 +15,7 @@ class GradesForm(forms.ModelForm):
         super(GradesForm, self).__init__(*args, **kwargs)
         self.fragment = GradeFragment.get_grade_fragment(self.initial['grade_fragment'])
         max_value = self.fragment.weight
-
+        self.fields['updated_on'].required = False
         # IF entry in percent and there is grade value
         if self.fragment.entry_in_percentages and self.initial['grade_quantity'] is not None:
             self.fields['actual_grade'] = forms.DecimalField(
@@ -103,7 +103,6 @@ class BaseGradesFormSet(BaseModelFormSet):
         self.average_boundary = None
 
     def clean(self):
-
         # if by somehow the grade was passed greater then what it should be it will accept it. Fix later
         for form in self.forms:
             if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
@@ -179,7 +178,7 @@ class BaseGradesFormSet(BaseModelFormSet):
                     _('Submitting Failed, Make sure the boundary range or boundary fixed average range'
                       ' of this grade plan has a value'))
 
-        return self.cleaned_data
+        return super(BaseGradesFormSet, self).clean()
 
 
 class GradeFragmentForm(forms.ModelForm):
