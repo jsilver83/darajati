@@ -35,7 +35,7 @@
                         {% endif %}
                     </span></p>
                     {% endif %}
-                    {% if grade_fragment.allow_change %}
+                    {% if not grade_fragment.allow_change %}
                         <q style="color:red">
                             {% trans '*Note: You can not change a student grade after submitting it.' %}
                         </q>
