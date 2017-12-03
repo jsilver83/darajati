@@ -1949,3 +1949,15 @@ body {
 }
 
 /*# sourceMappingURL=main.css.map */
+
+/* added by joud */
+.table .warning {
+    background-color: #FFF4BC !important;
+}
+.table .error {
+    background-color: #f2dede !important;
+}
+.table .success {
+    background-color: #dff0d8 !important;
+}
+/* end of addition by joud */

@@ -26,6 +26,8 @@
     <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/load_more.js' %}"></script>
 
+	{% block scripts %}
+	{% endblock scripts %}
 
 </head>
 {% if LANGUAGE_CODE == 'ar' %}

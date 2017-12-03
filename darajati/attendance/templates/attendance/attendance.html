@@ -97,7 +97,7 @@
                                         {% endif %}
                                     {% endfor %}
                                 </td>
-                                <td>
+                                <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
                                     <div class="row">
                                         <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
                                         <div class="col-md-4 info text-right">
@@ -116,7 +116,7 @@
                                     <span style="display: none;">{{ form.enrollment_id }}</span>
                                     <span style="display: none;">{{ form.student_name }}</span>
                                     <span style="display: none;">{{ form.student_university_id }}</span>
-                                    <td>
+                                    <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
                                         <div class="row">
                                             <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
                                             <div class="col-md-4 info text-right">
@@ -142,4 +142,8 @@
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript" src="{% static 'js/custom-attendance.js' %}"></script>
 {% endblock %}
