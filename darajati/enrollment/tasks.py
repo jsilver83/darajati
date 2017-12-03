@@ -4,7 +4,7 @@ from enrollment.models import Section, Enrollment
 from grade.models import GradeFragment, StudentGrade
 
 
-# @shared_task()
+@shared_task()
 def get_students_enrollment_grades():
     """
     :return:

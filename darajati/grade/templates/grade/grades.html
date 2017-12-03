@@ -22,19 +22,11 @@
                     <p>{% trans 'Grade Fragment Weight: ' %}<span
                             style="color:red">{{ grade_fragment.weight }}</span></p>
                     <p>{% trans 'Grade Fragment Type: ' %}<span
-                            style="color:red">{{ grade_fragment.boundary_type }}</span></p>
-                    {% if grade_fragment.boundary_type is 'SUBJECTIVE_BOUNDED' or  grade_fragment.boundary_type is 'SUBJECTIVE_BOUNDED_FIXED' %}
-                        <p>{% trans 'Grade Fragment Boundary: ' %}<span
-                                style="color:red">
-                        {% if grade_fragment.boundary_type is 'SUBJECTIVE_BOUNDED' %}
-                            {% trans 'Upper value: ' %}{{ grade_fragment.boundary_range_upper }}
-                            <br>
-                            {% trans 'Lower value: ' %}{{ grade_fragment.boundary_range_lower }}
-                        {% elif grade_fragment.boundary_type is 'SUBJECTIVE_BOUNDED_FIXED' %}
-                            {% trans 'Fixed average value: ' %}{{ grade_fragment.boundary_fixed_average }}
-                        {% endif %}
-                    </span></p>
+                            style="color:red">{{ grade_fragment.get_boundary_type_display }}</span></p>
+                    {% if boundary %}
+                        <span><strong>{{ boundary }}</strong></span>
                     {% endif %}
+                    </span></p>
                     {% if not grade_fragment.allow_change %}
                         <q style="color:red">
                             {% trans '*Note: You can not change a student grade after submitting it.' %}
@@ -98,13 +90,13 @@
                     </div>
                 </form>
                 {% if section_average %}
-                    <div> Section Average: {{ section_average }} / {{ grade_fragment.weight }}</div>
+                    <div> Section Average: {{ section_average }}</div>
                 {% endif %}
                 {% if section_objective_average %}
                     <div> Section Objective Average: {{ section_objective_average }}</div>
                 {% endif %}
                 {% if course_average %}
-                    <div> Coordinated Course Average: {{ course_average }} / {{ grade_fragment.weight }}</div>
+                    <div> Coordinated Course Average: {{ course_average }}</div>
                 {% endif %}
             {% else %}
                 {% trans 'There are no students' %}

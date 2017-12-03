@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
 from .forms import GradesImportForm
+from .utils import now
 
 from grade.forms import GradeFragmentForm
 
@@ -314,7 +315,7 @@ class AdminControlsView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request, *args, **kwargs):
         if self.request.POST.get('create_grade'):
             get_students_enrollment_grades()
-            # get_students_enrollment_grades.apply_async(args=[now()], eta=now())
+            # get_students_enrollment_grades.apply_async(eta=now())
         return render(request, self.template_name)
 
     def test_func(self):

@@ -2,13 +2,13 @@
 
 """
 --------------------------------------------------------------
-1. When changing status of attendance show the corresponding color:
+#Done - 1. When changing status of attendance show the corresponding color:
 
     Absent -> Red
     Late -> Yellow
     Excused -> Green-ish
     
-2. Do not navigate from a page when someone have changed something without saving.
+#Done - 2. Do not navigate from a page when someone have changed something without saving.
 
     This will take effect for Attendances and Grades.
 #DONE - 3. Flag for Don't calculate this fragment into the overall total of the student.
@@ -18,7 +18,7 @@
 #DONE  - 7. Fix the days of the attendances.
 #DONE - 8. Grades Fragment Import.
 #DONE - 9. WebService
-10. Absent & Late Deduction (Complex)
+#Done - 10. Absent & Late Deduction (Complex)
 #DONE - 11. Averages
 #DONE - 12. Add Serial Number for enrollments
 #DONE - 13. Order periods based on the start_time in attendance page.
@@ -52,5 +52,9 @@ also show a red note where to tell the instructor that he can not edit the grade
 
 - exporting grade fragments from other semester.
 - Averages monitoring
+
+
+Nov 22
+when a student moved to other section, the Serial number sequence should not change.
 """
 

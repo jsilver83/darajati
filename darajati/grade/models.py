@@ -186,6 +186,18 @@ class GradeFragment(models.Model):
             value=Concat('course_offering__course__code', Value(' '), 'description', output_field=models.CharField())
         ).values_list('id', 'value')
 
+    def get_fragment_boundary(self, section):
+        average = StudentGrade.get_section_average(
+            section,
+            self
+        )
+
+        if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED:
+            if average:
+                lower = average - self.boundary_range_lower
+                upper = average + self.boundary_range_upper
+                return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
+
     @property
     def is_entry_allowed(self):
         try:
@@ -194,6 +206,12 @@ class GradeFragment(models.Model):
         except:
             return False
         return False
+
+    @property
+    def get_weight(self):
+        if self.entry_in_percentages:
+            return '100%'
+        return self.weight
 
 
 class LetterGrade(models.Model):
@@ -248,11 +266,16 @@ class StudentGrade(models.Model):
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
-        return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
+        if grades['sum']:
+            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            if grade_fragment.entry_in_percentages:
+                section_average = section_average * 100 / grade_fragment.weight
+            return section_average if not grades['sum'] is None else False
+        return 0
         # TODO: There are different type of round should it be apply here ? Only when calculating the letter grade
 
     @staticmethod
-    def get_section_objective_average(section):
+    def get_section_objective_average(section, grade_fragment):
         grades = StudentGrade.objects.filter(
             grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
             enrollment__section=section,
@@ -262,7 +285,12 @@ class StudentGrade(models.Model):
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
-        return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
+        if grades['sum']:
+            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            if grade_fragment.entry_in_percentages:
+                section_average = section_average * 100 / grade_fragment.weight
+            return section_average if not grades['sum'] is None else False
+        return 0
 
     @staticmethod
     def get_course_average(section, grade_fragment):
@@ -276,7 +304,13 @@ class StudentGrade(models.Model):
                 sum=Sum('grade_quantity'),
                 count=Count('id'),
             )
-            return round(Decimal(grades['sum'] / grades['count']), 2) if not grades['sum'] is None else False
+            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            if grades['sum']:
+                section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                if grade_fragment.entry_in_percentages:
+                    section_average = section_average * 100 / grade_fragment.weight
+                return section_average if not grades['sum'] is None else False
+            return 0
         return False
 
     @staticmethod
@@ -361,12 +395,12 @@ class StudentGrade(models.Model):
                             continue
                     else:
                         same_list.append({'id': student_id,
-                                             'old_grade': old_percent_grade,
-                                             'new_grade': percent_new_grade,
-                                             'status': _(
-                                                 'same grade from {} to {}'.format(str(grade_object.grade_quantity),
-                                                                                   new_grade)),
-                                             'code': 'same_grade'})
+                                          'old_grade': old_percent_grade,
+                                          'new_grade': percent_new_grade,
+                                          'status': _(
+                                              'same grade from {} to {}'.format(str(grade_object.grade_quantity),
+                                                                                new_grade)),
+                                          'code': 'same_grade'})
                 if not fragment.entry_in_percentages:
                     new_grade = round(Decimal(new_grade), 2)
                     not_same_grade = new_grade != grade_object.grade_quantity
@@ -394,12 +428,12 @@ class StudentGrade(models.Model):
                             continue
                     else:
                         same_list.append({'id': student_id,
-                                             'old_grade': grade_object.grade_quantity,
-                                             'new_grade': new_grade,
-                                             'status': _(
-                                                 'same grade from {} to {}'.format(str(grade_object.grade_quantity),
-                                                                                   new_grade)),
-                                             'code': 'same_grade'})
+                                          'old_grade': grade_object.grade_quantity,
+                                          'new_grade': new_grade,
+                                          'status': _(
+                                              'same grade from {} to {}'.format(str(grade_object.grade_quantity),
+                                                                                new_grade)),
+                                          'code': 'same_grade'})
             else:
                 errors.append(
                     {'line': line, 'status': _('There is something wrong in this line'), 'code': 'invalid_line'})
