@@ -73,10 +73,12 @@ class GradesForm(forms.ModelForm):
                     max_digits=settings.MAX_DIGITS,
                     required=False,
                     widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
+        self.fields['remarks'].required = False
 
     def save(self, commit=True):
         self.instance.updated_by = self.user
-        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and self.fragment.allow_change:
+        if ('grade_quantity' in self.changed_data or 'remarks' in self.changed_data) and (
+            self.fragment.allow_change or self.cleaned_data['updated_on'] is None):
             self.instance.updated_on = today()
             if self.fragment.entry_in_percentages and self.cleaned_data['grade_quantity']:
                 self.instance.grade_quantity = (self.fragment.weight / 100) * self.cleaned_data['grade_quantity']
@@ -118,7 +120,7 @@ class BaseGradesFormSet(BaseModelFormSet):
         SUBJECTIVE_BOUNDED require an average of objective exams if there is not show a validation error
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
-            self.average_boundary = StudentGrade.get_section_objective_average(self.section)
+            self.average_boundary = StudentGrade.get_section_objective_average(self.section, self.fragment)
             if not self.average_boundary:
                 raise forms.ValidationError(
                     _('There are no objective grades average, make sure your objective grades are entered'))
