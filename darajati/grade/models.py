@@ -304,8 +304,9 @@ class StudentGrade(models.Model):
                 sum=Sum('grade_quantity'),
                 count=Count('id'),
             )
-            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+
             if grades['sum']:
+                section_average = round(Decimal(grades['sum'] / grades['count']), 2)
                 section_average = round(Decimal(grades['sum'] / grades['count']), 2)
                 if grade_fragment.entry_in_percentages:
                     section_average = section_average * 100 / grade_fragment.weight

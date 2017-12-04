@@ -46,7 +46,7 @@ class GradesView(AttendanceBaseView, ModelFormSetView):
                 messages.error(self.request, _('Please enter a valid grade plan'))
                 return False
 
-            if not self.grade_fragment.is_entry_allowed and not self.request.user.is_superuser:
+            if not self.grade_fragment.is_entry_allowed:
                 messages.error(self.request, _('You are not allowed to enter the marks'))
                 return False
             return True
