@@ -2,7 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, get_next_week
+from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, \
+    get_next_week
 
 User = settings.AUTH_USER_MODEL
 
@@ -93,12 +94,16 @@ class ScheduledPeriod(models.Model):
         :return: all periods for a giving section and date and instructor
         """
         if instructor:
-            return ScheduledPeriod.objects.filter(section=section_id,
-                                                  day__iexact=day,
-                                                  instructor_assigned=instructor)
+            return ScheduledPeriod.objects.filter(
+                section=section_id,
+                day__iexact=day,
+                instructor_assigned=instructor
+            )
         # coordinator
-        return ScheduledPeriod.objects.filter(section=section_id,
-                                              day__iexact=day)
+        return ScheduledPeriod.objects.filter(
+            section=section_id,
+            day__iexact=day
+        )
 
     # FIXME: You should fix me to look more prettier and more efficient
     @staticmethod

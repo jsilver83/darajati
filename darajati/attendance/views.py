@@ -86,7 +86,7 @@ class AttendanceView(AttendanceBaseView, FormSetView):
         context['current_periods'] = ScheduledPeriod.get_section_periods_of_day(
             self.section_id,
             self.day,
-            self.request.user.instructor.is_coordinator_or_instructor())
+            self.request.user.instructor.is_coordinator_or_instructor()).order_by('start_time')
 
         context['current_date'] = period_date
         context['today'] = today()

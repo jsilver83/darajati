@@ -2,7 +2,7 @@
 {% load i18n staticfiles %}
 {% block content %}
     <div class="content-panel">
-        <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
+        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
         <br>
         <div class="cntnt-sec">
             {% if formset.forms %}
