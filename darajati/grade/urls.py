@@ -12,6 +12,10 @@ urlpatterns = [
         views.GradesView.as_view(),
         name='plan_grades'),
 
+    url(r'^section/(?P<section_id>[0-9]+)/(?P<grade_fragment_id>[0-9]+)/view/$',
+        views.DisplayGradesView.as_view(),
+        name='view_grades'),
+
     url(r'^section/(?P<section_id>[0-9]+)/create-grade-plan/$',
         views.CreateGradeFragmentView.as_view(),
         name='create_grade_fragment')

@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% load i18n staticfiles %}
 {% block content %}
-<div class="content-panel">
-    <div class="cntnt-sec">
-        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
-        <div class="title-sec text-center">
-            <h3>{% trans 'Course:' %} {{ section.course_offering.course.name }}</h3>
-            <p>{% trans 'Find your current enrolled sections grades plans' %}</p>
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+            <div class="title-sec text-center">
+                <h3>{% trans 'Course:' %} {{ section.course_offering.course.name }}</h3>
+                <p>{% trans 'Find your current enrolled sections grades plans' %}</p>
+            </div>
+            {% if not section.course_offering.coordinated %}
+                <div class="float-right">
+                    <a class="thm-btn small-btn outline-btn-dgrey"
+                       href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
+                        {% trans 'Create New Grade Plan' %}</a>
+                </div>
+            {% endif %}
         </div>
-        {% if not section.course_offering.coordinated %}
-        <div class="float-right">
-            <a class="thm-btn small-btn outline-btn-dgrey"
-               href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
-                {% trans 'Create New Grade Plan' %}</a>
-        </div>
-        {% endif %}
-    </div>
 
         {% if grade_fragments %}
 
@@ -33,16 +33,22 @@
                 </thead>
                 <tbody>
                 {% for grade_fragment in grade_fragments %}
-                <tr>
-                    <td>{{ grade_fragment.order }}</td>
-                    <td>{{ grade_fragment.category }}</td>
-                    <td>{{ grade_fragment.description }}</td>
-                    <td>{{ grade_fragment.weight }}</td>
-                    <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
-                    <td>{{ grade_fragment.get_boundary_type_display }}</td>
-                    <td><a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-                           class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-                </tr>
+                    <tr>
+                        <td>{{ grade_fragment.order }}</td>
+                        <td>{{ grade_fragment.category }}</td>
+                        <td>{{ grade_fragment.description }}</td>
+                        <td>{{ grade_fragment.weight }}</td>
+                        <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
+                        <td>{{ grade_fragment.get_boundary_type_display }}</td>
+                        {% if grade_fragment.get_entry_is_allowed %}
+                            <td>
+                                <a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+                        {% else %}
+                            <td><a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
+                        {% endif %}
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -54,5 +60,5 @@
         {% endif %}
 
     </div>
-</div>
+    </div>
 {% endblock %}

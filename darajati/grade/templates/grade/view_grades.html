@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
+        </div>
+        <br>
+        <div class="card card-outline-secondary mb-3">
+            <div class="card-block">
+                <blockquote class="card-blockquote">
+                    <p>{% trans 'Semester: ' %}<span
+                            style="color:red">{{ grade_fragment.course_offering.semester.description }}</span></p>
+                    <p>{% trans 'Course: ' %}<span
+                            style="color:red">{{ grade_fragment.course_offering.course }}</span></p>
+                    <p>{% trans 'Grade Fragment Category: ' %}<span
+                            style="color:red">{{ grade_fragment.category }}</span></p>
+                    <p>{% trans 'Grade Fragment Description: ' %}<span
+                            style="color:red">{{ grade_fragment.description }}</span></p>
+                    <p>{% trans 'Grade Fragment Weight: ' %}<span
+                            style="color:red">{{ grade_fragment.weight }}</span></p>
+                    <p>{% trans 'Grade Fragment Type: ' %}<span
+                            style="color:red">{{ grade_fragment.get_boundary_type_display }}</span></p>
+                    {% if boundary %}
+                        <span><strong>{{ boundary }}</strong></span>
+                    {% endif %}
+                </blockquote>
+            </div>
+        </div>
+        <div class="cntnt-sec">
+            {% if grades %}
+                <table class="table table-condensed text-center">
+                <thead>
+                <tr>
+                    <th class="text-center">{% trans 'No.' %}</th>
+                    <th class="text-center">{% trans 'Student ID' %}</th>
+                    <th class="text-center">{% trans 'Student Name' %}</th>
+                    <th class="text-center">{% trans 'Mark' %}</th>
+                    <th class="text-center">{% trans 'Remark' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for grade in grades %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ grade.enrollment.student.university_id }}</td>
+                        <td>{{ grade.enrollment.student.english_name }}</td>
+                        <td>{{ grade.grade_quantity }}</td>
+                        <td>{{ grade.remarks }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                {% trans 'There are no students' %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

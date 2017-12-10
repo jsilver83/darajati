@@ -231,6 +231,10 @@ class GradeFragment(models.Model):
         return False
 
     @property
+    def get_entry_is_allowed(self):
+        return self.is_entry_allowed()
+
+    @property
     def get_weight(self):
         """
         :return: if entry is in % return out of 100% else return the actual weight 

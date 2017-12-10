@@ -88,6 +88,24 @@ class GradesView(GradeBaseView, ModelFormSetView):
         return kwargs
 
 
+class DisplayGradesView(GradeBaseView, ListView):
+    template_name = 'grade/view_grades.html'
+    model = StudentGrade
+    context_object_name = 'grades'
+
+    def get_queryset(self):
+        queryset = super(DisplayGradesView, self).get_queryset()
+        return queryset.filter(grade_fragment=self.grade_fragment, enrollment__section=self.section)
+
+    def get_context_data(self, **kwargs):
+        context = super(DisplayGradesView, self).get_context_data(**kwargs)
+        context.update({
+            'grade_fragment': self.grade_fragment,
+            'boundary': self.grade_fragment.get_fragment_boundary(self.section)
+        })
+        return context
+
+
 class CreateGradeFragmentView(GradeBaseView, CreateView):
     form_class = GradeFragmentForm
     model = GradeFragment
