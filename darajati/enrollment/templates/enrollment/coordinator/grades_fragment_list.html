@@ -3,28 +3,36 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
-                <h3>{% trans 'List of Grade Fragments' %}</h3>
+                <h3>{% trans 'Grade Fragments' %}</h3>
             </div>
             <div class="card card-outline-secondary mb-3">
                 <div class="card-block">
                     <blockquote class="card-blockquote">
-                        <p>{% trans 'Semester: ' %}<span style="color:red">{{ course_offering.semester.description }}</span></p>
+                        <p>{% trans 'Semester: ' %}<span
+                                style="color:red">{{ course_offering.semester.description }}</span></p>
                         <p>{% trans 'Course: ' %}<span style="color:red">{{ course_offering.course }}</span></p>
                         <p>{% trans 'Coordinated: ' %}<span style="color:red">{{ course_offering.coordinated }}</span>
                         </p>
                     </blockquote>
                 </div>
             </div>
+            <hr>
             {% if can_create_fragment %}
-            <a href="{% url 'enrollment:create_grade_fragment_coordinator' course_offering_id=course_offering.id %}"
-               class="thm-btn small-btn outline-btn-dgrey float-right">{% trans 'Create Grade Fragment' %}</a>
-            {% endif  %}
+                <div class="lft-head"></div>
+                <div class="rgt-head">
+                    <a href="{% url 'enrollment:create_grade_fragment_coordinator' course_offering_id=course_offering.id %}"
+                       class="thm-btn small-btn outline-btn-dgrey float-right">{% trans 'Create Grade Fragment' %}</a>
+                </div>
+                <br>
+                <br>
+            {% endif %}
             {% if fragments %}
                 <table class="table table-condensed text-center">
                     <thead>
                     <tr>
+                        <th class="text-center">{% trans 'No.' %}</th>
                         <th class="text-center">{% trans 'Category' %}</th>
                         <th class="text-center">{% trans 'Description' %}</th>
                         <th class="text-center">{% trans 'Type' %}</th>
@@ -36,9 +44,10 @@
                     <tbody>
                     {% for fragment in fragments %}
                         <tr>
+                            <td>{{ fragment.order }}</td>
                             <td>{{ fragment.category }}</td>
                             <td>{{ fragment.description }}</td>
-                            <td>{{ fragment.boundary_type }}</td>
+                            <td>{{ fragment.get_boundary_type_display }}</td>
                             <td>{{ fragment.weight }}</td>
                             <td>
                                 <a href="{% url 'enrollment:update_grade_fragment_coordinator' course_offering_id=fragment.course_offering.id pk=fragment.id %}"

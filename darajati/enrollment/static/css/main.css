@@ -14,6 +14,7 @@
  *    IE on Windows Phone and in iOS.
  */
 /* Document
+
    ========================================================================== */
 html {
   font-family: 'Open Sans', Arial;
@@ -1949,6 +1950,7 @@ body {
 }
 
 /*# sourceMappingURL=main.css.map */
+a {color:#000; text-decoration: none;}      /* unvisited link */
 
 /* added by joud */
 .table .warning {

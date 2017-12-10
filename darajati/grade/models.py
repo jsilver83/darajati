@@ -24,8 +24,8 @@ class GradeFragment(models.Model):
         def choices(cls):
             return (
                 (cls.OBJECTIVE, _('Objective')),
-                (cls.SUBJECTIVE_BOUNDED, _('Subjective Bounded')),
-                (cls.SUBJECTIVE_BOUNDED_FIXED, _('Subjective Bounded Fixed')),
+                (cls.SUBJECTIVE_BOUNDED, _('Subjective bound')),
+                (cls.SUBJECTIVE_BOUNDED_FIXED, _('Subjective bound Fixed')),
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
             )
 
@@ -60,13 +60,6 @@ class GradeFragment(models.Model):
         max_digits=settings.MAX_DIGITS,
         decimal_places=settings.MAX_DECIMAL_POINT
     )
-    # allow_entry = models.BooleanField(
-    #     _('Allow Entry'),
-    #     null=False,
-    #     blank=False,
-    #     default=True,
-    #     help_text=_('Allowing instructor to enter the marks for this grade break down')
-    # )
     entry_start_date = models.DateTimeField(
         _('Allowed entry start date'),
         null=True,
@@ -164,51 +157,84 @@ class GradeFragment(models.Model):
     class Meta:
         ordering = ['order']
 
-    @staticmethod
-    def get_grade_fragment(grade_fragment_id):
-        try:
-            return GradeFragment.objects.get(id=grade_fragment_id)
-        except:
-            return None
-
-    @staticmethod
-    def get_section_grade_fragments(section):
-        if section.course_offering.coordinated:
-            return GradeFragment.objects.filter(course_offering=section.course_offering)
-        return GradeFragment.objects.filter(section=section.id)
-
     def __str__(self):
         return to_string(self.course_offering, self.category, self.description)
 
     @staticmethod
+    def get_grade_fragment(grade_fragment_id):
+        """
+        :param grade_fragment_id: an integer number 
+        :return: a GradeFragment instance if exists else None
+        """
+        try:
+            return GradeFragment.objects.get(id=grade_fragment_id)
+        except GradeFragment.DoesNotExist:
+            return None
+
+    @staticmethod
+    def get_section_grade_fragments(section):
+        """
+        :param section: a section instance 
+        :return: list of grade fragments instances of a section or if the section is coordinated return 
+        a list of that coordinated course
+        """
+        if section.course_offering.coordinated:
+            return GradeFragment.objects.filter(course_offering=section.course_offering)
+        return GradeFragment.objects.filter(section=section.id)
+
+    @staticmethod
     def get_all_fragments_choices():
+        # FIXME: to only return grade fragments of the current active semesters.
+        """
+        :return: dic of id and value of all grade fragments. 
+        """
         return GradeFragment.objects.all().annotate(
-            value=Concat('course_offering__course__code', Value(' '), 'description', output_field=models.CharField())
+            value=Concat(
+                'course_offering__course__code',
+                Value(' '), 'description',
+                output_field=models.CharField()
+            )
         ).values_list('id', 'value')
 
     def get_fragment_boundary(self, section):
-        average = StudentGrade.get_section_average(
-            section,
-            self
-        )
-
+        """
+        :param section: 
+        :return: a string to present the boundary of subjective fragment 
+        """
         if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED:
+            average = StudentGrade.get_section_objective_average(
+                section,
+                self
+            )
             if average:
                 lower = average - self.boundary_range_lower
                 upper = average + self.boundary_range_upper
+                if self.entry_in_percentages:
+                    return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
                 return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
+        if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
+            lower = self.boundary_fixed_average - self.boundary_range_lower
+            upper = self.boundary_fixed_average + self.boundary_range_upper
+            if self.entry_in_percentages:
+                return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
+            return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
 
-    @property
     def is_entry_allowed(self):
+        """
+        :return: True if trying to access a grade fragment grades within the allowed time else False 
+        """
         try:
             if self.entry_start_date <= now() <= self.entry_end_date:
                 return True
-        except:
+        except GradeFragment.DoesNotExist:
             return False
         return False
 
     @property
     def get_weight(self):
+        """
+        :return: if entry is in % return out of 100% else return the actual weight 
+        """
         if self.entry_in_percentages:
             return '100%'
         return self.weight
@@ -232,31 +258,57 @@ class LetterGrade(models.Model):
 
 
 class StudentGrade(models.Model):
-    class Meta:
-        unique_together = ('enrollment', 'grade_fragment')
-
-    enrollment = models.ForeignKey('enrollment.Enrollment', on_delete=models.CASCADE, related_name="grades", null=True,
-                                   blank=False)
-    grade_fragment = models.ForeignKey(GradeFragment, on_delete=models.CASCADE, related_name="grades", null=True,
-                                       blank=False)
-    grade_quantity = models.DecimalField(_('Student Grade Quantity'), null=True, blank=False,
-                                         decimal_places=settings.MAX_DECIMAL_POINT,
-                                         max_digits=settings.MAX_DIGITS)
+    enrollment = models.ForeignKey(
+        'enrollment.Enrollment',
+        on_delete=models.CASCADE,
+        related_name="grades",
+        null=True,
+        blank=False
+    )
+    grade_fragment = models.ForeignKey(
+        GradeFragment,
+        on_delete=models.CASCADE,
+        related_name="grades",
+        null=True,
+        blank=False
+    )
+    grade_quantity = models.DecimalField(
+        _('Student Grade Quantity'),
+        null=True,
+        blank=False,
+        decimal_places=settings.MAX_DECIMAL_POINT,
+        max_digits=settings.MAX_DIGITS
+    )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
     updated_by = models.ForeignKey(User, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=False)
+
+    class Meta:
+        unique_together = ('enrollment', 'grade_fragment')
 
     def __str__(self):
         return to_string(self.grade_fragment, self.remarks)
 
     @staticmethod
     def get_section_grades(section_id, grade_fragment_id):
-        return StudentGrade.objects.filter(enrollment__section=section_id,
-                                           grade_fragment=grade_fragment_id,
-                                           enrollment__active=True)
+        """
+        :param section_id: 
+        :param grade_fragment_id: 
+        :return: get a list of grades from a section for a grade fragment - Only for active enrollments 
+        """
+        return StudentGrade.objects.filter(
+            enrollment__section=section_id,
+            grade_fragment=grade_fragment_id,
+            enrollment__active=True
+        )
 
     @staticmethod
     def get_section_average(section, grade_fragment):
+        """
+        :param section: 
+        :param grade_fragment: 
+        :return: get section average of a given grade fragment 
+        """
         grades = StudentGrade.objects.filter(
             grade_fragment=grade_fragment,
             enrollment__section=section,
@@ -270,12 +322,16 @@ class StudentGrade(models.Model):
             section_average = round(Decimal(grades['sum'] / grades['count']), 2)
             if grade_fragment.entry_in_percentages:
                 section_average = section_average * 100 / grade_fragment.weight
-            return section_average if not grades['sum'] is None else False
+            return section_average if not grades['sum'] is None else 0
         return 0
-        # TODO: There are different type of round should it be apply here ? Only when calculating the letter grade
 
     @staticmethod
     def get_section_objective_average(section, grade_fragment):
+        """
+        :param section: 
+        :param grade_fragment: 
+        :return: section average of all objective grade fragment 
+        """
         grades = StudentGrade.objects.filter(
             grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
             enrollment__section=section,
@@ -286,14 +342,19 @@ class StudentGrade(models.Model):
             count=Count('id'),
         )
         if grades['sum']:
-            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            section_objective_average = round(Decimal(grades['sum'] / grades['count']), 2)
             if grade_fragment.entry_in_percentages:
-                section_average = section_average * 100 / grade_fragment.weight
-            return section_average if not grades['sum'] is None else False
+                section_objective_average = section_objective_average * 100 / grade_fragment.weight
+            return section_objective_average if not grades['sum'] is None else 0
         return 0
 
     @staticmethod
     def get_course_average(section, grade_fragment):
+        """        
+        :param section: 
+        :param grade_fragment: 
+        :return: course average for all sections of this grade fragment 
+        """
         if section.course_offering.coordinated:
             grades = StudentGrade.objects.filter(
                 grade_fragment=grade_fragment,
@@ -306,28 +367,40 @@ class StudentGrade(models.Model):
             )
 
             if grades['sum']:
-                section_average = round(Decimal(grades['sum'] / grades['count']), 2)
-                section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                course_average = round(Decimal(grades['sum'] / grades['count']), 2)
                 if grade_fragment.entry_in_percentages:
-                    section_average = section_average * 100 / grade_fragment.weight
-                return section_average if not grades['sum'] is None else False
+                    course_average = course_average * 100 / grade_fragment.weight
+                return course_average if not grades['sum'] is None else 0
             return 0
         return False
 
     @staticmethod
     def get_student_old_grade(fragment, student_id):
-        return StudentGrade.objects.get(grade_fragment=fragment,
-                                        enrollment__student__university_id__exact=student_id,
-                                        enrollment__active=True)
+        """
+        :param fragment: 
+        :param student_id: 
+        :return:  get the current grade of a student for a grade fragment
+        """
+        return StudentGrade.objects.get(
+            grade_fragment=fragment,
+            enrollment__student__university_id__exact=student_id,
+            enrollment__active=True
+        )
 
     @staticmethod
-    def is_student_exists(fragment, student_id):
+    def is_student_grade_exists(fragment, student_id):
+        """
+        :param fragment: 
+        :param student_id: 
+        :return: True if student grade do exists else False 
+        """
         return StudentGrade.objects.filter(
             grade_fragment=fragment,
             enrollment__student__university_id__exact=student_id,
             enrollment__active=True,
         ).exists()
 
+    # FIXME: Oh oh no, Make me your priority to fix me i really look unpleasant method, others will make fun of me.
     @staticmethod
     def import_grades_by_admin(lines, fragment, current_user, commit=False):
         changes_list = []
@@ -360,9 +433,10 @@ class StudentGrade(models.Model):
                              'code': 'invalid_grade'})
                         continue
 
-                if not StudentGrade.is_student_exists(fragment, student_id):
+                if not StudentGrade.is_student_grade_exists(fragment, student_id):
                     errors.append(
-                        {'line': line, 'id': student_id, 'status': _('student do not exists'), 'code': 'no_student'})
+                        {'line': line, 'id': student_id, 'status': _('Student ID record not found'),
+                         'code': 'no_student'})
                     continue
 
                 grade_object = StudentGrade.get_student_old_grade(fragment, student_id)

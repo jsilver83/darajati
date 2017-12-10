@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import *
 from django.utils.translation import ugettext_lazy as _
+
+from .models import *
 
 from simple_history.admin import SimpleHistoryAdmin
 

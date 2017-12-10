@@ -1,5 +1,4 @@
 $(function () {
-
     var counter = 1;
 
     //http://stackoverflow.com/questions/7650063/how-can-i-prevent-window-onbeforeunload-from-being-triggered-by-javascript-href
@@ -33,7 +32,6 @@ $(function () {
         window.onbeforeunload = confirmOnPageExit;
 
         var val = $(this).val();
-
         if (val == "abs") {
             $(this).parent("div").parent("div").parent("td").removeClass("warning");
             $(this).parent("div").parent("div").parent("td").removeClass("success");

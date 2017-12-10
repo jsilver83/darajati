@@ -11,7 +11,7 @@ from enrollment.models import Enrollment
 from enrollment.views import InstructorBaseView
 
 
-class AttendanceBaseView(InstructorBaseView):
+class GradeBaseView(InstructorBaseView):
     grade_fragment_id = None
     grade_fragment = None
     grade_fragment_deadline = None
@@ -20,10 +20,10 @@ class AttendanceBaseView(InstructorBaseView):
         if self.kwargs.get('grade_fragment_id'):
             self.grade_fragment_id = self.kwargs['grade_fragment_id']
             self.grade_fragment = GradeFragment.get_grade_fragment(self.grade_fragment_id)
-        return super(AttendanceBaseView, self).dispatch(request, *args, **kwargs)
+        return super(GradeBaseView, self).dispatch(request, *args, **kwargs)
 
 
-class GradeFragmentView(AttendanceBaseView, ListView):
+class GradeFragmentView(GradeBaseView, ListView):
     template_name = 'grade/grade_fragments.html'
     context_object_name = 'grade_fragments'
 
@@ -31,7 +31,7 @@ class GradeFragmentView(AttendanceBaseView, ListView):
         return GradeFragment.get_section_grade_fragments(self.section)
 
 
-class GradesView(AttendanceBaseView, ModelFormSetView):
+class GradesView(GradeBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
     model = StudentGrade
     form_class = GradesForm
@@ -40,13 +40,12 @@ class GradesView(AttendanceBaseView, ModelFormSetView):
 
     def test_func(self, **kwargs):
         rules = super(GradesView, self).test_func(**kwargs)
-
         if rules:
             if not self.grade_fragment:
                 messages.error(self.request, _('Please enter a valid grade plan'))
                 return False
 
-            if not self.grade_fragment.is_entry_allowed:
+            if not self.grade_fragment.is_entry_allowed():
                 messages.error(self.request, _('You are not allowed to enter the marks'))
                 return False
             return True
@@ -57,19 +56,22 @@ class GradesView(AttendanceBaseView, ModelFormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(GradesView, self).get_context_data(**kwargs)
-        context['enrollments'] = Enrollment.get_students(self.section_id)
-        context['section_average'] = StudentGrade.get_section_average(self.section, self.grade_fragment)
-        context['section_objective_average'] = StudentGrade.get_section_objective_average(self.section,
-                                                                                          self.grade_fragment)
-        context['course_average'] = StudentGrade.get_course_average(self.section, self.grade_fragment)
-
+        context.update({
+            'enrollments': Enrollment.get_students_of_section(self.section_id),
+            'section_average': StudentGrade.get_section_average(self.section, self.grade_fragment),
+            'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
+            'course_average': StudentGrade.get_course_average(self.section, self.grade_fragment),
+            'grade_fragment': self.grade_fragment,
+            'boundary': self.grade_fragment.get_fragment_boundary(self.section)
+        })
         if self.grade_fragment.entry_in_percentages:
-            context['section_average'] = str(StudentGrade.get_section_average(self.section, self.grade_fragment)) + '%'
-            context['section_objective_average'] = str(StudentGrade.get_section_objective_average(self.section,
-                                                                                                  self.grade_fragment)) + '%'
+            context.update({
+                'section_average': str(StudentGrade.get_section_average(self.section, self.grade_fragment)) + '%',
+                'section_objective_average': str(StudentGrade.get_section_objective_average(self.section,
+                                                                                            self.grade_fragment)
+                                                 ) + '%',
+            })
             context['course_average'] = str(StudentGrade.get_course_average(self.section, self.grade_fragment)) + '%'
-        context['grade_fragment'] = self.grade_fragment
-        context['boundary'] = self.grade_fragment.get_fragment_boundary(self.section)
         return context
 
     def formset_valid(self, formset):
@@ -86,7 +88,7 @@ class GradesView(AttendanceBaseView, ModelFormSetView):
         return kwargs
 
 
-class CreateGradeFragmentView(AttendanceBaseView, CreateView):
+class CreateGradeFragmentView(GradeBaseView, CreateView):
     form_class = GradeFragmentForm
     model = GradeFragment
     template_name = 'grade/create_grade_fragment.html'
@@ -102,10 +104,8 @@ class CreateGradeFragmentView(AttendanceBaseView, CreateView):
 
     def form_valid(self, form):
         form = form.save(commit=False)
-
         if not self.section.course_offering.coordinated:
             form.section = self.section
-
         form.course_offering = self.section.course_offering
         form.updated_by = self.request.user
         form.save()

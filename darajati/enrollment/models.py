@@ -1,16 +1,11 @@
 from math import *
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import User as User_model
-
 from .types import RoundTypes
 from .utils import to_string, now, today, attendance_boundary
-
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
-
 from simple_history.models import HistoricalRecords
 
 User = settings.AUTH_USER_MODEL
@@ -29,38 +24,6 @@ class Person(models.Model):
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
 
-    @property
-    def in_student(self):
-        """
-        :return: True if the current user is a student else False
-        """
-        pass
-
-    @staticmethod
-    def has_access(user):
-        return Instructor.is_active(user=user) or Student.is_active(user=user)
-
-    @staticmethod
-    def is_instructor(user):
-        """
-        :return: True if the current user is an instructor else False
-        """
-        return Instructor.get_instructor(user=user)
-
-    @staticmethod
-    def is_coordinator(instructor):
-        """
-        :return: True if the current user is an instructor else False
-        """
-        return Coordinator.get_coordinator(instructor=instructor)
-
-    @property
-    def is_active(self):
-        """
-        :return: True if the user is active else is False
-        """
-        pass
-
     class Meta:
         abstract = True
 
@@ -74,42 +37,24 @@ class Student(Person):
     @staticmethod
     def is_active(user=None):
         """
-        :return: True if the user is active else is False
+        :return: True if student is active else False
         """
-        try:
-            return Student.objects.get(user=user).active
-        except:
-            return False
+        return Student.get_student(user).active
 
     @staticmethod
     def get_student(user=None):
         """
         :param user: current login user
-        :return: True if student else False
+        :return: True if student exist else False
         """
         try:
             return Student.objects.get(user=user)
-        except:
-            return False
+        except Student.DoesNotExist:
+            return None
 
     @staticmethod
     def is_student_exists(email):
         return Student.objects.filter(personal_email__exact=email).exists()
-
-    @staticmethod
-    def get_create_student(username, university_id, government_id, english_name, arabic_name, mobile, personal_email):
-        user, created = User_model.objects.get_or_create(username=username)
-
-        return Student.objects.get_or_create(
-            user=user,
-            university_id=university_id,
-            government_id=government_id,
-            english_name=english_name,
-            arabic_name=arabic_name,
-            mobile=mobile,
-            personal_email=personal_email,
-            active=True
-        )
 
 
 class Instructor(Person):
@@ -118,44 +63,78 @@ class Instructor(Person):
     def __str__(self):
         return to_string(self.english_name)
 
-        # :TODO Function to get the email ID from the USER_AUTH_MODEL.
-
-    @staticmethod
-    def is_active(user=None):
-        """
-        :return: True if the user is active else is False
-        """
-        try:
-            return Instructor.objects.get(user=user).active
-        except:
-            return False
-
     @staticmethod
     def get_instructor(user=None):
         """
-        :param user: current login user
-        :return: True if instructor else False
+        :parameter user: current login user
+        :return: return an instance of instructor if exist
         """
-        return Instructor.objects.filter(user=user).exists()
+        try:
+            return Instructor.objects.get(user=user)
+        except Instructor.DoesNotExist:
+            return None
+
+    @staticmethod
+    def is_active_instructor(user=None):
+        """
+        :parameter user: current login user
+        :return: True if instructor is active else False
+        """
+        instructor = Instructor.get_instructor(user=user)
+        if instructor:
+            return instructor.active
+        return False
+
+    @staticmethod
+    def is_active_coordinator(instructor=None):
+        """
+        :parameter instructor: current login user
+        :return: True if instructor is active else False
+        """
+        return Coordinator.get_coordinator(instructor=instructor)
 
     @staticmethod
     def is_instructor_exists(email):
+        """
+        :parameter email: a university email
+        :return: True if instructor with this email dose exist else False
+        """
         return Instructor.objects.filter(personal_email__exact=email).exists()
+
+    def is_coordinator_or_instructor(self):
+        if Coordinator.is_coordinator(self):
+            return None
+        return self
 
 
 class Semester(models.Model):
-    start_date = models.DateField(_('start date'))
-    end_date = models.DateField(_('end date'))
-    grade_fragment_deadline = models.DateField(_('Grade Break Down Deadline Date'),
-                                               null=True, blank=False)
+    start_date = models.DateField(_('Start date'))
+    end_date = models.DateField(_('End date'))
+    grade_fragment_deadline = models.DateField(
+        _('Grade break down deadline date'),
+        null=True,
+        blank=False
+    )
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
         return to_string(self.description, self.code)
 
-    @property
+    def check_is_accessible_date(self, date, offset_date):
+        """
+        :param date: the date which coordinator or instructor trying to access for attendance 
+        :param offset_date: the allowed offset days to view
+        :return: True if the given offset date is less than or equal to the date
+        """
+        if offset_date <= date and self.start_date <= date <= self.end_date:
+            return True
+        return False
+
     def can_create_grade_fragment(self):
+        """
+        :return: True if the deadline date is greater or equal to the current date else False 
+        """
         return True if self.grade_fragment_deadline >= today() else False
 
 
@@ -169,7 +148,6 @@ class Department(models.Model):
 
 
 class Course(models.Model):
-    # TODO: Attendance Deduction Formula
     name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
     department = models.ForeignKey(Department, related_name='courses', null=True, blank=False)
@@ -182,32 +160,62 @@ class Course(models.Model):
 
 class CourseOffering(models.Model):
     semester = models.ForeignKey(Semester, related_name='offering', on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offering', null=True, blank=False)
-    attendance_entry_window = models.PositiveIntegerField(_('attendance window'), null=True, blank=False, default=7)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='offering',
+        null=True,
+        blank=False
+    )
+    attendance_entry_window = models.PositiveIntegerField(
+        _('attendance window'),
+        null=True,
+        blank=False,
+        default=7
+    )
     coordinated = models.BooleanField(blank=False, default=1)
-    formula = models.CharField(_('Deduction formula'), max_length=200, null=True, blank=True,
-                               help_text=_('Formula to calculate the deduction value from students attendance'))
-    allow_change = models.BooleanField(_('Allow changing after submitting attendance?'),
-                                       blank=False,
-                                       default=1,
-                                       help_text=
-                                       _('This if checked will allow the instructors'
-                                         ' to change the attendances after submitting'))
-    total_rounding_type = models.CharField(_('Total Rounding Type'), max_length=50, choices=RoundTypes.choices(),
-                                           null=True,
-                                           blank=False,
-                                           default=RoundTypes.NONE,
-                                           help_text=_('Total grade rounding method for letter grade calculation'))
+    formula = models.CharField(
+        _('Deduction formula'),
+        max_length=200,
+        null=True,
+        blank=True,
+        help_text=_('Formula to calculate the deduction value from students attendance')
+    )
+    allow_change = models.BooleanField(
+        _('Allow changing after submitting attendance?'),
+        blank=False,
+        default=1,
+        help_text=
+        _('This if checked will allow the instructors to change the attendances after submitting')
+    )
+    total_rounding_type = models.CharField(
+        _('Total Rounding Type'), max_length=50,
+        choices=RoundTypes.choices(),
+        null=True,
+        blank=False,
+        default=RoundTypes.NONE,
+        help_text=_('Total grade rounding method for letter grade calculation')
+    )
 
     def __str__(self):
         return to_string(self.semester, self.course)
 
     @staticmethod
     def get_course_offering(course_offering_id):
-        return CourseOffering.objects.get(id=course_offering_id)
+        """
+        :param course_offering_id: an integer number which represent a id of course_offering 
+        :return: an instance of that id
+        """
+        try:
+            return CourseOffering.objects.get(id=course_offering_id)
+        except CourseOffering.DoesNotExist:
+            return None
 
     @staticmethod
     def get_current_course_offerings():
+        """
+        :return: current semester course_offering_id and course code 
+        """
         return CourseOffering.objects.filter(
             semester__start_date__lte=now(),
             semester__end_date__gte=now()
@@ -215,12 +223,21 @@ class CourseOffering(models.Model):
 
 
 class Section(models.Model):
-    course_offering = models.ForeignKey(CourseOffering, related_name='sections', on_delete=models.CASCADE)
+    course_offering = models.ForeignKey(
+        CourseOffering,
+        related_name='sections',
+        on_delete=models.CASCADE
+    )
     code = models.CharField(max_length=20, null=True, blank=False)
-    rounding_type = models.CharField(_('Rounding Type'), max_length=50, choices=RoundTypes.choices(), null=True,
-                                     blank=False,
-                                     default=RoundTypes.NONE,
-                                     help_text=_('Total grade rounding method for letter grade calculation'))
+    rounding_type = models.CharField(
+        _('Rounding Type'),
+        max_length=50,
+        choices=RoundTypes.choices(),
+        null=True,
+        blank=False,
+        default=RoundTypes.NONE,
+        help_text=_('Total grade rounding method for letter grade calculation')
+    )
     crn = models.CharField(_('CRN'), max_length=100, null=True, blank=False)
     active = models.BooleanField(_('Active'), default=False)
 
@@ -246,9 +263,9 @@ class Section(models.Model):
             return None
 
     @staticmethod
-    def get_sections():
+    def get_current_semesters_sections():
         """
-        :return: objects of all sections
+        :return: objects of all current semesters sections
         """
         return Section.objects.filter(course_offering__semester__start_date__lte=now(),
                                       course_offering__semester__end_date__gte=now()).distinct()
@@ -264,6 +281,16 @@ class Section(models.Model):
                                       scheduled_periods__section__course_offering__semester__end_date__gte=now()
                                       ).distinct()
 
+    @staticmethod
+    def is_section_exists_in_course_offering(course_offering, section_code):
+        """
+        :param course_offering: an instance of course_offering 
+        :param section_code: a section code
+        :return: True of exists else False
+        """
+        return Section.objects.filter(course_offering__exact=course_offering,
+                                      code__exact=section_code).exists()
+
     def is_instructor_section(self, instructor):
         """
         :param instructor: current login user
@@ -277,7 +304,7 @@ class Section(models.Model):
     def is_coordinator_section(self, instructor):
         """
         :param instructor: current login user
-        :return: 
+        :return:
         """
         return Coordinator.objects.filter(
             instructor=instructor,
@@ -286,48 +313,64 @@ class Section(models.Model):
             course_offering__semester__end_date__gte=now()
         ).exists()
 
-    @staticmethod
-    def is_section_exists(course_offering, section_code):
-        return Section.objects.filter(course_offering__exact=course_offering,
-                                      code__exact=section_code).exists()
-
-    @staticmethod
-    def get_create_section(course_offering, code, crn):
-        return Section.objects.get_or_create(
-            course_offering=course_offering,
-            code=code,
-            crn=crn,
-        )
-
 
 class Coordinator(models.Model):
-    course_offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='coordinators',
-                                        null=True, blank=False)
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='coordinators',
-                                   null=True, blank=False)
+    course_offering = models.ForeignKey(
+        CourseOffering,
+        on_delete=models.CASCADE,
+        related_name='coordinators',
+        null=True,
+        blank=False
+    )
+    instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.CASCADE,
+        related_name='coordinators',
+        null=True,
+        blank=False
+    )
 
     def __str__(self):
         return to_string(self.course_offering, self.instructor)
 
     @staticmethod
     def get_coordinator(instructor=None):
-        return Coordinator.objects.filter(instructor=instructor).exists()
+        """        
+        :param instructor: an instructor instance 
+        :return:  list of coordinated course offering of this instructor
+        """
+        return Coordinator.objects.filter(instructor=instructor)
 
     @staticmethod
-    def is_coordinator_course_offering(instructor, course_offering):
-        return Coordinator.objects.filter(
+    def is_coordinator(instructor=None):
+        """
+        :param instructor: an instructor instance 
+        :return: True if current instructor is coordinating at least one course offering
+        else False
+        """
+        coordinator = Coordinator.get_coordinator(instructor)
+        if coordinator:
+            return True
+        return False
+
+    @staticmethod
+    def is_coordinator_of_course_offering_in_this_semester(instructor, course_offering):
+        """
+        :param instructor: an instructor instance
+        :param course_offering: an instance of course offering
+        :return: True if this instructor is coordinator of at least one *Within this semester*
+        else False
+        """
+        return Coordinator.get_coordinator(
+            instructor=instructor
+        ).filter(
             course_offering=course_offering,
-            instructor=instructor,
             course_offering__semester__start_date__lte=now(),
             course_offering__semester__end_date__gte=now(),
         ).distinct().exists()
 
 
 class Enrollment(models.Model):
-    class Meta:
-        unique_together = ('student', 'section')
-        ordering = ['student__university_id']
-
     student = models.ForeignKey(Student, related_name='enrollments', on_delete=models.CASCADE)
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     active = models.BooleanField(_('Active'), blank=False, default=True)
@@ -337,6 +380,12 @@ class Enrollment(models.Model):
     updated_by = models.ForeignKey(User, related_name='enrollment_creator', null=True, blank=False)
     updated_on = models.DateTimeField(_('Updated on'), auto_now=True)
     history = HistoricalRecords()
+
+    # FIXME: when a students moves from section to other and that student has an id which comes between 2 students id
+    # FIXME: the order of the Serial Number would break.
+    class Meta:
+        unique_together = ('student', 'section')
+        ordering = ['student__university_id']
 
     def __str__(self):
         return to_string(self.student)
@@ -359,10 +408,13 @@ class Enrollment(models.Model):
 
     @property
     def get_letter_grade(self):
+        """        
+        :return: letter grade if it's set other wise return 'UD' which means Undecided   
+        """
         return self.letter_grade if self.letter_grade else "UD"
 
     @staticmethod
-    def get_students(section_id):
+    def get_students_of_section(section_id):
         """
         :return: list of all students for a giving section ID
         """
@@ -373,27 +425,20 @@ class Enrollment(models.Model):
         return Enrollment.objects.filter(student=student, section=section).exists()
 
     @staticmethod
-    def get_create_enrollment(student, section, register_date):
-        return Enrollment.objects.get_or_create(
-            student=student,
-            section=section,
-            register_date=parse_datetime(register_date)
-        )
-
-    @staticmethod
-    def get_students_enrollment(section_id, date, instructor):
+    def get_students_enrollment(section_id, date, instructor=None):
+        # FIXME: If possible make me nicer, i look like an ugly method *cry*
         """
-        :param section_id: 
+        :param section_id:
         :param date:
         :param instructor:
         :return: list of enrollments for a giving section_id and a day and instructor
            If the giving day is not exist get the nearest one
         """
-
         enrollments = []
         index = 1
-        day, period_date, periods = ScheduledPeriod.get_section_periods_of_nearest_day(section_id, date, instructor)
-        enrollment_list = Enrollment.get_students(section_id)
+        day, period_date = ScheduledPeriod.get_nearest_day_and_date(section_id, date, instructor)
+        periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor)
+        enrollment_list = Enrollment.get_students_of_section(section_id)
         count_index = 0
         for enrollment in enrollment_list:
             if enrollment.active is False:
@@ -442,6 +487,22 @@ class Enrollment(models.Model):
             enrollment__id=self.id,
             status=Attendance.Types.LATE).count()
 
+    @property
+    def get_enrollment_total_deduction(self):
+        result = 0
+        formula = self.section.course_offering.formula
+        if formula:
+            periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
+                'title'
+            )
+            for period in periods:
+                title = period.title
+                if title in formula:
+                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
+                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
+            result = eval(formula)
+        return result
+
     def get_enrollment_period_total_absence(self, period_title):
         return Attendance.objects.filter(
             enrollment__id=self.id,
@@ -460,18 +521,3 @@ class Enrollment(models.Model):
             attendance_instance__period__title=period_title,
             status=Attendance.Types.EXCUSED).count()
 
-    @property
-    def get_enrollment_total_deduction(self):
-        result = 0
-        formula = self.section.course_offering.formula
-        if formula:
-            periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
-                'title'
-            )
-            for period in periods:
-                title = period.title
-                if title in formula:
-                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
-                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
-            result = eval(formula)
-        return result

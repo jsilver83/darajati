@@ -29,7 +29,7 @@ class GradesForm(forms.ModelForm):
                 max_digits=settings.MAX_DIGITS,
                 required=False,
                 max_value=100, min_value=0,
-                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
 
             self.initial['actual_grade'] = self.initial['grade_quantity']
 
@@ -40,7 +40,7 @@ class GradesForm(forms.ModelForm):
                     max_digits=settings.MAX_DIGITS,
                     required=False,
                     max_value=100, min_value=0,
-                    widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
+                    widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity', 'readonly': 'True'}))
                 self.fields['remarks'] = forms.CharField(widget=forms.TextInput(attrs={'class': 'thm-field',
                                                                                        'readonly': 'True'}))
 
@@ -50,23 +50,23 @@ class GradesForm(forms.ModelForm):
         elif not self.fragment.entry_in_percentages and self.initial['grade_quantity']:
             self.fields['grade_quantity'] = forms.DecimalField(
                 max_value=max_value, min_value=0, required=False,
-                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
 
             # IF grade value was submitted once and it's not allowed to enter more then one time
             if self.initial['updated_on'] and not self.fragment.allow_change:
                 self.fields['grade_quantity'] = forms.DecimalField(
                     max_value=max_value, min_value=0, required=False,
-                    widget=forms.NumberInput(attrs={'class': 'thm-field', 'readonly': 'True'}))
+                    widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity', 'readonly': 'True'}))
                 self.fields['remarks'] = forms.CharField(widget=forms.TextInput(attrs={'class': 'thm-field',
                                                                                        'readonly': 'True'}))
         else:
             self.fields['grade_quantity'] = forms.DecimalField(
                 max_value=max_value, min_value=0, required=False,
-                widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
             if self.fragment.entry_in_percentages:
                 self.fields['grade_quantity'] = forms.DecimalField(
                     max_value=100, min_value=0, required=False,
-                    widget=forms.NumberInput(attrs={'class': 'thm-field'}))
+                    widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
 
                 self.fields['actual_grade'] = forms.DecimalField(
                     decimal_places=settings.MAX_DECIMAL_POINT,
@@ -117,7 +117,7 @@ class BaseGradesFormSet(BaseModelFormSet):
         self.average = round(self.average / len(self.forms), 2)
 
         """
-        SUBJECTIVE_BOUNDED require an average of objective exams if there is not show a validation error
+        SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
             self.average_boundary = StudentGrade.get_section_objective_average(self.section, self.fragment)
@@ -126,7 +126,7 @@ class BaseGradesFormSet(BaseModelFormSet):
                     _('There are no objective grades average, make sure your objective grades are entered'))
 
         """
-        SUBJECTIVE_BOUNDED_FIXED require boundary_fixed_average to not be null. If null show an error
+        SUBJECTIVE_BOUND_FIXED require boundary_fixed_average to not be null. If null show an error
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
             if not self.fragment.boundary_fixed_average:
@@ -134,7 +134,7 @@ class BaseGradesFormSet(BaseModelFormSet):
             self.average_boundary = self.fragment.boundary_fixed_average
 
         """
-        Validating the average or SUBJECTIVE_BOUNDED
+        Validating the average or SUBJECTIVE_BOUND
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
 
@@ -142,22 +142,16 @@ class BaseGradesFormSet(BaseModelFormSet):
 
                 less_objective_average = self.average_boundary - self.fragment.boundary_range_lower
                 more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
-
-                if self.fragment.entry_in_percentages:
-                    average_base_percent = round((self.average_boundary * 100) / self.fragment.weight, 2)
-                    less_objective_average = average_base_percent - self.fragment.boundary_range_lower
-                    more_objective_average = average_base_percent + self.fragment.boundary_range_upper
-
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
                         _('Section average {} should be between {} and {}'.format(
-                            self.average, more_objective_average, less_objective_average)))
+                            self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(
                     _('Submitting Failed, Make sure the boundary range of this grade plan has a value'))
 
         """
-        Validating the average or SUBJECTIVE_BOUNDED_FIXED
+        Validating the average or SUBJECTIVE_BOUND_FIXED
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
 
@@ -165,16 +159,10 @@ class BaseGradesFormSet(BaseModelFormSet):
 
                 less_objective_average = self.average_boundary - self.fragment.boundary_range
                 more_objective_average = self.average_boundary + self.fragment.boundary_range
-
-                # if self.fragment.entry_in_percentages:
-                # average_base_percent = round((self.average_boundary * 100) / self.fragment.weight, 2)
-                # less_objective_average = average_base_percent - self.fragment.boundary_range
-                # more_objective_average = average_base_percent + self.fragment.boundary_range
-
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
                         _('Section average {} should be between {} and {}'.format(
-                            self.average, more_objective_average, less_objective_average)))
+                            self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(
                     _('Submitting Failed, Make sure the boundary range or boundary fixed average range'
@@ -189,7 +177,7 @@ class GradeFragmentForm(forms.ModelForm):
         self.semester = semester
         unchanged_fields = ['weight', 'boundary_type', 'boundary_range_upper', 'boundary_range_lower',
                             'boundary_fixed_average']
-        if not self.semester.can_create_grade_fragment:
+        if not self.semester.can_create_grade_fragment():
             for field in self.fields:
                 if field in unchanged_fields:
                     self.fields[field].disabled = True

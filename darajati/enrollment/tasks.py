@@ -12,12 +12,12 @@ def get_students_enrollment_grades():
 
     count = 0
     enrollments = []
-    sections = Section.get_sections()
+    sections = Section.get_current_semesters_sections()
     messages = []
     if not sections:
         return "There is no sections available to create grades for - 'Scheduled Task - get_students_enrollment_grades'"
     for section in sections:
-        enrollment_list = Enrollment.get_students(section.id)
+        enrollment_list = Enrollment.get_students_of_section(section.id)
         if not enrollment_list:
             messages.append('There are no enrollments for section {}'.format(section))
         else:

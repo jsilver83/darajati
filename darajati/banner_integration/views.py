@@ -9,10 +9,6 @@ from enrollment.models import CourseOffering
 from grade.models import GradeFragment, StudentGrade
 
 
-class HomeView(LoginRequiredMixin, TemplateView):
-    template_name = 'banner_integration/home.html'
-
-
 class PopulationRosterView(LoginRequiredMixin, FormView):
     form_class = CourseOfferingForm
     template_name = 'banner_integration/roster_populate.html'

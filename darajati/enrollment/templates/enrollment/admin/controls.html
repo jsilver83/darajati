@@ -3,13 +3,21 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
+        <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
         <div class="title-sec text-center">
             <h3>{% trans 'Admin Controls' %}</h3>
             <form method="post">
                 {% csrf_token %}
                 <input class="thm-btn small-btn save-btn" type="submit" name="create_grade" value="{% trans 'Create Grades' %}">
-
             </form>
+            <div class="title-sec text-center">
+                <a class="thm-btn small-btn save-btn" href="{% url 'banner_integration:import_grade' %}">
+                    {% trans 'Import Grades' %}
+                </a>
+                <a class="thm-btn small-btn save-btn" href="{% url 'banner_integration:synchronization' %}">
+                    {% trans 'Synchronization' %}
+                </a>
+            </div>
         </div>
     </div>
 </div>

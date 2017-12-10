@@ -58,7 +58,7 @@ def initial_roster_creation(course_offering, current_user, commit=False):
     for result in results['data']:
         # Initialize non existing sections
         section_code = '{}-{}'.format(course_offering.course.code, result['sec'])
-        if not Section.is_section_exists(course_offering, section_code):
+        if not Section.is_section_exists_in_course_offering(course_offering, section_code):
             section = Section(course_offering=course_offering,
                               code=section_code,
                               crn=result['crn'],
@@ -122,7 +122,7 @@ def initial_roster_creation(course_offering, current_user, commit=False):
     for result in results['data']:
         # Initialize non existing enrollments
         section_code = '{}-{}'.format(course_offering.course.code, result['sec'])
-        if not Section.is_section_exists(course_offering, section_code):
+        if not Section.is_section_exists_in_course_offering(course_offering, section_code):
 
             section = Section(course_offering=course_offering,
                               code=section_code,

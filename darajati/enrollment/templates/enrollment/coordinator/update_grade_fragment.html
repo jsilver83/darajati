@@ -3,7 +3,7 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
                 <h3>{% trans 'Update Grade Fragment' %}</h3>
             </div>
@@ -19,7 +19,7 @@
                     </blockquote>
                 </div>
             </div>
-            <form method="post">
+            <form method="post" class="form-horizontal">
                 {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
                 <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
                 {% if can_delete_fragment %}

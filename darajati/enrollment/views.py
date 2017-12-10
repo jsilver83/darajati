@@ -19,11 +19,10 @@ from grade.models import GradeFragment, StudentGrade
 class HomeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
 
-        if Instructor.is_instructor(self.request.user):
-            if Instructor.is_coordinator(self.request.user.instructor):
+        if Instructor.is_active_instructor(self.request.user):
+            if Instructor.is_active_coordinator(self.request.user.instructor):
                 return redirect('enrollment:coordinator')
-            if Instructor.has_access(self.request.user):
-                return redirect('enrollment:instructor')
+            return redirect('enrollment:instructor')
         else:
             return redirect('enrollment:unauthorized')
 
@@ -47,7 +46,7 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         if self.kwargs.get('section_id'):
             self.section_id = self.kwargs['section_id']
             self.section = Section.get_section(self.section_id)
-        if Instructor.is_coordinator(self.request.user.instructor):
+        if Instructor.is_active_coordinator(self.request.user.instructor):
             self.coordinator = self.request.user.instructor.coordinators
         return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
 
@@ -85,7 +84,7 @@ class InstructorView(InstructorBaseView, ListView):
     context_object_name = 'sections'
 
     def test_func(self, **kwargs):
-        return True if Instructor.is_instructor(self.request.user) else False
+        return True if Instructor.is_active_instructor(self.request.user) else False
 
     def get_queryset(self):
         return Section.get_instructor_sections(self.request.user.instructor)
@@ -97,7 +96,7 @@ class SectionStudentView(InstructorBaseView, ListView):
     context_object_name = 'enrollments'
 
     def get_queryset(self):
-        query = Enrollment.get_students(self.section_id)
+        query = Enrollment.get_students_of_section(self.section_id)
         return query
 
 
@@ -141,7 +140,9 @@ class CoordinatorEditBaseView(CoordinatorBaseView):
             if not self.course_offering:
                 messages.error(self.request, _('No course offering found'))
                 return False
-            if not Coordinator.is_coordinator_course_offering(self.request.user.instructor, self.course_offering):
+            if not Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                    self.request.user.instructor,
+                    self.course_offering):
                 messages.error(self.request, _('You can not access this page'))
                 return False
 
@@ -182,7 +183,7 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(CoordinatorGradeFragmentView, self).get_context_data(**kwargs)
         context['course_offering'] = self.course_offering
-        context['can_create_fragment'] = self.course_offering.semester.can_create_grade_fragment
+        context['can_create_fragment'] = self.course_offering.semester.can_create_grade_fragment()
         return context
 
 
@@ -195,7 +196,7 @@ class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
     def test_func(self):
         rules = super(CoordinatorCreateGradeFragmentView, self).test_func()
         if rules:
-            return self.course_offering.semester.can_create_grade_fragment
+            return self.course_offering.semester.can_create_grade_fragment()
         messages.error(self.request, _('You can not create grade fragment at this time'))
         return False
 
@@ -252,7 +253,7 @@ class CoordinatorEditGradeFragmentView(CoordinatorEditBaseView, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(CoordinatorEditGradeFragmentView, self).get_context_data(**kwargs)
-        context['can_delete_fragment'] = self.course_offering.semester.can_create_grade_fragment
+        context['can_delete_fragment'] = self.course_offering.semester.can_create_grade_fragment()
         return context
 
     def get_success_url(self, **kwargs):
@@ -270,7 +271,7 @@ class CoordinatorDeleteGradeFragmentView(CoordinatorEditBaseView, DeleteView):
     def test_func(self):
         rules = super(CoordinatorDeleteGradeFragmentView, self).test_func()
         if rules:
-            return self.course_offering.semester.can_create_grade_fragment
+            return self.course_offering.semester.can_create_grade_fragment()
         messages.error(self.request, _('You can not delete grade fragment at this time'))
         return False
 

@@ -1,9 +1,6 @@
-//Preloader
 $(window).load(function () {
     $('.preloader').fadeOut(500);
 });
-
-
 $(document).ready(function(){
 	var window_height = '',header_height = '',footer_height = '', window_width = '';
 
@@ -21,7 +18,7 @@ $(document).ready(function(){
 			$('.content-panel').css('min-height', window_height - header_height - footer_height);
 		}
 		else{
-			$('.content-panel').css('min-height', '');	
+			$('.content-panel').css('min-height', '');
 		}
 
 	}
@@ -39,92 +36,43 @@ $(document).ready(function(){
 
 
 	$.fn.isOnScreen = function(){
-    
+
 	    var win = $(window);
-	    
+
 	    var viewport = {
 	        top : win.scrollTop(),
 	        left : win.scrollLeft()
 	    };
 	    viewport.right = viewport.left + win.width();
 	    viewport.bottom = viewport.top + win.height();
-	    
+
 	    var bounds = this.offset();
 	    bounds.right = bounds.left + this.outerWidth();
 	    bounds.bottom = bounds.top + this.outerHeight();
-	    
+
 	    return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
-	    
+
 	};
 
 
-	function mob_quick_access(){
-		if ($('.footer').isOnScreen() == true) {
-	       $('.mob-quick-access').css('position','absolute');
-	    }
-	    else{
-	    	$('.mob-quick-access').css('position','');
-	    }
-	}
-	mob_quick_access();
+    $('.info-icon').click(function () {
+        $('.info-cntnt').hide();
+        $(this).next('.info-cntnt').show();
+    });
 
-	$(window).scroll(function() {
-	    mob_quick_access();
-	});
+    $(window).click(function () {
+        if ($(this).hasClass('info-icon')) {
+            $('.info-cntnt').hide();
+        }
+    });
 
+    $(document).mouseup(function (e) {
+        var container = $(".info-cntnt");
 
-	$('.mob-quick-access').click(function(){
-		$('body').css({'overflow':'hidden'});
-		$('.quick-access').addClass('blanket');
-	});
-
-	$('.quick-access-close').click(function(){
-		$('body').css({'overflow':''});
-		$('.quick-access').removeClass('blanket');
-	});
-
-	$("#id_search_value").keydown(function(){
-		$('.errorlist').hide();
-	});
-
-
-	/*Edit Attendance*/
-	$('.edit-btn').click(function(){
-		$(this).hide();
-		$('.save-atten').show();
-	});
-	$('.cancel-btn').click(function(){
-		$(this).parent('.save-atten').hide();
-		$('.edit-btn').show();
-	});
-
-	$('.info-icon').click(function(){
-		$('.info-cntnt').hide();
-		$(this).next('.info-cntnt').show();
-	});
-
-	$(window).click(function() {
-		if($(this).hasClass('info-icon')){
-			$('.info-cntnt').hide();
-		}
-	});
-
-
-	$("body").click(function(e) {
-	    if($('.info-cntnt,.errorlist').is(':visible')){
-	    	$('.info-cntnt,.errorlist').hide().removeClass('active');
-	    }
-	    e.stopPropagation();
-	    //return false;
-	});
-
-
-	/*Student Screen Available Tutors*/
-	$('.info-icon').click(function(){
-		var thiselct = $(this);
-		$('.info-cntnt').hide().removeClass('active');
-		thiselct.siblings('.info-cntnt').show().addClass('active');
-		return false;
-	});
+        // if the target of the click isn't the container nor a descendant of the container
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+        }
+    });
 
 });

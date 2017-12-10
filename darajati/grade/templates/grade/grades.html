@@ -3,9 +3,7 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn">
-                <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a>
-            </div>
+            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
         </div>
         <br>
         <div class="card card-outline-secondary mb-3">
@@ -26,7 +24,6 @@
                     {% if boundary %}
                         <span><strong>{{ boundary }}</strong></span>
                     {% endif %}
-                    </span></p>
                     {% if not grade_fragment.allow_change %}
                         <q style="color:red">
                             {% trans '*Note: You can not change a student grade after submitting it.' %}
@@ -41,6 +38,15 @@
                     <div class="title-sec row">
                         <div class="col-md-9">
                             <h3>{% trans 'Available Grades' %}</h3>
+                            {% if section_average %}
+                                <span style="margin-right: 5%">{% trans 'Section Average:' %} <span class="section_average">{{ section_average }}</span></span>
+                            {% endif %}
+                            {% if section_objective_average %}
+                                <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}</span>
+                            {% endif %}
+                            {% if course_average %}
+                                <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
+                            {% endif %}
                         </div>
                         <div class="col-md-3 text-right">
                             <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
@@ -90,17 +96,34 @@
                     </div>
                 </form>
                 {% if section_average %}
-                    <div> Section Average: {{ section_average }}</div>
+                    <span style="margin-right: 5%">{% trans 'Section Average:' %} <span class="section_average">{{ section_average }}</span></span>
                 {% endif %}
                 {% if section_objective_average %}
-                    <div> Section Objective Average: {{ section_objective_average }}</div>
+                    <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}</span>
                 {% endif %}
                 {% if course_average %}
-                    <div> Coordinated Course Average: {{ course_average }}</div>
+                    <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
                 {% endif %}
             {% else %}
                 {% trans 'There are no students' %}
             {% endif %}
         </div>
     </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.grade_quantity').on('keyup paste', calculate_average);
+        });
+
+        function calculate_average() {
+            var total = 0;
+            $('.grade_quantity').each(function (index) {
+                var float_value = parseFloat($(this).val()) | 0;
+                total += float_value;
+            });
+            total = total / $('.grade_quantity').length;
+            $('.section_average').html(total.toFixed(2));
+        }
+    </script>
 {% endblock %}

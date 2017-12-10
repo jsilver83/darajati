@@ -13,22 +13,26 @@
     <meta name="author" content="Mohamed Faraj">
     <title>{% trans 'Darajati - King Fahd University of Petroleum and Minerals' %}</title>
     <link rel="icon" href="{% static 'images/favicon.png' %}">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+          integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
     <!-- Main CSS -->
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
-    <!-- Bootstrap-3 -->
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/bootstrap-datetime-picker.min.css' %}" rel="stylesheet">
 
     <!-- Js Files -->
     <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/moment.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/transition.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/collapse.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.js' %}"></script>
 
     <!-- Custom Files -->
     <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/load_more.js' %}"></script>
+
+{#    <script type="text/javascript" src="{% static 'js/moment.js' %}"></script>#}
+{#    <script type="text/javascript" src="{% static 'js/transition.js' %}"></script>#}
+{#    <script type="text/javascript" src="{% static 'js/collapse.js' %}"></script>#}
+{#    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>#}
+{#    <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.js' %}"></script>#}
+
 </head>
 {% if LANGUAGE_CODE == 'ar' %}
     <body class="arabic">
@@ -38,6 +42,7 @@
 <div class="preloader">
     <div class="loading"><img src="{% static 'images/kfupm-loading.gif' %}"/><h6>{% trans 'Loading...' %}</h6></div>
 </div>
+
 <!--Header-->
 <div class="header text-center">
     <div class="max-container">
@@ -48,32 +53,38 @@
             </a>
         </div>
         <div class="rgt-head">
-            <!-- Split button -->
-            <div class="btn-group">
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"
-                            style="background-color: #237d40;border-color: white;">
-                        {% trans 'Welcome! ' %}{{ request.user.username }}
-                        <span class="caret"></span></button>
-                    <ul class="dropdown-menu">
-                        {% if user.is_superuser %}
-                            <li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
-                        {% endif %}
-                        {% if coordinator %}
-                            <li><a href="{% url 'enrollment:coordinator' %}">{% trans 'Coordinated courses' %}</a></li>
-                            <li><a href="{% url 'enrollment:instructor' %}">{% trans 'Instructed section' %}</a></li>
-                        {% endif %}
-                        <li role="presentation" class="divider"></li>
-                        <li><a href="{% url 'logout' %}">{% trans 'Logout' %}</a></li>
-                    </ul>
-                </div>
-            </div>
+            <!-- nav bar-->
             {% if LANGUAGE_CODE == 'ar' %}
                 <a href="/en{{ request.get_full_path|slice:'3:' }}" class="lang en en-font">English</a>
             {% endif %}
             {% if LANGUAGE_CODE == 'en' %}
                 <a href="/ar{{ request.get_full_path|slice:'3:' }}" class="lang ar ar-font">عربى</a>
             {% endif %}
+
+            {% if user.is_authenticated %}
+                {% if user.is_superuser %}
+                    <a href="{% url 'enrollment:controls' %}" class="login-btn">{% trans 'Admin Controls' %}</a>
+                    <a href="{% url 'banner_integration:home' %}" class="login-btn">{% trans 'Banner Integration' %}</a>
+                {% endif %}
+                {% if coordinator %}
+                    <a href="{% url 'enrollment:coordinator' %}"
+                       class="login-btn">{% trans 'Coordinator Controls' %}</a>
+                    <a href="{% url 'enrollment:instructor' %}" class="login-btn">{% trans 'Instructor Controls' %}</a>
+                {% endif %}
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="login-btn">{% trans 'Logout' %}</a>
+                {% comment %}
+            {% else %}
+            <a href="{% url 'login' %}" class="login-btn">{% trans 'Login' %}</a>
+            {% endcomment %}
+                <span>
+                {% trans 'Welcome, ' %}{{ request.user.username }}
+                </span>
+            {% endif %}
+
+
         </div>
     </div>
 </div>
@@ -122,9 +133,8 @@
         <div class="ft-right">{% trans 'King Fahd University of Petroleum & Minerals' %}</div>
     </div>
 </div>
+<script>
 
-
-{% block scripts %}
-{% endblock %}
+</script>
 </body>
 </html>

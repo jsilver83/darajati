@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+        <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
         <div class="title-sec text-center">
             <h3>{% trans 'Course:' %} {{ section.course_offering.course.name }}</h3>
             <p>{% trans 'Find your current enrolled sections grades plans' %}</p>
@@ -22,6 +22,7 @@
             <table class="table table-condensed text-center">
                 <thead>
                 <tr>
+                    <th class="text-center">{% trans 'No.' %}</th>
                     <th class="text-center">{% trans 'Category' %}</th>
                     <th class="text-center">{% trans 'Description' %}</th>
                     <th class="text-center">{% trans 'Weight' %}</th>
@@ -33,6 +34,7 @@
                 <tbody>
                 {% for grade_fragment in grade_fragments %}
                 <tr>
+                    <td>{{ grade_fragment.order }}</td>
                     <td>{{ grade_fragment.category }}</td>
                     <td>{{ grade_fragment.description }}</td>
                     <td>{{ grade_fragment.weight }}</td>

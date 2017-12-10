@@ -2,8 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from enrollment.utils import to_string, get_offset_day, get_dates_in_between, day_string, \
-    get_start_end_dates_of_the_week, get_previous_week, get_next_week
+from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, get_next_week
 
 User = settings.AUTH_USER_MODEL
 
@@ -30,20 +29,18 @@ class ScheduledPeriod(models.Model):
                 (cls.SATURDAY, _('Saturday')),
             )
 
-    section = models.ForeignKey('enrollment.Section', related_name='scheduled_periods', null=True, blank=False,
-                                on_delete=models.CASCADE)
-
+    section = models.ForeignKey('enrollment.Section',
+                                related_name='scheduled_periods',
+                                on_delete=models.CASCADE,
+                                null=True,
+                                blank=False
+                                )
     instructor_assigned = models.ForeignKey('enrollment.Instructor', related_name='assigned_periods')
     day = models.CharField(max_length=9, null=True, blank=False, choices=Days.choices())
     title = models.CharField(max_length=20, null=True, blank=False)
     start_time = models.TimeField(_('start time'))
     end_time = models.TimeField(_('end time'))
     location = models.CharField(max_length=50, null=True, blank=False)
-    # late_deduction = models.DecimalField(_('late deduction'), null=True, blank=False, max_digits=settings.MAX_DIGITS,
-    #                                      decimal_places=settings.MAX_DECIMAL_POINT)
-    # absence_deduction = models.DecimalField(_('absence deduction'), null=True, blank=False,
-    #                                         max_digits=settings.MAX_DIGITS,
-    #                                         decimal_places=settings.MAX_DECIMAL_POINT)
 
     def __str__(self):
         return to_string(self.section.course_offering,
@@ -58,7 +55,10 @@ class ScheduledPeriod(models.Model):
         """
         This function will get a specific period for a giving id.
         """
-        return ScheduledPeriod.objects.filter(id=period_id).first
+        try:
+            return ScheduledPeriod.objects.get(id=period_id)
+        except ScheduledPeriod.DoesNotExist:
+            return None
 
     @staticmethod
     def get_periods():
@@ -85,7 +85,7 @@ class ScheduledPeriod(models.Model):
             'section_id', 'day').distinct()
 
     @staticmethod
-    def get_section_periods_of_date(section_id, day, instructor):
+    def get_section_periods_of_day(section_id, day, instructor):
         """
         :param section_id: giving section 
         :param day:
@@ -93,18 +93,21 @@ class ScheduledPeriod(models.Model):
         :return: all periods for a giving section and date and instructor
         """
         if instructor:
-            return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day, instructor_assigned=instructor)
+            return ScheduledPeriod.objects.filter(section=section_id,
+                                                  day__iexact=day,
+                                                  instructor_assigned=instructor)
+        # coordinator
+        return ScheduledPeriod.objects.filter(section=section_id,
+                                              day__iexact=day)
 
-        return ScheduledPeriod.objects.filter(section=section_id, day__iexact=day)
-
+    # FIXME: You should fix me to look more prettier and more efficient
     @staticmethod
-    def get_section_periods_of_nearest_day(section_id, date, instructor):
+    def get_nearest_day_and_date(section_id, date, instructor):
         """
-        :param section_id: 
-        :param giving_day: 
-        :param instructor: 
-        :param date
-        :return: 
+        :param section_id: given section id 
+        :param date: a date which to be accessed
+        :param instructor: an instructor instance
+        :return: nearest day in string, and it's date
         """
         days_offset = 0
         period_date = None
@@ -112,23 +115,25 @@ class ScheduledPeriod(models.Model):
 
         while days_offset <= 7:
             period_date, day = get_offset_day(date, -days_offset)
-            periods = ScheduledPeriod.get_section_periods_of_date(section_id, day, instructor).values_list(
+            periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor).values_list(
                 'day').distinct('day')
             if periods:
                 days_offset = 8
             days_offset += 1
 
-        if instructor:
-            return day, \
-                   period_date, \
-                   ScheduledPeriod.objects.filter(section=section_id, day__iexact=day,
-                                                  instructor_assigned=instructor).order_by('start_time')
-        return day, \
-               period_date, \
-               ScheduledPeriod.objects.filter(section=section_id, day__iexact=day).order_by('start_time')
+        return day, period_date
 
+    # FIXME: Oh no, such logic, i am structured so badly, consider breaking me down to smaller parts please.
     @staticmethod
     def get_section_periods_week_days(section, instructor, current_date, today):
+        """
+        :param section: 
+        :param instructor: 
+        :param current_date: 
+        :param today: 
+        :return: Will return a list of dates where they will be placed in the top of the attendance table
+        This will construct which date is available from previous week and next week. 
+        """
         dates = get_dates_in_between(current_date)
         period_dates = []
         previous_week = None
@@ -175,22 +180,28 @@ class ScheduledPeriod(models.Model):
 
     @staticmethod
     def is_period_exists(section, instructor, day, start_time, end_time):
-        return ScheduledPeriod.objects.filter(section=section, instructor_assigned=instructor, day=day,
+        """
+        :param section: 
+        :param instructor: 
+        :param day: 
+        :param start_time: 
+        :param end_time: 
+        :return: True if period with such input exists else False 
+        """
+        return ScheduledPeriod.objects.filter(section=section,
+                                              instructor_assigned=instructor,
+                                              day=day,
                                               start_time=start_time,
                                               end_time=end_time).exists()
 
     @staticmethod
-    def is_allowed_section_periods(section, instructor, day, date):
-        return ScheduledPeriod.objects.filter(
-            section=section,
-            instructor_assigned=instructor,
-            day=str(day).upper(),
-            section__course_offering__semester__start_date__lte=date,
-            section__course_offering__semester__end_date__gte=date
-        ).exists()
-
-    @staticmethod
     def is_period_within_range(section, day, instructor):
+        """
+        :param section: 
+        :param day: 
+        :param instructor: 
+        :return: True if a period within the attendance_window boundary else False 
+        """
         if instructor:
             return ScheduledPeriod.objects.filter(section=section.id,
                                                   day__iexact=day,
@@ -198,13 +209,17 @@ class ScheduledPeriod(models.Model):
                                                   ).distinct('day').exists()
 
         return ScheduledPeriod.objects.filter(section=section.id,
-                                              day__iexact=day).distinct('day').exists()
+                                              day__iexact=day
+                                              ).distinct('day').exists()
 
 
 class AttendanceInstance(models.Model):
     period = models.ForeignKey(ScheduledPeriod, related_name='attendance_dates')
     date = models.DateField()
     comment = models.CharField(max_length=150, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-date']
 
     def __str__(self):
         return to_string(self.period, self.date)
@@ -214,29 +229,12 @@ class AttendanceInstance(models.Model):
         """
         :param period: 
         :param date
-        :return: 
+        :return: True if an instance exists else False
         """
-        return True if AttendanceInstance.objects.filter(period=period, date=date) else False
-
-    @staticmethod
-    def get_attendance_instance_of_period(period, date):
-        """
-        :param period: 
-        :param date
-        :return: 
-        """
-        return AttendanceInstance.objects.filter(period=period, date=date)
-
-    class Meta:
-        ordering = ['-date']
+        return AttendanceInstance.objects.filter(period=period, date=date).exists()
 
 
 class Attendance(models.Model):
-    class Meta:
-        permissions = (
-            ('can_give_excused_status', _('Can change student status to excused')),
-        )
-
     class Types:
         ABSENT = 'abs'
         LATE = 'lat'
@@ -259,15 +257,10 @@ class Attendance(models.Model):
     updated_on = models.DateTimeField(auto_now=True, null=True, blank=False)
     updated_by = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
 
+    class Meta:
+        permissions = (
+            ('can_give_excused_status', _('Can change student status to excused')),
+        )
+
     def __str__(self):
         return to_string(self.attendance_instance.period, self.enrollment.student.english_name)
-
-    @staticmethod
-    def get_student_attendance(section_id):
-        """
-        :param section_id: 
-        :return: 
-        """
-        return Attendance.objects.filter(enrollment__section=section_id).values('enrollment', 'status').annotate(
-            total=models.Count('status')
-        )

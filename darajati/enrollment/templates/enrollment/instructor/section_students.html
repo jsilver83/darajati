@@ -3,10 +3,10 @@
 {% block content %}
 <div class="content-panel">
     <div class="cntnt-sec">
-        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+        <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
         <br>
         <div class="title-sec text-center">
-            <h3>{% trans 'Current active student for section' %} {{ section.code }}</h3>
+            <h3>{% trans 'Students list of section' %} {{ section.code }}</h3>
         </div>
     </div>
     <div class="cntnt-sec">
@@ -14,27 +14,29 @@
         <table class="table table-condensed">
             <thead>
             <tr>
-                <th>{% trans 'No.' %}</th>
-                <th>{% trans 'Name' %}</th>
-                <th>{% trans 'ID' %}</th>
-                <th>{% trans 'Active' %}</th>
-                <th>{% trans 'Letter Grade' %}</th>
-                <th>{% trans 'Absences' %}</th>
-                <th>{% trans 'Lates' %}</th>
-                <th>{% trans 'Deduction' %}</th>
+                <th class="text-center">{% trans 'No.' %}</th>
+                <th class="text-center">{% trans 'Name' %}</th>
+                <th class="text-center">{% trans 'ID' %}</th>
+                <th class="text-center">{% trans 'Active' %}</th>
+                <th class="text-center">{% trans 'Letter Grade' %}</th>
+                <th class="text-center">{% trans 'Absences' %}</th>
+                <th class="text-center">{% trans 'Lates' %}</th>
+                <th class="text-center">{% trans 'Deduction' %}</th>
+                <th class="text-center">{% trans 'View Absences & Lates' %}</th>
             </tr>
             </thead>
             <tbody>
             {% for enrollment in enrollments %}
-                <tr {% if not enrollment.active %}class="table-danger" {% endif %}>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ enrollment.student.english_name|lower }}</td>
-                    <td>{{ enrollment.student.university_id }}</td>
-                    <td>{{ enrollment.active }}</td>
-                    <td>{{ enrollment.get_letter_grade }}</td>
-                    <td>{{ enrollment.get_enrollment_total_absence }}</td>
-                    <td>{{ enrollment.get_enrollment_total_late }}</td>
-                    <td>{{ enrollment.get_enrollment_total_deduction }}</td>
+                <tr {% if not enrollment.active %}class="danger" {% endif %}>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td class="text-center">{{ enrollment.student.english_name|lower }}</td>
+                    <td class="text-center">{{ enrollment.student.university_id }}</td>
+                    <td class="text-center">{{ enrollment.active }}</td>
+                    <td class="text-center">{{ enrollment.get_letter_grade }}</td>
+                    <td class="text-center">{{ enrollment.get_enrollment_total_absence }}</td>
+                    <td class="text-center">{{ enrollment.get_enrollment_total_late }}</td>
+                    <td class="text-center">{{ enrollment.get_enrollment_total_deduction }}</td>
+                <td class="text-center"><a href="{% url 'attendance:attendance_summary' section_id=section.id enrollment_id=enrollment.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

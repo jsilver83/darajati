@@ -12,6 +12,7 @@ urlpatterns = [
         name='section_students'),
 ]
 
+
 # Coordinator
 urlpatterns += [
     url(r'^coordinator/$', views.CoordinatorView.as_view(), name='coordinator'),
