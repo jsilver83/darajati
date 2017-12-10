@@ -102,6 +102,9 @@ class Instructor(Person):
         return Instructor.objects.filter(personal_email__exact=email).exists()
 
     def is_coordinator_or_instructor(self):
+        """
+        :return: None if coordinator else return instructor instance 
+        """
         if Coordinator.is_coordinator(self):
             return None
         return self
@@ -246,6 +249,9 @@ class Section(models.Model):
 
     @property
     def attendance_entry_window(self):
+        """
+        :return: a integer defined attendance window if the course coordinator else 0  
+        """
         if self.course_offering.coordinated:
             return self.course_offering.attendance_entry_window
         else:
@@ -267,8 +273,9 @@ class Section(models.Model):
         """
         :return: objects of all current semesters sections
         """
-        return Section.objects.filter(course_offering__semester__start_date__lte=now(),
-                                      course_offering__semester__end_date__gte=now()).distinct()
+        return Section.objects.filter(
+            course_offering__semester__start_date__lte=now(),
+            course_offering__semester__end_date__gte=now()).distinct()
 
     @staticmethod
     def get_instructor_sections(instructor):
@@ -276,10 +283,11 @@ class Section(models.Model):
         :param instructor: current login user
         :return: a unique list of section objects for the login user and for the current semester
         """
-        return Section.objects.filter(scheduled_periods__instructor_assigned=instructor,
-                                      scheduled_periods__section__course_offering__semester__start_date__lte=now(),
-                                      scheduled_periods__section__course_offering__semester__end_date__gte=now()
-                                      ).distinct()
+        return Section.objects.filter(
+            scheduled_periods__instructor_assigned=instructor,
+            scheduled_periods__section__course_offering__semester__start_date__lte=now(),
+            scheduled_periods__section__course_offering__semester__end_date__gte=now()
+        ).distinct()
 
     @staticmethod
     def is_section_exists_in_course_offering(course_offering, section_code):
@@ -288,18 +296,21 @@ class Section(models.Model):
         :param section_code: a section code
         :return: True of exists else False
         """
-        return Section.objects.filter(course_offering__exact=course_offering,
-                                      code__exact=section_code).exists()
+        return Section.objects.filter(
+            course_offering__exact=course_offering,
+            code__exact=section_code
+        ).exists()
 
     def is_instructor_section(self, instructor):
         """
         :param instructor: current login user
         :return: return true if this is the instructor of this section
         """
-        return Section.objects.filter(id=self.id, scheduled_periods__instructor_assigned=instructor,
-                                      scheduled_periods__section__course_offering__semester__start_date__lte=now(),
-                                      scheduled_periods__section__course_offering__semester__end_date__gte=now()
-                                      ).distinct().exists()
+        return Section.objects.filter(
+            id=self.id, scheduled_periods__instructor_assigned=instructor,
+            scheduled_periods__section__course_offering__semester__start_date__lte=now(),
+            scheduled_periods__section__course_offering__semester__end_date__gte=now()
+        ).distinct().exists()
 
     def is_coordinator_section(self, instructor):
         """
@@ -477,18 +488,27 @@ class Enrollment(models.Model):
 
     @property
     def get_enrollment_total_absence(self):
+        """
+        :return: absence total of an enrollment 
+        """
         return Attendance.objects.filter(
             enrollment__id=self.id,
             status=Attendance.Types.ABSENT).count()
 
     @property
     def get_enrollment_total_late(self):
+        """
+        :return: late total of an enrollment 
+        """
         return Attendance.objects.filter(
             enrollment__id=self.id,
             status=Attendance.Types.LATE).count()
 
     @property
     def get_enrollment_total_deduction(self):
+        """
+        :return: total on this enrollment based on the formula 
+        """
         result = 0
         formula = self.section.course_offering.formula
         if formula:
@@ -504,20 +524,31 @@ class Enrollment(models.Model):
         return result
 
     def get_enrollment_period_total_absence(self, period_title):
+        """
+        :param period_title: 
+        :return: total absence of a a given period_title and enrollment
+        """
         return Attendance.objects.filter(
             enrollment__id=self.id,
             attendance_instance__period__title=period_title,
             status=Attendance.Types.ABSENT).count()
 
     def get_enrollment_period_total_late(self, period_title):
+        """
+        :param period_title: 
+        :return: total late of a a given period_title and enrollment
+        """
         return Attendance.objects.filter(
             enrollment__id=self.id,
             attendance_instance__period__title=period_title,
             status=Attendance.Types.LATE).count()
 
     def get_enrollment_period_total_excused(self, period_title):
+        """
+        :param period_title: 
+        :return: total excused of a a given period_title and enrollment
+        """
         return Attendance.objects.filter(
             enrollment__id=self.id,
             attendance_instance__period__title=period_title,
             status=Attendance.Types.EXCUSED).count()
-
