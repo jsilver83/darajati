@@ -95,7 +95,11 @@ class DisplayGradesView(GradeBaseView, ListView):
 
     def get_queryset(self):
         queryset = super(DisplayGradesView, self).get_queryset()
-        return queryset.filter(grade_fragment=self.grade_fragment, enrollment__section=self.section)
+        return queryset.filter(
+            grade_fragment=self.grade_fragment,
+            enrollment__section=self.section,
+            enrollment__active=True
+        )
 
     def get_context_data(self, **kwargs):
         context = super(DisplayGradesView, self).get_context_data(**kwargs)
