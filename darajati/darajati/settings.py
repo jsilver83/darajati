@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'enrollment',
     'attendance',
     'grade',
+    'exam',
     'banner_integration',
     'simple_history',
     'django_celery_results',

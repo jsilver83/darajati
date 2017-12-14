@@ -28,15 +28,23 @@ urlpatterns = i18n_patterns(
 )
 
 urlpatterns += i18n_patterns(
+    # Enrollment
     url(r'', include('enrollment.urls', namespace='enrollment', app_name='enrollment')),
+    # Attendance
     url(r'attendance/', include('attendance.urls', namespace='attendance', app_name='attendance')),
+    # Grade
     url(r'grade/', include('grade.urls', namespace='grade', app_name='grade')),
+    # Banner Integrations
     url(r'banner-integration/',
         include('banner_integration.urls', namespace='banner_integration', app_name='banner_integration')),
+    # Exams
+    url(r'exam/',
+        include('exam.urls', namespace='exam', app_name='exam')),
 )
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [
-        url(r'^debug/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+                      url(r'^debug/', include(debug_toolbar.urls)),
+                  ] + urlpatterns
