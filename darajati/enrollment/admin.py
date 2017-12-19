@@ -24,6 +24,7 @@ class EnrollmentAdmin(SimpleHistoryAdmin):
     history_list_display = ['letter_grade', 'section', 'active', 'comment', 'updated_by']
     list_filter = ('active', 'letter_grade', 'section')
     list_display = ('id', 'student', 'section', 'register_date', 'letter_grade', 'active')
+    search_fields = ['student__university_id']
 
 
 class CourseOfferingAdmin(admin.ModelAdmin):
