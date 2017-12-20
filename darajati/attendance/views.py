@@ -104,6 +104,7 @@ class AttendanceView(AttendanceBaseView, FormSetView):
                       'year': self.year,
                       'month': self.month,
                       'day': self.day}
+            return reverse_lazy('attendance:section_day_attendance', kwargs=kwargs)
         return reverse_lazy('attendance:section_attendance', kwargs=kwargs)
 
 
