@@ -527,3 +527,9 @@ class StudentGrade(models.Model):
                     item['grade_object'].save()
 
         return changes_list, errors
+
+    @property
+    def display_percent_grade(self):
+        if self.grade_quantity and self.grade_fragment.entry_in_percentages:
+            return (self.grade_quantity * 100) / self.grade_fragment.weight
+        return self.grade_quantity
