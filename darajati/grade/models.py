@@ -346,7 +346,6 @@ class StudentGrade(models.Model):
         )
 
         for fragment in fragments:
-            total_weight += fragment.weight
             grades = StudentGrade.objects.filter(
                 grade_fragment=fragment,
                 enrollment__section=section,
@@ -358,6 +357,7 @@ class StudentGrade(models.Model):
             )
 
             if grades['sum']:
+                total_weight += fragment.weight
                 section_average = round(Decimal(grades['sum'] / grades['count']), 2)
                 list_of_averages.append(section_average)
 
