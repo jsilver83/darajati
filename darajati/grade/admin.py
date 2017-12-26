@@ -13,7 +13,7 @@ class LetterGradeAdmin(admin.ModelAdmin):
 
 
 class StudentGradeAdmin(admin.ModelAdmin):
-    list_display = ('enrollment', 'grade_fragment', 'grade_quantity', 'remarks', 'updated_on', 'updated_by')
+    list_display = ('grade_fragment', 'grade_quantity', 'remarks', 'updated_on', 'updated_by')
     list_filter = ('grade_fragment',)
 
 

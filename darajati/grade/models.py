@@ -262,13 +262,6 @@ class LetterGrade(models.Model):
 
 
 class StudentGrade(models.Model):
-    enrollment = models.ForeignKey(
-        'enrollment.Enrollment',
-        on_delete=models.CASCADE,
-        related_name="grades",
-        null=True,
-        blank=False
-    )
     grade_fragment = models.ForeignKey(
         GradeFragment,
         on_delete=models.CASCADE,
@@ -596,3 +589,5 @@ class StudentGrade(models.Model):
                 return course_average if not grades['sum'] is None else ''
             return ''
         return ''
+
+

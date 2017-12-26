@@ -4,9 +4,9 @@ from .models import *
 
 class ScheduledPeriodAdmin(admin.ModelAdmin):
     list_filter = ('day',)
-    list_display = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
+    list_display = ('id', 'section', 'day', 'title', 'start_time',
                     'end_time', 'location')
-    search_fields = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
+    search_fields = ('id', 'section', 'day', 'title', 'start_time',
                      'end_time', 'location')
 
 
@@ -18,8 +18,8 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
 class AttendanceAdmin(admin.ModelAdmin):
     readonly_fields = ('updated_by',)
     list_filter = ('status', )
-    list_display = ('attendance_instance', 'enrollment', 'status')
-    search_fields = ('attendance_instance', 'enrollment', 'status')
+    list_display = ('attendance_instance', 'status')
+    search_fields = ('attendance_instance', 'status')
 
 admin.site.register(ScheduledPeriod, ScheduledPeriodAdmin)
 admin.site.register(AttendanceInstance, AttendanceInstanceAdmin)
