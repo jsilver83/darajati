@@ -58,20 +58,12 @@ class GradesView(GradeBaseView, ModelFormSetView):
         context = super(GradesView, self).get_context_data(**kwargs)
         context.update({
             'enrollments': Enrollment.get_students_of_section(self.section_id),
-            'section_average': StudentGrade.get_section_average(self.section, self.grade_fragment),
+            'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
-            'course_average': StudentGrade.get_course_average(self.section, self.grade_fragment),
+            'course_average': StudentGrade.display_course_average(self.section, self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
         })
-        if self.grade_fragment.entry_in_percentages:
-            context.update({
-                'section_average': str(StudentGrade.get_section_average(self.section, self.grade_fragment)) + '%',
-                'section_objective_average': str(StudentGrade.get_section_objective_average(self.section,
-                                                                                            self.grade_fragment)
-                                                 ) + '%',
-            })
-            context['course_average'] = str(StudentGrade.get_course_average(self.section, self.grade_fragment)) + '%'
         return context
 
     def formset_valid(self, formset):

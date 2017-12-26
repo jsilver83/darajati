@@ -336,21 +336,37 @@ class StudentGrade(models.Model):
         :param grade_fragment: 
         :return: section average of all objective grade fragment 
         """
-        grades = StudentGrade.objects.filter(
-            grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
-            enrollment__section=section,
-            grade_fragment__student_total_grading=True,
-            enrollment__active=True
-        ).exclude(grade_quantity=None).values().aggregate(
-            sum=Sum('grade_quantity'),
-            count=Count('id'),
+        list_of_averages = []
+        total_weight = 0
+
+        fragments = GradeFragment.objects.filter(
+            course_offering=section.course_offering,
+            boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
+            student_total_grading=True,
         )
-        if grades['sum']:
-            section_objective_average = round(Decimal(grades['sum'] / grades['count']), 2)
-            if grade_fragment.entry_in_percentages:
-                section_objective_average = section_objective_average * 100 / grade_fragment.weight
-            return section_objective_average if not grades['sum'] is None else 0
-        return 0
+
+        for fragment in fragments:
+            total_weight += fragment.weight
+            grades = StudentGrade.objects.filter(
+                grade_fragment=fragment,
+                enrollment__section=section,
+                grade_fragment__student_total_grading=True,
+                enrollment__active=True
+            ).exclude(grade_quantity=None).values().aggregate(
+                sum=Sum('grade_quantity'),
+                count=Count('id'),
+            )
+
+            if grades['sum']:
+                section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                list_of_averages.append(section_average)
+
+        total_average = Decimal(0)
+        for average in list_of_averages:
+            total_average += average
+        average = total_average / total_weight
+        average = round(average * 100, 2)
+        return average
 
     @staticmethod
     def get_course_average(section, grade_fragment):
@@ -533,3 +549,50 @@ class StudentGrade(models.Model):
         if self.grade_quantity and self.grade_fragment.entry_in_percentages:
             return (self.grade_quantity * 100) / self.grade_fragment.weight
         return self.grade_quantity
+
+    @staticmethod
+    def display_section_average(section, grade_fragment):
+        """
+        :param section: 
+        :param grade_fragment: 
+        :return: get section average of a given grade fragment 
+        """
+        grades = StudentGrade.objects.filter(
+            grade_fragment=grade_fragment,
+            enrollment__section=section,
+            grade_fragment__student_total_grading=True,
+            enrollment__active=True
+        ).exclude(grade_quantity=None).values().aggregate(
+            sum=Sum('grade_quantity'),
+            count=Count('id'),
+        )
+        if grades['sum']:
+            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            section_average = str(section_average) + ' (' + str(section_average * 100 / grade_fragment.weight) + '%)'
+            return section_average if not grades['sum'] is None else ''
+        return ''
+
+    @staticmethod
+    def display_course_average(section, grade_fragment):
+        """        
+                :param section: 
+                :param grade_fragment: 
+                :return: course average for all sections of this grade fragment 
+                """
+        if section.course_offering.coordinated:
+            grades = StudentGrade.objects.filter(
+                grade_fragment=grade_fragment,
+                grade_fragment__course_offering=section.course_offering,
+                grade_fragment__student_total_grading=True,
+                enrollment__active=True
+            ).exclude(grade_quantity=None).values().aggregate(
+                sum=Sum('grade_quantity'),
+                count=Count('id'),
+            )
+
+            if grades['sum']:
+                course_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                course_average = str(course_average * 100 / grade_fragment.weight) + '%'
+                return course_average if not grades['sum'] is None else ''
+            return ''
+        return ''
