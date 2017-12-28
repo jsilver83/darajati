@@ -115,7 +115,8 @@ class BaseGradesFormSet(BaseModelFormSet):
                 self.average += form.cleaned_data['grade_quantity']
 
         self.average = round(self.average / len(self.forms), 2)
-        self.average = round(self.average / self.fragment.weight * 100, 2)
+        if not self.fragment.entry_in_percentages:
+            self.average = round(self.average / self.fragment.weight * 100, 2)
 
         """
         SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
