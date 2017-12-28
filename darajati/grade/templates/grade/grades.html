@@ -115,29 +115,26 @@
         });
 
         function calculate_average() {
-            var total = 0;
+            var total = 0.0;
             var count = 0;
+            var average = 0.0;
+            var average_in_percent = 0.0;
+            $('.grade_quantity').each(function (index) {
+                if ($(this).val() != '') {
+                    var value = parseFloat($(this).val());
+                    total += value;
+                    count += 1;
+                }
+            });
             {% if not grade_fragment.entry_in_percentages %}
-                $('.grade_quantity').each(function (index) {
-                    if ($(this).val() != '') {
-                        var value = parseFloat($(this).val());
-                        total += value;
-                        count += 1;
-                    }
-                });
+                average = total / count;
+                average_in_percent = average / {{ grade_fragment.weight }} * 100;
             {% else %}
-                $('.actual_grade').each(function (index) {
-                    if ($(this).val() != '') {
-                        var value = parseFloat($(this).val());
-                        total += value;
-                        count += 1;
-                    }
-                });
+                average_in_percent = total / count;
+                average = average_in_percent / 100 * {{ grade_fragment.weight }};
             {% endif %}
-            total = (total / count).toFixed(2);
-            var total_percent = total / {{ grade_fragment.weight }} * 100;
             $('.section_average').html(
-                "" + total + "  (" + total_percent.toFixed(2) + "%)"
+                "" + average.toFixed(2) + "  (" + average_in_percent.toFixed(2) + "%)"
             );
         }
     </script>
