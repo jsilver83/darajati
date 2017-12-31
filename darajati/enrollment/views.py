@@ -6,11 +6,18 @@ from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
-from .tasks import get_students_enrollment_grades
-from .forms import GradesImportForm
-from .utils import now
+from .models import Section, Coordinator, CourseOffering
+# from .forms import GradesImportForm
+# from .utils import now
+#
+# from grade.forms import GradeFragmentForm
+# from grade.models import GradeFragment, StudentGrade
+from .web_service_utils import *
 
-from grade.forms import GradeFragmentForm
 
-from grade.models import GradeFragment, StudentGrade
+class CourseSectionListView(ListView):
+    template_name = 'enrollment/sections_list.html'
+    context_object_name = 'sections'
+
+    def get_queryset(self):
+        return get_course_sections_value('201710-SH', 'ENGL01')

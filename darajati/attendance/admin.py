@@ -18,8 +18,9 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
 class AttendanceAdmin(admin.ModelAdmin):
     readonly_fields = ('updated_by',)
     list_filter = ('status', )
-    list_display = ('attendance_instance', 'status')
+    list_display = ('student_id', 'attendance_instance', 'status')
     search_fields = ('attendance_instance', 'status')
+
 
 admin.site.register(ScheduledPeriod, ScheduledPeriodAdmin)
 admin.site.register(AttendanceInstance, AttendanceInstanceAdmin)

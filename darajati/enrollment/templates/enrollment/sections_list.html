@@ -3,7 +3,6 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
                 <h3>{% trans 'Find your current enrolled sections' %}</h3>
             </div>
@@ -12,9 +11,6 @@
                 <table class="table table-condensed text-center">
                     <thead>
                     <tr>
-                        <th class="text-center">{% trans 'Semester Code' %}</th>
-                        <th class="text-center">{% trans 'Course Code' %}</th>
-                        <th class="text-center">{% trans 'Course Name' %}</th>
                         <th class="text-center">{% trans 'Section Code' %}</th>
                         <th class="text-center">{% trans 'Attendances' %}</th>
                         <th class="text-center">{% trans 'Grades' %}</th>
@@ -25,18 +21,8 @@
                     <tbody>
                     {% for section in sections %}
                         <tr>
-                            <td>{{ section.course_offering.semester.code }}</td>
-                            <td {% if section.course_offering.coordinated %} style="color:red" {% endif %}>
-                                {{ section.course_offering.course.code }}</td>
-                            <td>{{ section.course_offering.course.name }}</td>
-                            <td>{{ section.code }}</td>
-                            <td><a href="{% url 'attendance:section_attendance' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-                            <td><a href="{% url 'grade:section_grade' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-                            <td><a href="{% url 'enrollment:section_students' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
-                            <td></td>
+                            <td>{{ section.sec_code }}</td>
+                            <td><a href="{% url 'attendance:section_attendance' crn=section.crn %}">attendance</a></td>
                         </tr>
                     {% endfor %}
                     </tbody>

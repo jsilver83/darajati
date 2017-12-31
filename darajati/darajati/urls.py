@@ -28,11 +28,11 @@ urlpatterns = i18n_patterns(
 )
 
 urlpatterns += i18n_patterns(
-    url(r'', include('enrollment.urls', namespace='enrollment', app_name='enrollment')),
-    url(r'attendance/', include('attendance.urls', namespace='attendance', app_name='attendance')),
-    url(r'grade/', include('grade.urls', namespace='grade', app_name='grade')),
-    url(r'banner-integration/',
-        include('banner_integration.urls', namespace='banner_integration', app_name='banner_integration')),
+    url(r'^', include('enrollment.urls', namespace='enrollment', app_name='enrollment')),
+    url(r'^attendance/', include('attendance.urls', namespace='attendance', app_name='attendance')),
+    # url(r'grade/', include('grade.urls', namespace='grade', app_name='grade')),
+    # url(r'banner-integration/',
+    #     include('banner_integration.urls', namespace='banner_integration', app_name='banner_integration')),
 )
 
 if settings.DEBUG:

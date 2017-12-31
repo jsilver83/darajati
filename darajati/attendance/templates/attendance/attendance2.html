@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <br>
+        <div class="cntnt-sec">
+            {% if formset.forms %}
+                <form method="post">
+                <div class="title-sec row">
+                    <div class="col-md-3 text-right">
+                        <input class="thm-btn small-btn save-btn" type="submit" value="{% trans 'Save' %}">
+                    </div>
+                </div>
+                <div class="thm-table odd period-cntnt">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>{% trans 'ID' %}</th>
+                            {% for period in current_periods %}
+                                <th>{{ period.start_time }}{% trans ' to ' %}{{ period.end_time }}</th>
+                            {% endfor %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{ formset.non_field_errors }}
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                        {% for form in formset %}
+                            {{ form.id }}
+                            {{ form.attendance_instance }}
+                            {% ifchanged form.student_id.value %}
+                                <tr>
+                                <td>{{ form.student_id }}</td>
+                                <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
+                                    <div class="row">
+                                        <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
+                                        <div class="col-md-4 info text-right">
+                                            <img class="info-icon" src="{% static 'images/info.png' %}"/>
+                                            <div class="info-cntnt">
+                                                <span>Updated By : {{ form.updated_by }}</span>
+                                                <span>Updated On : {{ form.updated_on }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            {% else %}
+
+                                <span style="display: none;">{{ form.student_id }}</span>
+                                <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
+                                    <div class="row">
+                                        <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
+                                        <div class="col-md-4 info text-right">
+                                            <img class="info-icon" src="{% static 'images/info.png' %}"/>
+                                            <div class="info-cntnt">
+                                                <span>Updated By : {{ form.updated_by }}</span>
+                                                <span>Updated On : {{ form.updated_on }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                            {% endifchanged %}
+                        {% endfor %}
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                {% trans 'There are no students' %}
+            {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

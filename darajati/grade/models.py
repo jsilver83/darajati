@@ -280,9 +280,6 @@ class StudentGrade(models.Model):
     updated_by = models.ForeignKey(User, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=False)
 
-    class Meta:
-        unique_together = ('enrollment', 'grade_fragment')
-
     def __str__(self):
         return to_string(self.grade_fragment, self.remarks)
 

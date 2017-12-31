@@ -42,7 +42,7 @@
 <div class="header text-center">
     <div class="max-container">
         <div class="lft-head">
-            <a href="{% url 'enrollment:home' %}">
+            <a href="">
                 <div class="kfupm-logo"><img src="{% static 'images/logo.png' %}"/></div>
                 <div class="dept-logo"><h1>{% trans 'Darajati' %}</h1></div>
             </a>
@@ -57,11 +57,11 @@
                         <span class="caret"></span></button>
                     <ul class="dropdown-menu">
                         {% if user.is_superuser %}
-                            <li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
+                            <li><a href="">{% trans 'Admin Controls' %}</a></li>
                         {% endif %}
                         {% if coordinator %}
-                            <li><a href="{% url 'enrollment:coordinator' %}">{% trans 'Coordinated courses' %}</a></li>
-                            <li><a href="{% url 'enrollment:instructor' %}">{% trans 'Instructed section' %}</a></li>
+                            <li><a href="">{% trans 'Coordinated courses' %}</a></li>
+                            <li><a href="">{% trans 'Instructed section' %}</a></li>
                         {% endif %}
                         <li role="presentation" class="divider"></li>
                         <li><a href="{% url 'logout' %}">{% trans 'Logout' %}</a></li>
