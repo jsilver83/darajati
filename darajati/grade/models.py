@@ -323,9 +323,10 @@ class StudentGrade(models.Model):
             count=Count('id'),
         )
         if grades['sum']:
-            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            section_average = Decimal(grades['sum'] / grades['count'])
             if grade_fragment.entry_in_percentages:
                 section_average = section_average * 100 / grade_fragment.weight
+            section_average = round(section_average, 2)
             return section_average if not grades['sum'] is None else 0
         return 0
 
@@ -364,9 +365,11 @@ class StudentGrade(models.Model):
         total_average = Decimal(0)
         for average in list_of_averages:
             total_average += average
-        average = total_average / total_weight
-        average = round(average * 100, 2)
-        return average
+        if total_average:
+            average = total_average / total_weight
+            average = round(average * 100, 2)
+            return average
+        return 0
 
     @staticmethod
     def get_course_average(section, grade_fragment):
@@ -387,9 +390,10 @@ class StudentGrade(models.Model):
             )
 
             if grades['sum']:
-                course_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                course_average = Decimal(grades['sum'] / grades['count'])
                 if grade_fragment.entry_in_percentages:
                     course_average = course_average * 100 / grade_fragment.weight
+                course_average = round(course_average, 2)
                 return course_average if not grades['sum'] is None else 0
             return 0
         return False
@@ -568,7 +572,7 @@ class StudentGrade(models.Model):
         )
         if grades['sum']:
             section_average = round(Decimal(grades['sum'] / grades['count']), 2)
-            section_average = str(section_average) + ' (' + str(section_average * 100 / grade_fragment.weight) + '%)'
+            section_average = str(section_average) + ' (' + str(round(section_average * 100 / grade_fragment.weight, 2)) + '%)'
             return section_average if not grades['sum'] is None else ''
         return ''
 
@@ -592,7 +596,7 @@ class StudentGrade(models.Model):
 
             if grades['sum']:
                 course_average = round(Decimal(grades['sum'] / grades['count']), 2)
-                course_average = str(course_average * 100 / grade_fragment.weight) + '%'
+                course_average = str(round(course_average * 100 / grade_fragment.weight, 2)) + '%'
                 return course_average if not grades['sum'] is None else ''
             return ''
         return ''
