@@ -106,6 +106,7 @@ class BaseGradesFormSet(BaseModelFormSet):
 
     def clean(self):
         # if by somehow the grade was passed greater then what it should be it will accept it. Fix later
+        count = 0
         for form in self.forms:
             if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
                     ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
@@ -113,8 +114,9 @@ class BaseGradesFormSet(BaseModelFormSet):
 
             if form.cleaned_data['grade_quantity']:
                 self.average += form.cleaned_data['grade_quantity']
+                count += 1
 
-        self.average = round(self.average / len(self.forms), 2)
+        self.average = round(self.average / count, 2)
         if not self.fragment.entry_in_percentages:
             self.average = round(self.average / self.fragment.weight * 100, 2)
 
@@ -157,10 +159,10 @@ class BaseGradesFormSet(BaseModelFormSet):
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
 
-            if self.fragment.boundary_range and self.fragment.boundary_fixed_average:
+            if self.fragment.boundary_fixed_average:
 
-                less_objective_average = self.average_boundary - self.fragment.boundary_range
-                more_objective_average = self.average_boundary + self.fragment.boundary_range
+                less_objective_average = self.average_boundary - self.fragment.boundary_range_lower
+                more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
                         _('Section average {}% should be between {}% and {}%'.format(
