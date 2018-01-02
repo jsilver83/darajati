@@ -3,7 +3,7 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
+            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
         </div>
         <br>
         <div class="card card-outline-secondary mb-3">
@@ -29,28 +29,35 @@
         </div>
         <div class="cntnt-sec">
             {% if grades %}
+                <div class="title-sec row">
+                    <div class="col-md-12">
+                        <h3>{% trans 'Available Grades' %}</h3>
+                        <span style="margin-right: 5%">{% trans 'Section Average:' %} <span
+                                class="section_average">{{ section_average }}</span></span>
+                    </div>
+                </div>
                 <table class="table table-condensed text-center">
-                <thead>
-                <tr>
-                    <th class="text-center">{% trans 'No.' %}</th>
-                    <th class="text-center">{% trans 'Student ID' %}</th>
-                    <th class="text-center">{% trans 'Student Name' %}</th>
-                    <th class="text-center">{% trans 'Mark' %}</th>
-                    <th class="text-center">{% trans 'Remark' %}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for grade in grades %}
+                    <thead>
                     <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ grade.enrollment.student.university_id }}</td>
-                        <td>{{ grade.enrollment.student.english_name }}</td>
-                        <td>{{ grade.display_percent_grade }}</td>
-                        <td>{{ grade.remarks }}</td>
+                        <th class="text-center">{% trans 'No.' %}</th>
+                        <th class="text-center">{% trans 'Student ID' %}</th>
+                        <th class="text-center">{% trans 'Student Name' %}</th>
+                        <th class="text-center">{% trans 'Mark' %}</th>
+                        <th class="text-center">{% trans 'Remark' %}</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for grade in grades %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ grade.enrollment.student.university_id }}</td>
+                            <td>{{ grade.enrollment.student.english_name }}</td>
+                            <td>{{ grade.display_percent_grade }}</td>
+                            <td>{{ grade.remarks }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             {% else %}
                 {% trans 'There are no students' %}
             {% endif %}

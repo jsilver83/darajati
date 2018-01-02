@@ -230,6 +230,11 @@ class GradeFragment(models.Model):
             return False
         return False
 
+    def get_section_average(self, section):
+        return StudentGrade.get_section_average(
+            section, self
+        )
+
     @property
     def get_entry_is_allowed(self):
         return self.is_entry_allowed()
@@ -551,7 +556,8 @@ class StudentGrade(models.Model):
     @property
     def display_percent_grade(self):
         if self.grade_quantity and self.grade_fragment.entry_in_percentages:
-            return (self.grade_quantity * 100) / self.grade_fragment.weight
+            return round((self.grade_quantity * 100) / self.grade_fragment.weight, 2)
+
         return self.grade_quantity
 
     @staticmethod

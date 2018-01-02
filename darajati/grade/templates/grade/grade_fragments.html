@@ -15,6 +15,11 @@
                         {% trans 'Create New Grade Plan' %}</a>
                 </div>
             {% endif %}
+            <div class="float-right">
+                <a class="thm-btn small-btn outline-btn-dgrey"
+                   href="{% url 'grade:section_grade_report' section_id=section_id %}">
+                    {% trans 'Grades Report' %}</a>
+            </div>
         </div>
 
         {% if grade_fragments %}
@@ -45,7 +50,8 @@
                                 <a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
                                    class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
                         {% else %}
-                            <td><a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+                            <td>
+                                <a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
                                    class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
                         {% endif %}
                     </tr>

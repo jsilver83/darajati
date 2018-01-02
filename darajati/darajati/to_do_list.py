@@ -16,5 +16,10 @@ when a student moved to other section, the Serial number sequence should not cha
 Dec 25
 - redis server is ready for testing, celery needs to be implemented.
 - exam app needs to be functional
+
+
+:::
+Jan 2 2018
+add last updated by in grades
 """
 

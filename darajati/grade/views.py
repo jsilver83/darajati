@@ -1,5 +1,6 @@
+from django.db.models import Value, IntegerField
 from extra_views import ModelFormSetView
-from django.views.generic import ListView, CreateView
+from django.views.generic import ListView, CreateView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
@@ -96,6 +97,7 @@ class DisplayGradesView(GradeBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(DisplayGradesView, self).get_context_data(**kwargs)
         context.update({
+            'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
         })
@@ -128,3 +130,29 @@ class CreateGradeFragmentView(GradeBaseView, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('grade:section_grade', kwargs={'section_id': self.section_id})
+
+
+class GradeReportView(GradeBaseView, TemplateView):
+    template_name = 'grade/grade_report.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        fragments = GradeFragment.objects.filter(
+                course_offering=self.section.course_offering)
+
+        context.update({
+            'grades': StudentGrade.objects.filter(
+                enrollment__section=self.section,
+                enrollment__active=True,
+            ).order_by('enrollment__student__university_id', 'grade_fragment__order'),
+            'fragments': fragments
+        })
+        averages = []
+        for fragment in fragments:
+            averages.append(
+                fragment.get_section_average(self.section)
+            )
+        context.update({
+            'averages': averages
+        })
+        return context

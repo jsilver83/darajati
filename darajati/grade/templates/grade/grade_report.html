@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
+        </div>
+        <br>
+        <div class="cntnt-sec">
+            {% if grades %}
+                <div class="thm-table odd period-cntnt">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>{% trans 'Student Name' %}</th>
+                        <th>{% trans 'Student ID' %}</th>
+                        {% for fragment in fragments %}
+                            <th>{{ fragment.description|lower }} / {{ fragment.weight }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for grade in grades %}
+                        {% ifchanged grade.enrollment.student.university_id %}
+                            <tr>
+                            <td>{{ grade.enrollment.student.english_name }}</td>
+                            <td>{{ grade.enrollment.student.university_id }}</td>
+                            <td>{{ grade.display_percent_grade }}</td>
+                        {% else %}
+                            <td>{{ grade.display_percent_grade }}</td>
+                        {% endifchanged %}
+                    {% endfor %}
+                    </tr>
+                    <tr>
+                    <td>{% trans 'Averages: ' %}</td>
+                    <td></td>
+                    {% for average in averages %}
+                        <td>{{ average }}</td>
+                    {% endfor %}
+                    </tr>
+                    </tbody>
+                </table>
+            {% else %}
+                {% trans 'There are no students' %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
