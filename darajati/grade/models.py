@@ -321,7 +321,7 @@ class StudentGrade(models.Model):
         grades = StudentGrade.objects.filter(
             grade_fragment=grade_fragment,
             enrollment__section=section,
-            grade_fragment__student_total_grading=True,
+            # grade_fragment__student_total_grading=True,
             enrollment__active=True
         ).exclude(grade_quantity=None).values().aggregate(
             sum=Sum('grade_quantity'),
