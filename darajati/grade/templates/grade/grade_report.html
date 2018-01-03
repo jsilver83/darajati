@@ -61,17 +61,8 @@
     <script type="text/javascript">
         $(document).ready(function () {
             var table = $('#mytable').DataTable({
-                fixedHeader: {
-                    header: true,
-                    footer: true
-                },
                 "pageLength": 50,
                 "scrollX": true
-            });
-            $('#mytable').scroll(function () {
-                if ($(".fixedHeader-floating").is(":visible")) {
-                    $(".fixedHeader-floating").scrollLeft($(this).scrollLeft());
-                }
             });
         });
     </script>
