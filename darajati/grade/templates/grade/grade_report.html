@@ -68,6 +68,11 @@
                 "pageLength": 50,
                 "scrollX": true
             });
+            $('#mytable').scroll(function () {
+                if ($(".fixedHeader-floating").is(":visible")) {
+                    $(".fixedHeader-floating").scrollLeft($(this).scrollLeft());
+                }
+            });
         });
     </script>
 {% endblock %}
