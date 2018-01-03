@@ -577,9 +577,10 @@ class StudentGrade(models.Model):
             count=Count('id'),
         )
         if grades['sum']:
-            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
-            section_average = str(section_average) + ' (' + str(round(section_average * 100 / grade_fragment.weight, 2)) + '%)'
-            return section_average if not grades['sum'] is None else ''
+            section_average = Decimal(grades['sum'] / grades['count'])
+            section_average_percent = round(section_average * 100 / grade_fragment.weight, 2)
+            display_average = '{0:.2f}, ({1:.2f}%)'.format(round(section_average, 2), section_average_percent)
+            return display_average if not grades['sum'] is None else ''
         return ''
 
     @staticmethod
@@ -601,8 +602,8 @@ class StudentGrade(models.Model):
             )
 
             if grades['sum']:
-                course_average = round(Decimal(grades['sum'] / grades['count']), 2)
-                course_average = str(round(course_average * 100 / grade_fragment.weight, 2)) + '%'
-                return course_average if not grades['sum'] is None else ''
-            return ''
+                section_average = Decimal(grades['sum'] / grades['count'])
+                section_average_percent = round(section_average * 100 / grade_fragment.weight, 2)
+                display_average = '{0:.2f}, ({1:.2f}%)'.format(round(section_average, 2), section_average_percent)
+                return display_average if not grades['sum'] is None else ''
         return ''
