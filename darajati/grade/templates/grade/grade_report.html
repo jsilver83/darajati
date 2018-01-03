@@ -8,8 +8,7 @@
         <br>
         <div class="cntnt-sec">
             {% if grades %}
-                <div class="thm-table odd period-cntnt grade-report">
-                <table class="table">
+                <table class="table display" id="mytable" cellspacing="0" width="100%">
                     <thead>
                     <tr>
                         <th>{% trans 'Student Name' %}</th>
@@ -19,6 +18,15 @@
                         {% endfor %}
                     </tr>
                     </thead>
+                    <tfoot>
+                    <tr>
+                        <th>{% trans 'Student Name' %}</th>
+                        <th>{% trans 'Student ID' %}</th>
+                        {% for fragment in fragments %}
+                            <th>{{ fragment.description|lower }} / {{ fragment.weight }}</th>
+                        {% endfor %}
+                    </tr>
+                    </tfoot>
                     <tbody>
                     {% for grade in grades %}
                         {% ifchanged grade.enrollment.student.university_id %}
@@ -28,22 +36,37 @@
                             <td>{{ grade.display_percent_grade }}</td>
                         {% else %}
                             <td>{{ grade.display_percent_grade }}</td>
+
                         {% endifchanged %}
                     {% endfor %}
-                    </tr>
-                    <tr>
-                    <td>{% trans 'Averages: ' %}</td>
-                    <td></td>
-                    {% for average in averages %}
-                        <td>{{ average }}</td>
-                    {% endfor %}
-                    </tr>
+
                     </tbody>
+                    <thead>
+                    <tr>
+                        <th>{% trans 'Averages' %}</th>
+                        <th></th>
+                        {% for average in averages %}
+                            <th>{{ average }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
                 </table>
             {% else %}
                 {% trans 'There are no students' %}
             {% endif %}
-            </div>
         </div>
     </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var table = $('#mytable').DataTable({
+                fixedHeader: {
+                    header: true,
+                    footer: true
+                },
+                "pageLength": 50
+            });
+        });
+    </script>
 {% endblock %}
