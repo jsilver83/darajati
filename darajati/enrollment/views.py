@@ -43,11 +43,12 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         """
          Assign section_id and get section object
         """
-        if self.kwargs.get('section_id'):
-            self.section_id = self.kwargs['section_id']
-            self.section = Section.get_section(self.section_id)
-        if Instructor.is_active_coordinator(self.request.user.instructor):
-            self.coordinator = self.request.user.instructor.coordinators
+        if request.user.is_authenticated:
+            if self.kwargs.get('section_id'):
+                self.section_id = self.kwargs['section_id']
+                self.section = Section.get_section(self.section_id)
+            if Instructor.is_active_coordinator(self.request.user.instructor):
+                self.coordinator = self.request.user.instructor.coordinators
         return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self, **kwargs):
@@ -73,7 +74,11 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         return context
 
     def get_login_url(self):
-        if self.request.user != "AnonymousUser":
+        """
+        
+        :return: 
+        """
+        if self.request.user.is_authenticated:
             return reverse_lazy('enrollment:home')
 
 

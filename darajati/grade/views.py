@@ -156,3 +156,7 @@ class GradeReportView(GradeBaseView, TemplateView):
             'averages': averages
         })
         return context
+
+
+class GradeCourseReport(GradeBaseView, TemplateView):
+    pass
