@@ -274,6 +274,8 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
         results = request_faculty_teaching(semester_code, section.crn)
         # Instructor and Periods Initialization
         for result in results['data']:
+            if not result['email'] and not result['user']:
+                continue
             if not Instructor.is_instructor_exists(result['email']):
                 user, created = User.objects.get_or_create(username=result['user'])
                 if commit:
