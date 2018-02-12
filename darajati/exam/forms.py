@@ -7,7 +7,6 @@ from grade.models import GradeFragment
 class SubjectiveGradeFragmentForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.fragments = self.request = kwargs.pop('fragments', None)
-        print(self.fragments)
         super(SubjectiveGradeFragmentForm, self).__init__(*args, **kwargs)
         self.fields['grade_fragment'] = forms.ChoiceField(
             label=_('Grade fragment'),
@@ -25,3 +24,13 @@ class SubjectiveGradeFragmentForm(forms.Form):
     # def __init__(self, *args, **kwargs):
     #     super(SubjectiveGradeFragmentForm, self).__init__()
     #     self.fields['']
+
+
+class ExamsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(ExamsForm, self).__init__(*args, **kwargs)
+        self.fields['grade_fragment'] = forms.CharField(
+            label=_('Grade fragment'),
+            required=False,
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )

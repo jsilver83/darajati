@@ -4,4 +4,6 @@ from .models import *
 
 admin.site.register(Room)
 admin.site.register(Exam)
-admin.site.register(Assignment)
+admin.site.register(Examiner)
+admin.site.register(ExamStudent)
+admin.site.register(AssignmentInstance)

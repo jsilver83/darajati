@@ -7,7 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from enrollment.utils import to_string, now, today
-from exam.models import Assignment
 from decimal import *
 
 User = settings.AUTH_USER_MODEL
@@ -31,7 +30,7 @@ class GradeFragment(models.Model):
 
     course_offering = models.ForeignKey(
         'enrollment.CourseOffering',
-        related_name="GradeFragment",
+        related_name="fragments",
         null=True,
         blank=False
     )
@@ -284,7 +283,6 @@ class StudentGrade(models.Model):
         max_digits=settings.MAX_DIGITS
     )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
-    marker = models.ForeignKey(Assignment, on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey(User, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=False)
 
@@ -528,7 +526,3 @@ class StudentGrade(models.Model):
                     item['grade_object'].save()
 
         return changes_list, errors
-
-
-class Room(models.Model):
-    pass
