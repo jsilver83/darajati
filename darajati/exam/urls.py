@@ -5,21 +5,21 @@ app_name = 'exam'
 
 urlpatterns = [
     url(r'^course/(?P<course_offering_id>[0-9]+)/fragment/(?P<grade_fragment_id>[0-9]+)/'
-        r'exam-list/$',
-        views.ExamListView.as_view(),
-        name='list_exams'
+        r'examiner-list/$',
+        views.ExaminerListView.as_view(),
+        name='examiner'
         ),
 
     url(r'^course/(?P<course_offering_id>[0-9]+)/fragment/(?P<grade_fragment_id>[0-9]+)/'
-        r'add-exam/$',
-        views.ExamAddView.as_view(),
-        name='add_exam'
+        r'add-examiner/$',
+        views.ExaminerAddView.as_view(),
+        name='add_examiner'
         ),
 
     url(r'^course/(?P<course_offering_id>[0-9]+)/fragment/(?P<grade_fragment_id>[0-9]+)/'
-        r'edit-exam/(?P<exam_id>[0-9]+)$',
-        views.ExamEditView.as_view(),
-        name='edit_exam'
+        r'edit-examiner/(?P<pk>[0-9]+)/$',
+        views.ExaminerEditView.as_view(),
+        name='edit_examiner'
         ),
 
     url(r'^rooms/$',

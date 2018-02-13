@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="panel panel-default">
+                <div class="panel-heading">{% trans 'Examiners List' %}</div>
+                <div class="panel-body">
+                    {% if examiners %}
+                        <table class="table table-condensed text-center">
+                            <thead>
+                            <tr>
+                                <th class="text-center">{% trans 'Examiner Name' %}</th>
+                                <th class="text-center">{% trans 'Examiner ID' %}</th>
+                                <th class="text-center">{% trans 'Assigned Exam' %}</th>
+                                <th class="text-center">{% trans 'Marker Order' %}</th>
+                                <th class="text-center">{% trans 'Generosity Factor' %}</th>
+                                <th class="text-center">{% trans 'Edit' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for examiner in examiners %}
+                                <tr>
+                                    <td>{{ examiner.instructor.english_name }}</td>
+                                    <td>{{ examiner.instructor.university_id }}</td>
+                                    <td>{{ examiner.exam.fragment.description }}</td>
+                                    <td>{{ examiner.order }}</td>
+                                    <td>{{ examiner.generosity_factor }}</td>
+                                    <td><a href="{% url 'exam:edit_examiner' course_offering_id=examiner.exam.fragment.course_offering.id  grade_fragment_id=examiner.exam.fragment.id pk=examiner.id %}"
+                                           class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        There are no exams
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

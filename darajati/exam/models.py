@@ -29,7 +29,8 @@ class Room(models.Model):
 
 
 class Exam(models.Model):
-    fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.CASCADE, related_name='exams', null=True, blank=False)
+    fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.CASCADE, related_name='exams', null=True,
+                                 blank=False)
     date_time = models.DateTimeField(_('Exam Date & Time'), null=True, blank=False)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='examiners', null=True, blank=False)
     updated_by = models.ForeignKey(User, null=True, blank=True)
@@ -53,6 +54,12 @@ class Examiner(models.Model):
                                             help_text=_('Generosity for for this instructor, can be in minus.'
                                                         'Make sure it is in percent'),
                                             null=True, blank=False)
+    order = models.PositiveIntegerField(
+        _('Examiner Marking Order'),
+        help_text=_('This is the order in which after a examiner 1 finish the marking examiner 2 will start..'),
+        null=True,
+        blank=False
+    )
     updated_by = models.ForeignKey(User, null=True, blank=True)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
