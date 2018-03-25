@@ -1,9 +1,11 @@
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
+from django.db import transaction
+
 from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from attendance.models import ScheduledPeriod
-from django.db import transaction
 
 
 def request_faculty_teaching(semester_code, section_code):
@@ -103,6 +105,7 @@ def initial_roster_creation(course_offering, current_user, commit=False):
                 id=section.id
             )
 
+    # ----------------------
     inactive_sections_count = len(inactive_sections)
     if commit:
         with transaction.atomic():
@@ -344,3 +347,116 @@ def initial_faculty_teaching_creation(course_offering, sections, commit=False):
                     continue
 
     return instructors, periods_report
+
+
+def get_format_section_code(course_code, section_code):
+    return '{}-{}'.format(course_code, section_code)
+
+
+class Synchronization(object):
+
+    def __init__(self, course_offering, current_user, commit=False):
+        self.course_offering = CourseOffering.get_course_offering(course_offering)
+        self.current_user = current_user
+        self.commit = commit
+        if not self.course_offering:
+            raise ValueError(_('Make sure provided Course Offering is a valid one'))
+
+        self.course_code = self.course_offering.course.code
+        self.semester_code = self.course_offering.semester.code
+
+        # set global variables to be used
+        self.roster_information = self.get_roster_information()
+        self.sections = self.get_sections()
+        self.non_created_sections = []
+        self.changed_sections = []
+        self.result = None
+        self.crns = []
+
+    def get_roster_information(self):
+        """
+        This will call banner-api to get students enrollment to a the assigned course offering
+        :return: list of enrollments
+        """
+        url = settings.ROSTER_WEB_SERVICE + self.semester_code + '/' + self.course_code
+        response = requests.get(url, auth=(settings.BANNER_API_USER, settings.BANNER_API_PASSWORD))
+        response = response.json()
+        return response.get('data')
+
+    def get_section_faculties(self, section):
+        """
+        This will call banner-api to get faculty that are assigned to this given section
+        :return: list of
+        """
+        url = settings.FACULTY_WEB_SERVICE + self.semester_code + '/' + section.crn
+        response = requests.get(url, auth=(settings.BANNER_API_USER, settings.BANNER_API_PASSWORD))
+        response = response.json()
+        return response.get('data')
+
+    def get_sections(self):
+        """
+        :return: list of all sections that belongs to this course offering
+        """
+        self.sections = self.course_offering.sections.all()
+        return self.sections
+
+    def get_inactive_sections(self):
+        """
+        Getting all sections for a given 'Course Offering' and check if each section
+        do exists in the api result, if not than this section is inactive.
+        :return: list of inactive sections
+        """
+        inactive_sections = self.sections
+        for enrollment in self.roster_information:
+            section_code = get_format_section_code(self.course_code, enrollment['sec'])
+            if Section.is_section_exists_in_course_offering(self.course_offering, section_code):
+                inactive_sections = inactive_sections.exclude(
+                    course_offering=self.course_offering,
+                    code=section_code
+                )
+        return inactive_sections
+
+    def get_inactive_enrollments(self):
+        pass
+
+    def roaster_initiation(self):
+        """
+        This is the main enrollment assignment it has the main loop that most of other
+        functions will be ran into.
+        :return: none
+        """
+
+        for self.result in self.roster_information:
+            self.create_or_activate_sections()
+
+    def create_or_activate_sections(self):
+
+        section_code = get_format_section_code(self.course_code, self.result['sec'])
+        if not Section.is_section_exists_in_course_offering(self.course_offering, section_code) \
+                and self.result['crn'] not in self.crns:
+            section = Section(
+                course_offering=self.course_offering,
+                code=section_code,
+                crn=self.result['crn'],
+                active=True
+            )
+            self.non_created_sections.append(section)
+            self.crns.append(self.result['crn'])
+
+        else:
+            section = Section.objects.get(
+                course_offering__exact=self.course_offering,
+                code__exact=section_code,
+                crn=self.result['crn']
+            )
+            if not section.active and section.crn not in self.crns:
+                section.active = True
+                self.changed_sections.append(section)
+                self.crns.append(section.crn)
+
+    def create_or_get_student(self):
+        user, created = User.objects.get_or_create(username=self.result['email'][:10])
+        pass
+
+    def assign_enrollments(self):
+        pass
