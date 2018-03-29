@@ -2,8 +2,10 @@ import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+
 from django.db import transaction
 
+from enrollment.utils import get_local_datetime_format
 from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from attendance.models import ScheduledPeriod
 
@@ -371,7 +373,14 @@ class Synchronization(object):
         self.non_created_sections = []
         self.changed_sections = []
         self.result = None
+        self.section = None
         self.crns = []
+        self.student = None
+        self.enrollment = None
+        self.new_enrollments = []
+        self.current_enrollments = []
+        self.old_enrollments = []
+        self.inactive_enrollment = []
 
     def get_roster_information(self):
         """
@@ -400,6 +409,12 @@ class Synchronization(object):
         self.sections = self.course_offering.sections.all()
         return self.sections
 
+    def get_enrollments(self):
+        """
+        :return:
+        """
+        return Enrollment.objects.filter(section__course_offering=self.course_offering)
+
     def get_inactive_sections(self):
         """
         Getting all sections for a given 'Course Offering' and check if each section
@@ -416,9 +431,6 @@ class Synchronization(object):
                 )
         return inactive_sections
 
-    def get_inactive_enrollments(self):
-        pass
-
     def roaster_initiation(self):
         """
         This is the main enrollment assignment it has the main loop that most of other
@@ -426,37 +438,134 @@ class Synchronization(object):
         :return: none
         """
 
-        for self.result in self.roster_information:
+        for index, self.result in enumerate(self.roster_information):
             self.create_or_activate_sections()
+            self.create_or_get_student()
+            self.assign_or_change_enrollment()
+            if index == 2: break
+
+        if self.commit:
+            self.commit_roaster_changes()
 
     def create_or_activate_sections(self):
-
+        """
+        :return:
+        """
         section_code = get_format_section_code(self.course_code, self.result['sec'])
-        if not Section.is_section_exists_in_course_offering(self.course_offering, section_code) \
-                and self.result['crn'] not in self.crns:
-            section = Section(
+        if not Section.is_section_exists_in_course_offering(self.course_offering, section_code) and self.result['crn'] not in self.crns:
+            self.section = Section(
                 course_offering=self.course_offering,
                 code=section_code,
                 crn=self.result['crn'],
                 active=True
             )
-            self.non_created_sections.append(section)
+            self.non_created_sections.append(self.section)
             self.crns.append(self.result['crn'])
 
         else:
-            section = Section.objects.get(
+            if self.result['crn'] in self.crns:
+                return
+            self.section = Section.objects.get(
                 course_offering__exact=self.course_offering,
                 code__exact=section_code,
                 crn=self.result['crn']
             )
-            if not section.active and section.crn not in self.crns:
-                section.active = True
-                self.changed_sections.append(section)
-                self.crns.append(section.crn)
+            if not self.section.active and self.section.crn not in self.crns:
+                self.section.active = True
+                self.changed_sections.append(self.section)
+                self.crns.append(self.section.crn)
 
     def create_or_get_student(self):
+        """
+        :return:
+        """
         user, created = User.objects.get_or_create(username=self.result['email'][:10])
-        pass
+        self.student, created = Student.objects.get_or_create(
+            user=user,
+            university_id=self.result['stu_id']
+        )
+        self.student.government_id = self.result['stu_id']
+        self.student.english_name = self.result['name_en']
+        self.student.arabic_name = self.result['name_ar']
+        self.student.mobile = self.result['mobile']
+        self.student.personal_email = self.result['email']
+        self.student.active = True
+        self.student.save()
 
-    def assign_enrollments(self):
-        pass
+    def assign_or_change_enrollment(self):
+        """
+        :return:
+        """
+        if self.commit:
+            self.section.save()
+        if not Enrollment.is_enrollment_exists(self.student, self.section):
+            self.enrollment = Enrollment(
+                section=self.section,
+                student=self.student,
+                updated_by=self.current_user,
+                register_date=get_local_datetime_format(self.result['reg_date']),
+                letter_grade=self.result['grade']
+            )
+            current_old_enrollments = Enrollment.objects.filter(
+                student=self.student,
+                section__course_offering=self.course_offering,
+                letter_grade__iexact="MOVED"
+            )
+            if current_old_enrollments:
+                for old_enrollment in current_old_enrollments:
+                    old_enrollment.comment = 'Moved to other section {}'.format(self.section)
+                    old_enrollment.letter_grade = 'MOVED'
+                    self.old_enrollments.append(old_enrollment)
+
+            if self.is_grade_has_a_letter():
+                self.enrollment.comment = 'Dropped with grade {}'.format(str(self.result['grade']).lower())
+                self.enrollment.updated_by = self.current_user
+                self.enrollment.active = False
+                self.inactive_enrollment.append(self.enrollment)
+            else:
+                self.new_enrollments.append(self.enrollment)
+        else:
+            self.enrollment = Enrollment.objects.get(
+                student=self.student,
+                section=self.section
+            )
+            self.enrollment.letter_grade = self.result['grade']
+            self.enrollment.active = True
+
+            if self.is_grade_has_a_letter():
+                self.enrollment.active = False
+                self.enrollment.comment = 'Dropped with grade {}'.format(str(self.result['grade']).lower())
+                self.inactive_enrollment.append(self.enrollment)
+            else:
+                self.current_enrollments.append(self.enrollment)
+
+    def is_grade_has_a_letter(self):
+        """
+        :return:
+        """
+        current_letter_grade = str(self.result['grade']).lower()
+        letter_grades = ['w', 'wp', 'wf', 'ic', 'dn']
+        return True if current_letter_grade in letter_grades else False
+
+    def commit_roaster_changes(self):
+        with transaction.atomic():
+            # Enrollment
+            for new_enrollment in self.new_enrollments:
+                new_enrollment.save()
+
+            for current_enrollment in self.current_enrollments:
+                current_enrollment.save()
+
+            for moved_enrollment in self.old_enrollments:
+                moved_enrollment.save()
+
+            for inactive_enrollment in self.inactive_enrollment:
+                inactive_enrollment.save()
+
+    def roaster_report(self):
+        print("Sections to be created: ", len(self.non_created_sections))
+        print("Sections to be changed: ", len(self.changed_sections))
+        print("New Enrollments: ", len(self.new_enrollments))
+        print("Current Enrollments: ", len(self.current_enrollments))
+        print("Old enrollments: ", len(self.old_enrollments))
+        print("Inactive enrollments: ", len(self.inactive_enrollment))

@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 
 
@@ -70,3 +71,8 @@ def get_offset_day(date, offset_days):
 
 def get_offset_time(time, offset_hours):
     return time + datetime.timedelta(hours=offset_hours)
+
+
+def get_local_datetime_format(datetime):
+    parsed_datetime = parse_datetime(datetime)
+    return timezone.make_aware(parsed_datetime)
