@@ -20,7 +20,7 @@
         email: joud@kfupm.edu.sa
       - name: mohammed alnajdi
         email: malnajdi@kfupm.edu.sa
-    uwsgi_processes: 2
+    uwsgi_processes: 64
 
   vars_prompt:
     - name: ad_username
