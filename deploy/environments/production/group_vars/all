@@ -10,7 +10,7 @@ database_engine: django.db.backends.postgresql
 database_name: darajati
 database_user: darajati
 # database_password: set from Vault in playbook
-database_host: postgres-1.kfupm.edu.sa
+database_host: postgres-darajati-1.kfupm.edu.sa
 database_port: 5432
 
 django_debug: no
