@@ -35,33 +35,33 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         This will consist of the creation of the sections and assigning students to these section
           From there Faculty will be assigned to that section.
         """
-        sync = Synchronization(form.cleaned_data['course_offering'], self.sections, form.cleaned_data['commit_changes'])
-        sync.roaster_initiation()
-        sync.roaster_report()
+        # sync = Synchronization(form.cleaned_data['course_offering'], self.sections, form.cleaned_data['commit_changes'])
+        # sync.roaster_initiation()
+        # sync.roaster_report()
 
-        # self.section_report, self.student_report, self.enrollment_report, self.sections = initial_roster_creation(
-        #     form.cleaned_data['course_offering'],
-        #     self.request.user,
-        #     form.cleaned_data['commit_changes'])
+        self.section_report, self.student_report, self.enrollment_report, self.sections = initial_roster_creation(
+            form.cleaned_data['course_offering'],
+            self.request.user,
+            form.cleaned_data['commit_changes'])
         #
-        # self.instructors, self.periods = initial_faculty_teaching_creation(
-        #     form.cleaned_data['course_offering'],
-        #     self.sections,
-        #     form.cleaned_data['commit_changes'])
+        self.instructors, self.periods = initial_faculty_teaching_creation(
+            form.cleaned_data['course_offering'],
+            self.sections,
+            form.cleaned_data['commit_changes'])
         #
         context = self.get_context_data(**kwargs)
-        # context['sections_report'] = self.section_report
-        # context['enrollments_report'] = self.enrollment_report
-        # context['periods'] = self.periods
-        #
-        # context['detail_report'] = False
-        # context['report'] = False
-        #
-        # if context['sections_report'] or context['enrollments_report'] or context['periods']:
-        #     context['report'] = True
-        #
-        # if form.cleaned_data.get('detail_report'):
-        #     context['detail_report'] = True
+        context['sections_report'] = self.section_report
+        context['enrollments_report'] = self.enrollment_report
+        context['periods'] = self.periods
+
+        context['detail_report'] = False
+        context['report'] = False
+
+        if context['sections_report'] or context['enrollments_report'] or context['periods']:
+            context['report'] = True
+
+        if form.cleaned_data.get('detail_report'):
+            context['detail_report'] = True
 
         return self.render_to_response(context)
 
