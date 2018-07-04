@@ -98,7 +98,7 @@ WSGI_APPLICATION = 'darajati.wsgi.application'
 
 
 AUTHENTICATION_BACKENDS = [
-    'enrollment.auth.backends.CaseInsensitiveRemoteUser',
+    'django.contrib.auth.backends.RemoteUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
