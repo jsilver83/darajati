@@ -1,4 +1,4 @@
 - name: django-project
   src: ssh://hg@hg.itc.kfupm.edu.sa/config/ansible-roles/django-project
   scm: hg
-  version: "3.8"
+  version: "3.9"
