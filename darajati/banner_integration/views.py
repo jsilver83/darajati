@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 
 from .forms import CourseOfferingForm, GradesImportForm
-from .utils import initial_roster_creation, initial_faculty_teaching_creation, Synchronization
+from .utils import Synchronization
 
 from enrollment.models import CourseOffering
 from grade.models import GradeFragment, StudentGrade
