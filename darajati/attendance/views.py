@@ -33,10 +33,12 @@ class AttendanceBaseView(InstructorBaseView):
 
     def test_func(self, **kwargs):
         rule = super(AttendanceBaseView, self).test_func(**kwargs)
+        is_coordinator = self.section.is_coordinator_section(self.request.user.instructor)
         if rule:
             offset_date, day = get_offset_day(today(), -self.section.course_offering.attendance_entry_window)
             if self.date <= today():
-                if self.section.course_offering.semester.check_is_accessible_date(self.date, offset_date):
+                if self.section.course_offering.semester.check_is_accessible_date(self.date, offset_date) or \
+                        is_coordinator:
                     return True
                 else:
                     messages.error(self.request,
