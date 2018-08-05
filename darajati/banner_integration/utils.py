@@ -41,6 +41,7 @@ class Synchronization(object):
         self.old_enrollments = []
         self.inactive_enrollment = []
         self.all_sections = []
+        self.enrollment = None
         # instructor
         self.instructor = None
         self.faculty_period = None
@@ -178,12 +179,13 @@ class Synchronization(object):
             current_old_enrollments = Enrollment.objects.filter(
                 student=self.student,
                 section__course_offering=self.course_offering,
-                letter_grade__iexact="MOVED"
             )
+
             if current_old_enrollments:
                 for old_enrollment in current_old_enrollments:
                     old_enrollment.comment = 'Moved to other section {}'.format(self.section)
                     old_enrollment.letter_grade = 'MOVED'
+                    old_enrollment.updated_by = self.current_user
                     self.old_enrollments.append(old_enrollment)
 
             if self.is_grade_has_a_letter() and self.enrollment.active:
@@ -193,18 +195,27 @@ class Synchronization(object):
                 self.inactive_enrollment.append(self.enrollment)
             else:
                 self.new_enrollments.append(self.enrollment)
+
         else:
             self.enrollment = Enrollment.objects.get(
                 student=self.student,
                 section=self.section
             )
-
             self.enrollment.letter_grade = self.result['grade']
+
+            # Case 1 When enrollment is active and has no letter grade
+            # than the registrar update the letter grade with one of the 5 letter grades
+            # ['w', 'wp', 'wf', 'ic', 'dn'] than deactivate the student
             if self.is_grade_has_a_letter() and self.enrollment.active:
                 self.enrollment.active = False
                 self.enrollment.comment = 'Dropped with grade {}'.format(str(self.result['grade']).lower())
+                self.enrollment.updated_by = self.current_user
                 self.inactive_enrollment.append(self.enrollment)
-            else:
+
+            # Case 2 if student was deactivated and he got changed back to active by
+            # the registrar this means student do not have a letter grade from the 5
+            # ['w', 'wp', 'wf', 'ic', 'dn'] so he should be activated
+            elif not self.is_grade_has_a_letter() and not self.enrollment.active:
                 self.enrollment.active = True
                 self.current_enrollments.append(self.enrollment)
 
