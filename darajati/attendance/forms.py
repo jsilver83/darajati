@@ -77,7 +77,7 @@ class AttendanceForm(forms.ModelForm):
             return super(AttendanceForm, self).save()
 
     def clean_status(self):
-        if 'can_give_excused_status' not in self.permissions \
+        if 'attendance.can_give_excused_status' not in self.permissions \
                 and self.cleaned_data.get('status') == Attendance.Types.EXCUSED\
                 and 'status' in self.changed_data:
             self.add_error('status', _("You don't have permission to make this change"))
