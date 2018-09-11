@@ -13,8 +13,11 @@
     django_project_admin_email: joud@kfupm.edu.sa
     django_project_package_name: darajati
     apache_authn: cas
-    apache_authn_urls:
-      - /
+    apache_auth:
+      - path: /
+        authn_type: cas
+        authz_type: none
+
     admins:
       - name: abdullah joud
         email: joud@kfupm.edu.sa
