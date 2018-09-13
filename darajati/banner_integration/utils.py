@@ -186,6 +186,7 @@ class Synchronization(object):
                     old_enrollment.comment = 'Moved to other section {}'.format(self.section)
                     old_enrollment.letter_grade = 'MOVED'
                     old_enrollment.updated_by = self.current_user
+                    old_enrollment.active = False
                     self.old_enrollments.append(old_enrollment)
 
             if self.is_grade_has_a_letter() and self.enrollment.active:
@@ -201,6 +202,20 @@ class Synchronization(object):
                 student=self.student,
                 section=self.section
             )
+
+            current_old_enrollments = Enrollment.objects.filter(
+                student=self.student,
+                section__course_offering=self.course_offering,
+                active=True
+            ).exclude(id=self.enrollment.id)
+
+            for old_enrollment in current_old_enrollments:
+                    old_enrollment.comment = 'Moved to other section {}'.format(self.section)
+                    old_enrollment.letter_grade = 'MOVED'
+                    old_enrollment.updated_by = self.current_user
+                    old_enrollment.active = False
+                    self.old_enrollments.append(old_enrollment)
+
             self.enrollment.letter_grade = self.result['grade']
 
             # Case 1 When enrollment is active and has no letter grade
