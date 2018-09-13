@@ -35,7 +35,7 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         This will consist of the creation of the sections and assigning students to these section
           From there Faculty will be assigned to that section.
         """
-        sync = Synchronization(form.cleaned_data['course_offering'], self.sections, form.cleaned_data['commit_changes'])
+        sync = Synchronization(form.cleaned_data['course_offering'], self.request.user, form.cleaned_data['commit_changes'])
         sync.roaster_initiation()
         sync.faculty_initiation()
         sync.faculties_periods_report()
