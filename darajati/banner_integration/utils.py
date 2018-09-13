@@ -42,6 +42,7 @@ class Synchronization(object):
         self.inactive_enrollment = []
         self.all_sections = []
         self.enrollment = None
+        self.dropped_enrollments = self.get_enrollments().filter(active=True)
         # instructor
         self.instructor = None
         self.faculty_period = None
@@ -112,8 +113,17 @@ class Synchronization(object):
             self.create_or_get_student()
             self.assign_or_change_enrollment()
 
+        self.is_inactive_enrollment()
         if self.commit:
             self.commit_roaster_changes()
+
+    def is_inactive_enrollment(self):
+        for dropped_enrollment in self.dropped_enrollments:
+            dropped_enrollment.active = False
+            dropped_enrollment.comment = 'Dropped with no letter grade'
+            dropped_enrollment.letter_grade = 'Dropped'
+            dropped_enrollment.updated_by = self.current_user
+            self.inactive_enrollment.append(dropped_enrollment)
 
     def create_or_activate_sections(self):
         """
@@ -166,6 +176,10 @@ class Synchronization(object):
         """
         :return:
         """
+        self.dropped_enrollments = self.dropped_enrollments.exclude(
+            section=self.section,
+            student=self.student
+        )
         if self.commit:
             self.section.save()
         if not Enrollment.is_enrollment_exists(self.student, self.section):
@@ -254,8 +268,8 @@ class Synchronization(object):
             for moved_enrollment in self.old_enrollments:
                 moved_enrollment.save()
 
-            for inactive_enrollment in self.inactive_enrollment:
-                inactive_enrollment.save()
+            for enrollment in self.inactive_enrollment:
+                enrollment.save()
 
     def faculty_initiation(self):
         """
