@@ -4,7 +4,7 @@ apache_server_names:
   - darajati.test.kfupm.edu.sa
 
 apache_public_url: https://darajati.test.kfupm.edu.sa
-apache_load_balancer_ips: [10.180.24.1]
+apache_load_balancer_ips: ["10.180.24.1"]
 apache_proxy:
   - path: /
     protocol: uwsgi
