@@ -29,7 +29,7 @@ class Person(models.Model):
 
 
 class Student(Person):
-    user = models.OneToOneField(User, related_name='student', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name, self.university_id)
@@ -58,7 +58,7 @@ class Student(Person):
 
 
 class Instructor(Person):
-    user = models.OneToOneField(User, related_name='instructor', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name)
@@ -153,7 +153,7 @@ class Department(models.Model):
 class Course(models.Model):
     name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
-    department = models.ForeignKey(Department, related_name='courses', null=True, blank=False)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
@@ -388,7 +388,7 @@ class Enrollment(models.Model):
     comment = models.CharField(_('Comment'), max_length=200, blank=True)
     letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=False, default='UD')
     register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
-    updated_by = models.ForeignKey(User, related_name='enrollment_creator', null=True, blank=False)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollment_creator', null=True, blank=False)
     updated_on = models.DateTimeField(_('Updated on'), auto_now=True)
     history = HistoricalRecords()
 

@@ -5,6 +5,7 @@ from django.db.models import Sum, Count
 from django.db.models.functions import Concat
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from simple_history.models import HistoricalRecords
 
 from enrollment.utils import to_string, now, today
 
@@ -31,12 +32,14 @@ class GradeFragment(models.Model):
 
     course_offering = models.ForeignKey(
         'enrollment.CourseOffering',
+        on_delete=models.CASCADE,
         related_name="GradeFragment",
         null=True,
         blank=False
     )
     section = models.ForeignKey(
         'enrollment.Section',
+        on_delete=models.CASCADE,
         related_name="GradeFragment",
         null=True,
         blank=True)
@@ -145,6 +148,7 @@ class GradeFragment(models.Model):
     )
     updated_by = models.ForeignKey(
         User,
+        on_delete=models.CASCADE,
         related_name='GradeFragment',
         null=True,
         blank=True
@@ -250,14 +254,15 @@ class GradeFragment(models.Model):
 
 
 class LetterGrade(models.Model):
-    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="letter_grades", null=True,
+    course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
+                                        related_name="letter_grades", null=True,
                                         blank=False)
-    section = models.ForeignKey('enrollment.Section', related_name="letter_grades", null=True, blank=True)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.CASCADE, related_name="letter_grades", null=True, blank=True)
     letter_grade = models.CharField(_('Letter Grade'), max_length=5, null=True, blank=False)
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
                                         max_digits=settings.MAX_DIGITS,
                                         decimal_places=settings.MAX_DECIMAL_POINT)
-    updated_by = models.ForeignKey(User, related_name='letter_grade', null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_grade', null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
     # TODO: Ordering of letter grade
@@ -289,8 +294,10 @@ class StudentGrade(models.Model):
         max_digits=settings.MAX_DIGITS
     )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
-    updated_by = models.ForeignKey(User, null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=False)
+
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ('enrollment', 'grade_fragment')
