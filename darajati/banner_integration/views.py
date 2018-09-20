@@ -1,5 +1,5 @@
-from django.views.generic import FormView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 
 from .forms import CourseOfferingForm, GradesImportForm
@@ -9,7 +9,7 @@ from enrollment.models import CourseOffering
 from grade.models import GradeFragment, StudentGrade
 
 
-class PopulationRosterView(LoginRequiredMixin, FormView):
+class PopulationRosterView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = CourseOfferingForm
     template_name = 'banner_integration/roster_populate.html'
     success_url = reverse_lazy('banner_integration:home')
@@ -21,6 +21,9 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
     instructors = None
     periods = None
     sections = None
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def get_form_kwargs(self):
         """
@@ -48,10 +51,13 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         return self.render_to_response(context)
 
 
-class ImportGradesView(LoginRequiredMixin, FormView):
+class ImportGradesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = GradesImportForm
     template_name = 'banner_integration/import_grades.html'
     success_url = reverse_lazy('banner_integration:home')
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def get_form_kwargs(self):
         """
