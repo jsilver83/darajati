@@ -5,7 +5,7 @@ apache_server_names:
   - "{{ inventory_hostname }}"
 # required for proper SSL termination on load-balancer while using CAS
 apache_public_url: https://darajati.kfupm.edu.sa
-apache_load_balancer_ips: [10.142.4.1]
+apache_load_balancer_ips: ["10.142.24.1", "10.142.26.1"]
 apache_proxy:
   - path: /
     protocol: uwsgi

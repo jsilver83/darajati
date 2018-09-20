@@ -31,6 +31,7 @@ class CourseOfferingAdmin(admin.ModelAdmin):
     list_display = ('id', 'semester', 'course', 'attendance_entry_window', 'allow_change')
     list_filter = ('coordinated', )
 
+
 admin.site.register(Semester, SemesterAdmin)
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Enrollment, EnrollmentAdmin)

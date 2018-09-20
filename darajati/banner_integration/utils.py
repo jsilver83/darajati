@@ -371,6 +371,10 @@ class Synchronization(object):
             report.append(
                 {'enrollment': old_enrollment, 'code': 'CHANGED', 'message': 'Enrollment has been changed.'}
             )
+        for current_enrollment in self.current_enrollments:
+            report.append(
+                {'enrollment': current_enrollment, 'code': 'CHANGED', 'message': 'Enrollment has been changed.'}
+            )
         for inactive_enrollment in self.inactive_enrollment:
             report.append(
                 {'enrollment': inactive_enrollment, 'code': 'INACTIVE', 'message': 'Enrollment will be set to inactive.'}

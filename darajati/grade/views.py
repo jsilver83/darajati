@@ -1,4 +1,5 @@
 from django.db.models import Value, IntegerField
+from django.http import HttpResponseRedirect
 from extra_views import ModelFormSetView
 from django.views.generic import ListView, CreateView, TemplateView
 from django.urls import reverse_lazy
@@ -72,7 +73,15 @@ class GradesView(GradeBaseView, ModelFormSetView):
             form.user = self.request.user
             form.save(commit=False)
         messages.success(self.request, _('Grades were saved successfully'))
-        return super(GradesView, self).formset_valid(formset)
+        return HttpResponseRedirect(reverse_lazy(
+            'grade:plan_grades',
+            kwargs={
+                'section_id': self.section_id,
+                'grade_fragment_id': self.grade_fragment_id
+            }
+        ))
+        # This used to save the same object 2 times
+        # return super(GradesView, self).formset_valid(formset)
 
     def get_formset_kwargs(self):
         kwargs = super(GradesView, self).get_formset_kwargs()

@@ -14,29 +14,31 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
     """
 
-from django.conf.urls import url, include
+from django.urls import re_path, include
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.auth import views
 from django.conf import settings
 
 urlpatterns = i18n_patterns(
-    url(r'^login/$', views.login, {'template_name': 'login.html', 'redirect_authenticated_user': True}, name='login'),
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^impersonate/', include('impersonate.urls')),
-    url(r'^logout/$', views.logout, {'template_name': 'logout.html'}, name='logout'),
+    re_path(r'^login/$', views.login, {'template_name': 'login.html', 'redirect_authenticated_user': True},
+            name='login'),
+    re_path(r'^admin/', admin.site.urls),
+    re_path(r'^impersonate/', include('impersonate.urls')),
+    re_path(r'^logout/$', views.logout, {'template_name': 'logout.html'}, name='logout'),
 )
 
 urlpatterns += i18n_patterns(
-    url(r'', include('enrollment.urls', namespace='enrollment', app_name='enrollment')),
-    url(r'attendance/', include('attendance.urls', namespace='attendance', app_name='attendance')),
-    url(r'grade/', include('grade.urls', namespace='grade', app_name='grade')),
-    url(r'banner-integration/',
-        include('banner_integration.urls', namespace='banner_integration', app_name='banner_integration')),
+    re_path(r'', include('enrollment.urls', namespace='enrollment')),
+    re_path(r'attendance/', include('attendance.urls', namespace='attendance')),
+    re_path(r'grade/', include('grade.urls', namespace='grade')),
+    re_path(r'banner-integration/',
+            include('banner_integration.urls', namespace='banner_integration')),
 )
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [
-        url(r'^debug/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+                      re_path(r'^debug/', include(debug_toolbar.urls)),
+                  ] + urlpatterns
