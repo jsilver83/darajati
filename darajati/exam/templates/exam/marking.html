@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		<div class="card card-outline-secondary mb-3">
+			<div class="card-block">
+				<blockquote class="card-blockquote">
+					<p>{% trans 'Course' %}: <span
+							style="color:red">{{ grade_fragment.course_offering }}</span></p>
+					<p>{% trans 'Grade Fragment Category: ' %}<span
+							style="color:red">{{ grade_fragment.category }}</span></p>
+					<p>{% trans 'Grade Fragment Description: ' %}<span
+							style="color:red">{{ grade_fragment.description }}</span></p>
+					<p>{% trans 'Marker' %}: <span
+							style="color:red">{{ marker }} ({{ marker_order }})</span></p>
+					<p>{% trans 'Room' %}: <span
+							style="color:red">{{ marker.room }}</span></p>
+					{% if not grade_fragment.allow_change %}
+						<q style="color:red">
+							{% trans '*Note: You can not change a student grade after submitting it.' %}
+						</q>
+					{% endif %}
+				</blockquote>
+			</div>
+		</div>
+
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-9">
+							<h3>{% trans 'Marks' %}</h3>
+						</div>
+						<div class="col-md-3 text-right">
+							<input class="thm-btn small-btn" type="submit" name="save" value="{% trans 'Save' %}">
+						</div>
+					</div>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'Enrollment' %}</th>
+								<th>{% trans 'Mark' %}</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								<tr>
+									<td>{{ form.id }}{{ forloop.counter }}</td>
+									<td>{{ form.enrollment }}{{ form.enrollment.errors }}</td>
+									<td>{{ form.mark }}{{ form.mark.errors }}</td>
+								</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+
+			{% else %}
+				{% trans 'There are no markings' %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

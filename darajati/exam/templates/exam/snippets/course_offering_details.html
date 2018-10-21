@@ -1,0 +1,30 @@
+{% load i18n %}
+
+<div class="card card-outline-secondary mb-3">
+	<div class="card-block">
+		<blockquote class="card-blockquote">
+			<p>{% trans 'Semester: ' %}<span
+					style="color:red">{{ grade_fragment.course_offering.semester.description }}</span></p>
+			<p>{% trans 'Course: ' %}<span
+					style="color:red">{{ grade_fragment.course_offering.course }}</span></p>
+			<p>{% trans 'Grade Fragment: ' %}<span
+					style="color:red">{{ grade_fragment.category }} - {{ grade_fragment.description }}</span></p>
+			<p>{% trans 'Grade Fragment Weight: ' %}<span
+					style="color:red">{{ grade_fragment.weight }}</span></p>
+			<p>{% trans 'Grade Fragment Type: ' %}<span
+					style="color:red">{{ grade_fragment.get_boundary_type_display }}</span></p>
+			{% if boundary %}
+				<span><strong>{{ boundary }}</strong></span>
+			{% endif %}
+			{% if grade_fragment.exam_date %}
+			<p>{% trans 'Exam Date: ' %}<span
+				style="color:red">{{ grade_fragment.exam_date }}</span></p>
+			{% endif %}
+			{% if not grade_fragment.allow_change %}
+				<q style="color:red">
+					{% trans '*Note: You can not change a student grade after submitting it.' %}
+				</q>
+			{% endif %}
+		</blockquote>
+	</div>
+</div>

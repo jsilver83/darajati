@@ -38,7 +38,7 @@ urlpatterns += i18n_patterns(
     url(r'banner-integration/',
         include('banner_integration.urls', namespace='banner_integration', app_name='banner_integration')),
     # Exams
-    url(r'subjective-marking/',
+    url(r'exam/',
         include('exam.urls', namespace='exam', app_name='exam')),
 )
 
