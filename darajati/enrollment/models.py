@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.auth.models import User as User_model
-from .types import RoundTypes
+from .data_types import RoundTypes
 from .utils import to_string, now, today, attendance_boundary
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from simple_history.models import HistoricalRecords
