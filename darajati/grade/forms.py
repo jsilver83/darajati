@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from .models import StudentGrade, GradeFragment
-
+from .utils import display_average_of_value
 from enrollment.utils import today
 from decimal import Decimal
 
@@ -112,13 +112,17 @@ class BaseGradesFormSet(BaseModelFormSet):
                     ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
                 raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
 
-            if form.cleaned_data['grade_quantity']:
+            # You might die if you remove this this thi ss THISSS
+            if form.cleaned_data['grade_quantity'] is not None:
                 self.average += form.cleaned_data['grade_quantity']
                 count += 1
 
-        self.average = round(self.average / count, 2)
+        if count:
+            self.average = self.average / count
+            self.average = display_average_of_value(self.average)
         if not self.fragment.entry_in_percentages:
-            self.average = round(self.average / self.fragment.weight * 100, 2)
+            self.average = self.average / self.fragment.weight * 100
+
 
         """
         SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
@@ -165,7 +169,7 @@ class BaseGradesFormSet(BaseModelFormSet):
                 more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
-                        _('Section average {}% should be between {}% and {}%'.format(
+                        _('Section average }% should be between {}% and {}%'.format(
                             self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(

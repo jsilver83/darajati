@@ -20,3 +20,5 @@ darajati/darajati/settings/local.py
 *.mo
 .idea
 .DS_Store
+*.sqlite
+*.sqlite3

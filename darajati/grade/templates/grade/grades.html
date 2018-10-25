@@ -134,7 +134,7 @@
                 average = average_in_percent / 100 * {{ grade_fragment.weight }};
             {% endif %}
             $('.section_average').html(
-                "" + average.toFixed(2) + "  (" + average_in_percent.toFixed(2) + "%)"
+                "" + average.toFixed(4) + "  (" + average_in_percent.toFixed(4) + "%)"
             );
         }
     </script>

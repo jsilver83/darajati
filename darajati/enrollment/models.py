@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.auth.models import User as User_model
-from .types import RoundTypes
+from .data_types import RoundTypes
 from .utils import to_string, now, today, attendance_boundary
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from simple_history.models import HistoricalRecords
@@ -448,7 +448,7 @@ class Enrollment(models.Model):
         enrollments = []
         index = 1
         day, period_date = ScheduledPeriod.get_nearest_day_and_date(section_id, date, instructor)
-        periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor)
+        periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor).order_by('start_time')
         enrollment_list = Enrollment.get_students_of_section(section_id)
         count_index = 0
         for enrollment in enrollment_list:
@@ -515,12 +515,13 @@ class Enrollment(models.Model):
             periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
                 'title'
             )
-            for period in periods:
-                title = period.title
-                if title in formula:
-                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
-                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
-            result = eval(formula)
+            if periods:
+                for period in periods:
+                    title = period.title
+                    if title in formula:
+                        formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
+                        formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
+                result = eval(formula)
         return result
 
     def get_enrollment_period_total_absence(self, period_title):
