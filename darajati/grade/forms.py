@@ -112,7 +112,8 @@ class BaseGradesFormSet(BaseModelFormSet):
                     ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
                 raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
 
-            if form.cleaned_data['grade_quantity']:
+            # You might die if you remove this this thi ss THISSS
+            if form.cleaned_data['grade_quantity'] is not None:
                 self.average += form.cleaned_data['grade_quantity']
                 count += 1
 
