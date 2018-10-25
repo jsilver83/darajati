@@ -187,7 +187,7 @@ CELERY_TIMEZONE = 'US/Eastern'
 MAX_DIGITS = 5  # 10000.00
 MAX_DECIMAL_POINT = 2  # .00
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1200  # The Limit exception i am getting is around 1012
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is around 1012
 try:
     from .local_settings import *
 except ImportError:
