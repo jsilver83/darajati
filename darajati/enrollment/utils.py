@@ -75,4 +75,7 @@ def get_offset_time(time, offset_hours):
 
 def get_local_datetime_format(datetime):
     parsed_datetime = parse_datetime(datetime)
-    return timezone.make_aware(parsed_datetime)
+    try:
+        return timezone.make_aware(parsed_datetime)
+    except:
+        return parsed_datetime
