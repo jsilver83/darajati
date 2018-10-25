@@ -515,12 +515,13 @@ class Enrollment(models.Model):
             periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
                 'title'
             )
-            for period in periods:
-                title = period.title
-                if title in formula:
-                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
-                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
-            result = eval(formula)
+            if periods:
+                for period in periods:
+                    title = period.title
+                    if title in formula:
+                        formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
+                        formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
+                result = eval(formula)
         return result
 
     def get_enrollment_period_total_absence(self, period_title):
