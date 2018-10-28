@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
     """
 
-from django.urls import re_path, include
+from django.urls import re_path, include, path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.auth import views
@@ -25,7 +25,7 @@ urlpatterns = i18n_patterns(
             name='login'),
     re_path(r'^admin/', admin.site.urls),
     re_path(r'^impersonate/', include('impersonate.urls')),
-    re_path(r'^logout/$', views.logout, {'template_name': 'logout.html'}, name='logout'),
+    path('logout/', views.logout, {'next_page': 'login'}, name='logout'),
 )
 
 urlpatterns += i18n_patterns(
