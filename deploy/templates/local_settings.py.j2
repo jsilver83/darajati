@@ -29,6 +29,8 @@ ADMINS = [
     {% endfor %}
 ]
 
+LOGOUT_REDIRECT_URL = '{{ cas_logout_url }}'
+
 # Banner-api
 FACULTY_WEB_SERVICE = 'https://banner-api.kfupm.edu.sa/darajati/periods/'
 ROSTER_WEB_SERVICE = 'https://banner-api.kfupm.edu.sa/darajati/roster/'
