@@ -51,6 +51,7 @@ class Synchronization(object):
         self.current_day = None
         self.period = None
         self.non_created_periods = []
+        self.periods_with_issues = []
 
     def get_roster_information(self):
         """
@@ -130,7 +131,8 @@ class Synchronization(object):
         :return:
         """
         section_code = get_format_section_code(self.course_code, self.result['sec'])
-        if not Section.is_section_exists_in_course_offering(self.course_offering, section_code) and self.result['crn'] not in self.crns:
+        if not Section.is_section_exists_in_course_offering(self.course_offering, section_code) and \
+                self.result['crn'] not in self.crns:
             self.section = Section(
                 course_offering=self.course_offering,
                 code=section_code,
@@ -224,11 +226,11 @@ class Synchronization(object):
             ).exclude(id=self.enrollment.id)
 
             for old_enrollment in current_old_enrollments:
-                    old_enrollment.comment = 'Moved to other section {}'.format(self.section)
-                    old_enrollment.letter_grade = 'MOVED'
-                    old_enrollment.updated_by = self.current_user
-                    old_enrollment.active = False
-                    self.old_enrollments.append(old_enrollment)
+                old_enrollment.comment = 'Moved to other section {}'.format(self.section)
+                old_enrollment.letter_grade = 'MOVED'
+                old_enrollment.updated_by = self.current_user
+                old_enrollment.active = False
+                self.old_enrollments.append(old_enrollment)
 
             self.enrollment.letter_grade = self.result['grade']
 
@@ -306,21 +308,29 @@ class Synchronization(object):
         """
         :return:
         """
-        for day in map(str, self.faculty_period['class_days']):
-            self.current_day = self.get_period_current_day(day)
-            start_time = self.get_period_start_time()
-            end_time = self.get_period_end_time()
-            if not ScheduledPeriod.is_period_exists(self.section, self.instructor, self.current_day, start_time, end_time):
-                self.period = ScheduledPeriod(
-                    section=self.section,
-                    instructor_assigned=self.instructor,
-                    day=self.current_day,
-                    title=self.faculty_period['activity'],
-                    start_time=start_time,
-                    end_time=end_time,
-                    location=self.faculty_period['bldg'] + ' ' + self.faculty_period['room'],
-                )
-                self.non_created_periods.append(self.period)
+        # ENGLEP there is something called virtual section this has to be handled.
+        if self.faculty_period['class_days'] and \
+                self.faculty_period['room'] and \
+                self.faculty_period['activity']:
+            for day in map(str, self.faculty_period['class_days']):
+                self.current_day = self.get_period_current_day(day)
+                start_time = self.get_period_start_time()
+                end_time = self.get_period_end_time()
+                if not ScheduledPeriod.is_period_exists(self.section, self.instructor, self.current_day, start_time,
+                                                        end_time):
+                    self.period = ScheduledPeriod(
+                        section=self.section,
+                        instructor_assigned=self.instructor,
+                        day=self.current_day,
+                        title=self.faculty_period['activity'],
+                        start_time=start_time,
+                        end_time=end_time,
+                        location=self.faculty_period['bldg'] + ' ' + self.faculty_period['room'],
+                    )
+                    self.non_created_periods.append(self.period)
+        else:
+            if self.section not in self.periods_with_issues:
+                self.periods_with_issues.append(self.section)
 
     def get_period_current_day(self, day):
         if day == 'U':
@@ -377,7 +387,8 @@ class Synchronization(object):
             )
         for inactive_enrollment in self.inactive_enrollment:
             report.append(
-                {'enrollment': inactive_enrollment, 'code': 'INACTIVE', 'message': 'Enrollment will be set to inactive.'}
+                {'enrollment': inactive_enrollment, 'code': 'INACTIVE',
+                 'message': 'Enrollment will be set to inactive.'}
             )
         return report
 
@@ -386,5 +397,10 @@ class Synchronization(object):
         for non_created_period in self.non_created_periods:
             report.append(
                 {'period': non_created_period, 'code': 'CREATE', 'message': 'Period to be created.'}
+            )
+        for period_with_issue in self.periods_with_issues:
+            report.append(
+                {'period': period_with_issue, 'code': 'MI-VS',
+                 'message': 'This period has missing information or it belongs to virtual section'}
             )
         return report
