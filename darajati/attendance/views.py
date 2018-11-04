@@ -66,7 +66,7 @@ class AttendanceView(AttendanceBaseView, FormSetView):
             saved_form = form.save(commit=False)
             if saved_form:
                 saved_form.save()
-        messages.success(self.request, _('Attendance were saved successfully'))
+        messages.success(self.request, _('Your attendances were saved'))
         return super(AttendanceView, self).formset_valid(formset)
 
     # FIXME: I know i look nice-ish but i wanna be more nicer when you have time fix me please
