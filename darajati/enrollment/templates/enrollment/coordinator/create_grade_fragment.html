@@ -3,7 +3,7 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
+            <div class="back-btn"> <a href="{% url 'enrollment:grade_fragment_coordinator' course_offering_id=course_offering.id %}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
                 <h3>{% trans 'Create Grade Fragment' %}</h3>
             </div>
