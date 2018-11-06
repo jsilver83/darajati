@@ -138,7 +138,6 @@ class GradeFragment(models.Model):
         default=False,
         help_text=_('If this is checked, It will be calculated in the total mark')
     )
-
     entry_in_percentages = models.BooleanField(
         _('Entry in Percentages'),
         null=False,
@@ -146,6 +145,47 @@ class GradeFragment(models.Model):
         default=False,
         help_text=_('Checked when the course entered grades are in %')
     )
+    exam_date = models.DateField(
+        _('Exam Date'),
+        null=True,
+        blank=True,
+    )
+    allow_markers_from_other_courses = models.NullBooleanField(
+        _('Allow Markers From Other Courses'),
+        null=True,
+        blank=True,
+        default=False,
+        help_text=_('If checked, it means you can assign markers in the subjective marking module from other courses '
+                    'within the same department')
+    )
+    allow_markers_to_mark_own_students = models.NullBooleanField(
+        _('Allow Markers To Mark Own Students'),
+        null=True,
+        blank=True,
+        default=False,
+        help_text=_('If checked, it means the marker can mark students that he actually teaches')
+    )
+    markings_difference_tolerance = models.DecimalField(
+        _('Markings Difference Tolerance'),
+        null=True,
+        blank=True,
+        help_text=_('The maximum difference allowed between different markings of a student paper before the '
+                    'intervention of a tie-breaker'),
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    number_of_markers = models.PositiveSmallIntegerField(
+        _('Number Of Markers'),
+        null=True,
+        blank=True,
+        default=2,
+        help_text=_('Indicates the number of markers that will subjectively mark students papers. If the number is 2,'
+                    'that means two markers will enter marks for each student paper and a third marker will break the '
+                    'tie if needed')
+    )
+    default_tie_breaking_marker = models.ForeignKey('enrollment.Instructor', on_delete=models.SET_NULL,
+                                                    related_name='third_marker', null=True, blank=False,
+                                                    verbose_name=_('Default Tie-Breaking Marker'), )
     updated_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

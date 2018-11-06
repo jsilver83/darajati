@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		{% if markers %}
+		<div class="card card-outline-secondary mb-3">
+			<div class="card-block">
+				<blockquote class="card-blockquote">
+					<ul>
+						{% for marker in markers %}
+							<li>
+								<a href="{% url 'exam:marking' marker.fragment.pk marker.room.pk marker.order %}">
+									{{ marker }} {{ marker.fragment }} {{ marker.room }} {{ marker.order }}</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</blockquote>
+			</div>
+		</div>
+
+		<div class="cntnt-sec">
+
+		</div>
+		{% endif %}
+	</div>
+{% endblock %}

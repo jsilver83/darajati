@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		{% include 'exam/snippets/course_offering_details.html' %}
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-9">
+							<h3>{% trans 'Monitors and Markers' %}</h3>
+						</div>
+						<div class="col-md-3 text-right">
+							<input class="thm-btn small-btn" type="submit" name="save" value="{% trans 'Save' %}">
+							<input class="thm-btn small-btn" type="submit"
+							       onclick="return confirm('{% trans "Are you sure? All entered marks for the below markers will be lost!" %}');"
+							       name="shuffle" value="{% trans 'Save and Shuffle' %}">
+						</div>
+					</div>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								{% for i in number_of_markers %}
+								<th colspan="3" style="text-align: center">{% trans 'Marker' %} # {{ i }}</th>
+								{% endfor %}
+							</tr>
+							<tr>
+								{% for i in number_of_markers %}
+								<th>{% trans 'Instructor' %}</th>
+{#								<th>{% trans 'Order' %}</th>#}
+								<th>{% trans 'Is a Monitor' %}</th>
+								<th>{% trans 'Generosity Factor' %}</th>
+								{% endfor %}
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								{% ifchanged form.instance.exam_room %}
+									<tr>
+										<td colspan="100">{{ form.instance.exam_room }} -
+											{{ form.instance.exam_room.students.all|length }} {% trans 'Students' %}
+										</td>
+									</tr>
+									<tr>
+										<td>{{ form.id }}{{ form.non_field_errors }}
+											{{ form.instructor }}{{ form.instructor.errors }}
+											{{ form.exam_room.errors }}{{ form.order.errors }}
+											<div style="display: none">
+											{{ form.exam_room }}{{ form.order }}
+											</div>
+										</td>
+										<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
+										<td>{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</td>
+								{% else %}
+										<td>{{ form.id }}{{ form.non_field_errors }}
+											{{ form.instructor }}{{ form.instructor.errors }}
+											<div style="display: none">
+											{{ form.order }}{{ form.order.errors }}
+											{{ form.exam_room }}{{ form.exam_room.errors }}
+											</div>
+										</td>
+										<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
+										<td>{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</td>
+								{% endifchanged %}
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+				<br>
+				<div>
+					<h2>{% trans 'Statistics' %}</h2>
+					<hr>
+					{% for stat in stats %}
+					{{ stat.marker }} - {{ stat.assignments }} {% trans 'assignment(s)' %}
+						{% if stat.assignments %}
+							[ {{ stat.first }} (1st) -- {{ stat.second }} (2nd)]
+						{% endif %}
+						<br>
+					{% endfor %}
+				</div>
+			{% else %}
+				{% trans 'There are no rooms' %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

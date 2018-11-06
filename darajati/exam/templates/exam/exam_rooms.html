@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		{% include 'exam/snippets/course_offering_details.html' %}
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-9">
+							<h3>{% trans 'Exam Rooms' %}</h3>
+						</div>
+						<div class="col-md-3 text-right">
+							<input class="thm-btn small-btn" type="submit" name="save" value="{% trans 'Save' %}">
+							{% if can_proceed %}
+							<input class="thm-btn small-btn" type="submit"
+							       onclick="return confirm('{% trans "Are you sure?" %}');"
+							       name="next" value="{% trans 'Save and Next' %}">
+							{% endif %}
+						</div>
+					</div>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'Shift' %}</th>
+								<th>{% trans 'Room' %}</th>
+								<th>{% trans 'Capacity' %}</th>
+								<th>{% trans 'Delete?' %}</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								<tr>
+									<td>{{ form.id }}{{ forloop.counter }}{{ form.non_field_errors }}</td>
+									<td>{{ form.exam_shift }}{{ form.exam_shift.errors }}</td>
+									<td>{{ form.room }}{{ form.room.errors }}</td>
+									<td>{{ form.capacity }}{{ form.capacity.errors }}</td>
+									<td>{{ form.DELETE }}</td>
+								</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+
+			{% else %}
+				{% trans 'There are no rooms' %}
+			{% endif %}
+		</div>
+		<div class="card card-outline-secondary mb-3">
+			<div class="card-block">
+				<blockquote class="card-blockquote">
+					{% trans 'Current selected rooms can accomodate' %}&nbsp;{{ rooms_capacity }}&nbsp;
+					{% trans 'out of' %}&nbsp;{{ students_count }}
+				</blockquote>
+			</div>
+		</div>
+	</div>
+	    <script type="text/javascript">
+        $(function () {
+            $('.dpicker').datetimepicker({
+                format: 'YYYY-MM-DD h:mm:ss'
+            });
+        });
+    </script>
+{% endblock %}

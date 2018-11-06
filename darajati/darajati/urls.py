@@ -29,16 +29,19 @@ urlpatterns = i18n_patterns(
 )
 
 urlpatterns += i18n_patterns(
+    # Enrollment
     re_path(r'', include('enrollment.urls', namespace='enrollment')),
     re_path(r'attendance/', include('attendance.urls', namespace='attendance')),
     re_path(r'grade/', include('grade.urls', namespace='grade')),
-    re_path(r'banner-integration/',
-            include('banner_integration.urls', namespace='banner_integration')),
+    re_path(r'banner-integration/', include('banner_integration.urls', namespace='banner_integration')),
+
+    # Exams
+    re_path(r'exam/', include('exam.urls', namespace='exam')),
+
 )
 
 if settings.DEBUG:
     import debug_toolbar
-
     urlpatterns = [
                       re_path(r'^debug/', include(debug_toolbar.urls)),
                   ] + urlpatterns
