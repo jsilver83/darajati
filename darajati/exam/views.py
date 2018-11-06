@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Sum, F, Subquery, OuterRef, Func, DecimalField
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +9,6 @@ from extra_views import ModelFormSetView
 
 from enrollment.models import Enrollment
 from enrollment.views import CoordinatorBaseView
-from grade.models import GradeFragment
 from .forms import *
 
 
@@ -204,6 +203,7 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
     def formset_valid(self, formset):
         self.object_list = formset.save()
 
+        # TODO: rework the shuffle algorithm to make it more fair
         if 'shuffle' in self.request.POST:
             # delete existing placements before performing the shuffle
             StudentPlacement.objects.filter(exam_room__exam_shift__fragment=self.fragment).delete()
@@ -219,7 +219,7 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
 
                 for exam_room in exam_rooms:
                     if exam_room.remaining_seats > 0 and exam_room.can_place_enrollment(enrollment):
-                        student_placement, created = StudentPlacement.objects.get_or_create(
+                        student_placement = StudentPlacement.objects.create(
                             enrollment=enrollment,
                             exam_room=exam_room,
                             is_present=True,
@@ -257,8 +257,76 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
         return redirect(self.request.get_full_path())
 
 
-class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
+class StudentMarksView(CoordinatorBaseView, ModelFormSetView):
     template_name = 'exam/student_marks.html'
+    model = StudentMark
+    form_class = StudentMarkForm
+    formset_class = StudentMarkFormSet
+    extra = 0
+    can_delete = False
+
+    def dispatch(self, request, *args, **kwargs):
+        self.marker = get_object_or_404(Marker, pk=self.kwargs['marker_id'])
+
+        # check if user can mark
+        if not(self.marker.instructor.user == self.request.user or self.request.user.is_superuser or \
+                Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                    Instructor.get_instructor(self.request.user),
+                    self.marker.exam_room.exam_shift.fragment.course_offering)):
+            messages.error(self.request, _('You are not authorised to mark this room.'))
+            return redirect(reverse_lazy('enrollment:home'))
+
+        # if no marks, redirect to main page with an error message
+        if not self.get_queryset().exists():
+            messages.error(self.request, _('There are no marks available at the moment. Check back later.'))
+            return redirect(reverse_lazy('enrollment:home'))
+
+        return super(StudentMarksView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(StudentMarksView, self).get_context_data(**kwargs)
+        context['grade_fragment'] = self.marker.exam_room.exam_shift.fragment
+        context['should_take_attendance'] = self.marker.is_a_monitor
+        context['total_number_of_students'] = StudentMark.objects.filter(
+            marker__order=self.marker.order - 1,
+            marker__exam_room=self.marker.exam_room,
+            student_placement__is_present=True
+        ).values('student_placement').distinct().count()
+        context['previous_marker'] = Marker.objects.filter(order=self.marker.order-1,
+                                                           exam_room=self.marker.exam_room).first()
+        return context
+
+    def get_extra_form_kwargs(self):
+        kwargs = super(StudentMarksView, self).get_extra_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('enrollment:home')
+
+    def get_queryset(self):
+        if self.marker.is_the_tiebreaker():
+            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.fragment).filter(
+                marker=self.marker, )
+        elif self.marker.order > 1:
+            students_marked_by_previous_marker = StudentMark.objects.filter(
+                mark__isnull=False,
+                marker__order=self.marker.order - 1,
+                marker__exam_room=self.marker.exam_room
+            ).values('student_placement').distinct()
+            return StudentMark.objects.filter(marker=self.marker,
+                                              student_placement__in=students_marked_by_previous_marker)
+        else:
+            return StudentMark.objects.filter(marker=self.marker)
+
+    def formset_valid(self, formset):
+        self.object_list = formset.save()
+        messages.success(self.request, _('Marks were submitted successfully'))
+        return redirect(self.get_success_url())
+
+
+class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
+    template_name = 'exam/unaccepted_student_marks.html'
     model = StudentMark
     form_class = StudentMarkForm
     formset_class = StudentMarkFormSet
@@ -279,27 +347,5 @@ class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
         context['number_of_markers'] = range(1, self.fragment.number_of_markers + 2)
         return context
 
-    def get_extra_form_kwargs(self):
-        kwargs = super(UnacceptedStudentMarksView, self).get_extra_form_kwargs()
-        kwargs['fragment'] = self.fragment
-        return kwargs
-
     def get_queryset(self):
-        # NOTE: THIS IS THE MOST COMPLICATED QUERY I'VE WROTE IN DJANGO ORM SO FAR
-        subquery_first_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=1)\
-            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
-        subquery_second_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=2)\
-            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
-        subquery_third_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=3)\
-            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
-
-        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__fragment=self.fragment)\
-            .annotate(
-            first_mark=Subquery(subquery_first_marker.values('weighted_mark')[:1]),
-            second_mark=Subquery(subquery_second_marker.values('weighted_mark')[:1]),
-            third_mark=Subquery(subquery_third_marker.values('mark')[:1]), )\
-            .annotate(
-            marks_difference=Func(F('first_mark') - F('second_mark'), function='ABS', output_field=DecimalField()))\
-            .filter(marks_difference__gt=self.fragment.markings_difference_tolerance)
-
-        return StudentMark.objects.filter(student_placement__in=student_placement_queryset)
+        return StudentMark.get_unaccepted_marks(self.fragment)

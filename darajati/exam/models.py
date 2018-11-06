@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import OuterRef, F, Subquery, Func, DecimalField
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -173,6 +174,9 @@ class Marker(models.Model):
     class Meta:
         ordering = ['exam_room', 'order', 'instructor', ]
 
+    def is_the_tiebreaker(self):
+        return self.order == self.exam_room.exam_shift.fragment.number_of_markers + 1
+
     @staticmethod
     def create_markers_for_fragment(fragment):
         Marker.objects.filter(exam_room__exam_shift__fragment=fragment).delete()
@@ -257,7 +261,7 @@ class StudentMark(models.Model):
     mark = models.DecimalField(
         _('Student Grade Quantity'),
         null=True,
-        blank=False,
+        blank=True,
         decimal_places=settings.MAX_DECIMAL_POINT,
         max_digits=settings.MAX_DIGITS,
         validators=(MinValueValidator(Decimal("000.00")),
@@ -277,3 +281,25 @@ class StudentMark(models.Model):
         mark = self.mark if self.mark else Decimal(0)
         generosity_factor = self.marker.generosity_factor if self.marker.generosity_factor else Decimal(0)
         return mark + generosity_factor
+
+    @staticmethod
+    def get_unaccepted_marks(fragment):
+        # NOTE: THIS IS THE MOST COMPLICATED QUERY I'VE EVER WRITTEN IN DJANGO ORM SO FAR
+        # because of its complexity, I assumed it will be used in the case of 2 markers and a tiebreaker
+        subquery_first_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=1)\
+            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
+        subquery_second_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=2)\
+            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
+        subquery_third_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=3)\
+            .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
+
+        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__fragment=fragment)\
+            .annotate(
+            first_mark=Subquery(subquery_first_marker.values('weighted_mark')[:1]),
+            second_mark=Subquery(subquery_second_marker.values('weighted_mark')[:1]),
+            third_mark=Subquery(subquery_third_marker.values('mark')[:1]), )\
+            .annotate(
+            marks_difference=Func(F('first_mark') - F('second_mark'), function='ABS', output_field=DecimalField()))\
+            .filter(marks_difference__gt=fragment.markings_difference_tolerance)
+
+        return StudentMark.objects.filter(student_placement__in=student_placement_queryset)

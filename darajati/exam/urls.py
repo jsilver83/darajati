@@ -39,6 +39,11 @@ urlpatterns = [
         name='markers'
         ),
 
+    url(r'^marks/(?P<marker_id>[0-9]+)/$',
+        views.StudentMarksView.as_view(),
+        name='marks'
+        ),
+
     url(r'^unaccepted/(?P<grade_fragment_id>[0-9]+)/$',
         views.UnacceptedStudentMarksView.as_view(),
         name='unaccepted_markers'

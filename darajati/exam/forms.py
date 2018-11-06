@@ -150,6 +150,8 @@ class MarkersFormSet(BaseModelFormSet):
 
 
 class StudentMarkForm(forms.ModelForm):
+    is_present = forms.NullBooleanField(label=_('Is Present?'), widget=forms.CheckboxInput)
+
     class Meta:
         model = StudentMark
         fields = ['student_placement', 'marker', 'mark']
@@ -159,9 +161,44 @@ class StudentMarkForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.fragment = kwargs.pop('fragment')
+        self.user = kwargs.pop('user')
         super(StudentMarkForm, self).__init__(*args, **kwargs)
         self.fields['mark'].required = False
+        self.fields['mark'].widget.attrs.update({'style': 'width:75px'})
+        if self.instance.marker.is_a_monitor:
+            self.initial['is_present'] = self.instance.student_placement.is_present
+        else:
+            del self.fields['is_present']
+
+    def clean(self):
+        cleaned_data = super(StudentMarkForm, self).clean()
+        mark = cleaned_data['mark']
+        is_present = cleaned_data.get('is_present')
+
+        # if self.instance.marker.is_a_monitor:
+        #     if is_present and not mark:
+        #         raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
+        #
+        # if self.instance.student_placement.is_present and not mark:
+        #     raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
+
+        if not self.instance.student_placement.is_present and mark:
+            raise forms.ValidationError(_("This student is marked as absent but you gave him a mark"))
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        saved = super(StudentMarkForm, self).save(commit=False)
+        saved.updated_by = self.user
+
+        if commit:
+            saved.save()
+
+        if 'is_present' in self.changed_data:
+            self.instance.student_placement.is_present = self.cleaned_data.get('is_present')
+            self.instance.student_placement.save()
+
+        return saved
 
 
 class StudentMarkFormSet(BaseModelFormSet):

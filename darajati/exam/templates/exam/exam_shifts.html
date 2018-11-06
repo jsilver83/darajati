@@ -34,7 +34,13 @@
 							{{ formset.management_form }}
 							{% for form in formset %}
 								<tr>
-									<td>{{ form.id }}{{ forloop.counter }}{{ form.non_field_errors }}</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.id }}{{ forloop.counter }}{{ form.non_field_errors }}
+											</div>
+										</div>
+									</td>
 									<td>{{ form.start_date }}{{ form.start_date.errors }}</td>
 									<td>{{ form.end_date }}{{ form.end_date.errors }}</td>
 									<td>{{ form.DELETE }}</td>

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		{% include 'exam/snippets/course_offering_details.html' %}
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-9">
+							<h3>{% trans 'Unaccepted Marks' %}</h3>
+						</div>
+						<div class="col-md-3 text-right">
+							<input class="thm-btn small-btn" type="submit" name="save" value="{% trans 'Save' %}">
+						</div>
+					</div>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>&nbsp;</th>
+								<th>&nbsp;</th>
+								<th>&nbsp;</th>
+								{% for i in number_of_markers %}
+									<th colspan="2" style="text-align: center">{% trans 'Instructor' %} # {{ i }}</th>
+								{% endfor %}
+							</tr>
+							<tr>
+								<th>{% trans 'Student Name' %}</th>
+								<th>{% trans 'Student ID' %}</th>
+								<th>{% trans 'Final Mark' %}</th>
+								{% for i in number_of_markers %}
+									<th>{% trans 'Mark' %}</th>
+									<th>{% trans 'Weighted' %}</th>
+								{% endfor %}
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								{% ifchanged form.instance.student_placement %}
+									<tr>
+										<td>
+											{{ form.instance.student_placement.enrollment.student.english_name }}
+										</td>
+										<td>{{ form.id }}{{ form.non_field_errors }}
+											{{ form.instance.student_placement.enrollment.student.university_id }}
+											<div style="display: none">
+											{{ form.marker }}{{ form.marker.errors }}
+											{{ form.student_placement }}{{ form.student_placement }}
+											</div>
+										</td>
+										<td>{{ form.instance.student_placement.final_mark }}</td>
+										<td>{{ form.mark }}{{ form.mark.errors }}</td>
+										<td>{{ form.instance.weighted_mark }}
+											({{ form.instance.marker.generosity_factor }})</td>
+								{% else %}
+										<td>{{ form.id }}{{ form.non_field_errors }}
+											<div style="display: none">
+											{{ form.marker }}{{ form.marker.errors }}
+											{{ form.student_placement }}{{ form.student_placement }}
+											</div>
+											{{ form.mark }}{{ form.mark.errors }}</td>
+										<td>{{ form.instance.weighted_mark }}
+											({{ form.instance.marker.generosity_factor }})</td>
+								{% endifchanged %}
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+			{% else %}
+				{% trans 'There are no marks' %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
