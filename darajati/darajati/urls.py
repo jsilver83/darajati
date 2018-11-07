@@ -25,7 +25,7 @@ urlpatterns = i18n_patterns(
             name='login'),
     re_path(r'^admin/', admin.site.urls),
     re_path(r'^impersonate/', include('impersonate.urls')),
-    path('logout/', views.logout, {'next_page': 'login'}, name='logout'),
+    path('logout/', views.logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
 )
 
 urlpatterns += i18n_patterns(
