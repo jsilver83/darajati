@@ -276,27 +276,6 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
                         enrollments.count())
                     )
 
-            # From here
-
-            # if exam_rooms:
-            #     for enrollment in enrollments:
-            #         for room in exam_rooms.iterator():
-            #             if room.remaining_seats > 0:
-            #                 print(1)
-            #                 student_placement = StudentPlacement.objects.create(
-            #                     enrollment=enrollment,
-            #                     exam_room=exam_room,
-            #                     is_present=True,
-            #                     shuffled_by=self.request.user
-            #                 )
-            #
-            #                 placement_count += 1
-            #
-            #                 for marker in exam_room.get_markers():
-            #                     student_mark, created = StudentMark.objects.get_or_create(
-            #                         student_placement=student_placement,
-            #                         marker=marker)
-
         else:
             messages.success(self.request, _('Markers were saved successfully'))
 
