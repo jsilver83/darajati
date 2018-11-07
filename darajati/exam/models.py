@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from enrollment.models import Coordinator, Instructor, Section, ScheduledPeriod
+from enrollment.models import Coordinator, Instructor, Section, ScheduledPeriod, Enrollment
 
 User = settings.AUTH_USER_MODEL
 
@@ -122,24 +122,43 @@ class ExamRoom(models.Model):
         ordering = ['exam_shift', 'room', ]
 
     @property
-    def remaining_seats(self):
-        return self.room.capacity - len(self.students.all())
-
-    @property
     def students_count(self):
         return len(self.students.all())
+
+    @property
+    def remaining_seats(self):
+        return self.capacity - self.students_count
 
     def get_markers(self):
         return self.markers.all()
 
     def can_place_enrollment(self, enrollment):
-        number_of_markers = self.exam_shift.fragment.number_of_markers
-        hospitable = True
+        # Check all the student periods (for the same course) in the exam date and make sure ...
+        # the current exam shift falls in any of them
+        exam_day = self.exam_shift.fragment.exam_date.strftime('%A').lower()
 
-        for marker in self.get_markers():
-            if marker.order < number_of_markers:
-                hospitable = hospitable and marker.can_mark_enrollment(enrollment)
-        return hospitable
+        student_periods_at_exam_day = enrollment.section.scheduled_periods.filter(
+            section__course_offering=self.exam_shift.fragment.course_offering,
+            day__iexact=exam_day
+        ).values('start_time', 'end_time').distinct()
+
+        no_issue_in_timing = False
+        for period in student_periods_at_exam_day:
+            if self.exam_shift.start_date.astimezone().time() >= period.get('start_time') and \
+                    self.exam_shift.end_date.astimezone().time() >= period.get('end_time'):
+                no_issue_in_timing = True
+                break
+
+        if no_issue_in_timing:
+            number_of_markers = self.exam_shift.fragment.number_of_markers
+            hospitable = True
+
+            for marker in self.get_markers():
+                if marker.order < number_of_markers:  # tiebreakers don't follow this rule
+                    hospitable = hospitable and marker.can_mark_enrollment(enrollment)
+            return hospitable
+        else:
+            return False
 
 
 class Marker(models.Model):

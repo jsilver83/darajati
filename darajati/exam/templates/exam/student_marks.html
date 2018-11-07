@@ -11,6 +11,7 @@
 			{% trans 'He only eneterend' %} {{ formset|length }} {% trans 'out of' %} {{ total_number_of_students }}...
 		</div>
 		{% endif %}
+		<h5>{% trans 'Section Average:' %} <b class="section_average">{{ section_average }}</b>%</h5>
 		<div class="cntnt-sec">
 			{% if formset.forms %}
 				<form method="post">
@@ -56,11 +57,13 @@
 										{{ form.student_placement }}{{ form.student_placement }}
 										</div>
 									</td>
-									<td{% if not form.instance.student_placement.is_present %} style="color:red; font-weight: bold" {% endif %}>
+									<td>
 									{% if should_take_attendance %}
 										{{ form.is_present }}
 									{% else %}
-										{{ form.instance.student_placement.is_present|yesno:"Present,Absent,Maybe" }}
+										<span class="badge {{ form.instance.student_placement.is_present|yesno:"success,error,warning" }}">
+											{{ form.instance.student_placement.is_present|yesno:"Present,Absent,Not Entered" }}
+										</span>
 									{% endif %}
 									</td>
 									<td>{{ form.mark }}{{ form.mark.errors }}</td>
@@ -77,4 +80,21 @@
 			{% endif %}
 		</div>
 	</div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.grade_quantity').on('keyup paste change', calculate_average);
+        });
+
+        function calculate_average() {
+            var total = 0;
+            $('.grade_quantity').each(function (index) {
+                var float_value = parseFloat($(this).val()) | 0;
+                total += float_value;
+            });
+            total = total / $('.grade_quantity').length;
+            $('.section_average').html(total.toFixed(2));
+        }
+    </script>
 {% endblock %}

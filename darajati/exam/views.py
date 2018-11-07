@@ -1,13 +1,13 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import ListView, UpdateView, CreateView
 from extra_views import ModelFormSetView
 
-from enrollment.models import Enrollment
 from enrollment.views import CoordinatorBaseView
 from .forms import *
 
@@ -184,7 +184,7 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
         allowed_markers = get_allowed_markers_for_a_fragment(self.fragment)
         for marker in allowed_markers:
             assignments = self.get_queryset().filter(instructor=marker, order__in=[1, 2])
-            assignments_count = assignments.count() # if assignments else 0
+            assignments_count = assignments.count()  # if assignments else 0
             if assignments_count < 1 or assignments_count > 1:
                 first_assignments = assignments.filter(order=1)
                 second_assignments = assignments.filter(order=2)
@@ -212,52 +212,98 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
 
             exam_rooms = ExamRoom.objects.filter(exam_shift__fragment=self.fragment)
 
-            cannot_be_placed = []
-            placement_count = 0
-            for enrollment in enrollments:
-                student_placement = None
+            if exam_rooms:
+                exam_rooms_iterator = exam_rooms.iterator()
 
-                for exam_room in exam_rooms:
-                    if exam_room.remaining_seats > 0 and exam_room.can_place_enrollment(enrollment):
-                        student_placement = StudentPlacement.objects.create(
-                            enrollment=enrollment,
-                            exam_room=exam_room,
-                            is_present=True,
-                            shuffled_by=self.request.user)
+                cannot_be_placed = []
+                placement_count = 0
 
-                        placement_count += 1
+                exam_room = exam_rooms_iterator.__next__()
 
-                        for marker in exam_room.get_markers():
-                            student_mark, created = StudentMark.objects.get_or_create(
-                                student_placement=student_placement,
-                                marker=marker)
+                for enrollment in enrollments:
+                    student_placement = None
 
-                        break
+                    counter = len(exam_rooms)
 
-                if student_placement is None:
-                    cannot_be_placed.append(enrollment.student.university_id)
+                    while counter:
+                        counter -= 1
 
-            if cannot_be_placed:
-                messages.warning(
-                    self.request,
-                    _('%s out of %s were shuffled successfully. The following students were not placed: %s') %
-                    (placement_count,
-                     enrollments.count(),
-                     cannot_be_placed)
-                )
-            else:
-                messages.success(
-                    self.request,
-                    _('%s out of %s were shuffled successfully. Instructors can enter marks now') % (placement_count,
-                                                                                                     enrollments.count())
-                )
+                        if exam_room.remaining_seats > 0 and exam_room.can_place_enrollment(enrollment):
+                            print(1)
+                            student_placement = StudentPlacement.objects.create(
+                                enrollment=enrollment,
+                                exam_room=exam_room,
+                                is_present=True,
+                                shuffled_by=self.request.user
+                            )
+
+                            placement_count += 1
+
+                            for marker in exam_room.get_markers():
+                                student_mark, created = StudentMark.objects.get_or_create(
+                                    student_placement=student_placement,
+                                    marker=marker)
+
+                            try:
+                                exam_room = exam_rooms_iterator.__next__()
+                            except:
+                                exam_rooms_iterator = exam_rooms.iterator()
+                                exam_room = exam_rooms_iterator.__next__()
+                            break
+
+                        try:
+                            exam_room = exam_rooms_iterator.__next__()
+                        except:
+                            exam_rooms_iterator = exam_rooms.iterator()
+                            exam_room = exam_rooms_iterator.__next__()
+
+                    if student_placement is None:
+                        cannot_be_placed.append(enrollment.student.university_id)
+
+                if cannot_be_placed:
+                    messages.warning(
+                        self.request,
+                        _('%s out of %s were shuffled successfully. The following students were not placed: %s') %
+                        (placement_count,
+                         enrollments.count(),
+                         cannot_be_placed)
+                    )
+                else:
+                    messages.success(
+                        self.request,
+                        _('%s out of %s were shuffled successfully. Instructors can enter marks now') % (
+                        placement_count,
+                        enrollments.count())
+                    )
+
+            # From here
+
+            # if exam_rooms:
+            #     for enrollment in enrollments:
+            #         for room in exam_rooms.iterator():
+            #             if room.remaining_seats > 0:
+            #                 print(1)
+            #                 student_placement = StudentPlacement.objects.create(
+            #                     enrollment=enrollment,
+            #                     exam_room=exam_room,
+            #                     is_present=True,
+            #                     shuffled_by=self.request.user
+            #                 )
+            #
+            #                 placement_count += 1
+            #
+            #                 for marker in exam_room.get_markers():
+            #                     student_mark, created = StudentMark.objects.get_or_create(
+            #                         student_placement=student_placement,
+            #                         marker=marker)
+
         else:
             messages.success(self.request, _('Markers were saved successfully'))
 
         return redirect(self.request.get_full_path())
 
 
-class StudentMarksView(CoordinatorBaseView, ModelFormSetView):
+class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
     template_name = 'exam/student_marks.html'
     model = StudentMark
     form_class = StudentMarkForm
@@ -266,20 +312,21 @@ class StudentMarksView(CoordinatorBaseView, ModelFormSetView):
     can_delete = False
 
     def dispatch(self, request, *args, **kwargs):
-        self.marker = get_object_or_404(Marker, pk=self.kwargs['marker_id'])
+        if request.user.is_authenticated:
+            self.marker = get_object_or_404(Marker, pk=self.kwargs['marker_id'])
 
-        # check if user can mark
-        if not(self.marker.instructor.user == self.request.user or self.request.user.is_superuser or \
-                Coordinator.is_coordinator_of_course_offering_in_this_semester(
-                    Instructor.get_instructor(self.request.user),
-                    self.marker.exam_room.exam_shift.fragment.course_offering)):
-            messages.error(self.request, _('You are not authorised to mark this room.'))
-            return redirect(reverse_lazy('enrollment:home'))
+            # check if user can mark
+            if not (self.marker.instructor.user == self.request.user or self.request.user.is_superuser or \
+                    Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                        Instructor.get_instructor(self.request.user),
+                        self.marker.exam_room.exam_shift.fragment.course_offering)):
+                messages.error(self.request, _('You are not authorised to mark this room.'))
+                return redirect(reverse_lazy('enrollment:home'))
 
-        # if no marks, redirect to main page with an error message
-        if not self.get_queryset().exists():
-            messages.error(self.request, _('There are no marks available at the moment. Check back later.'))
-            return redirect(reverse_lazy('enrollment:home'))
+            # if no marks, redirect to main page with an error message
+            if not self.get_queryset().exists():
+                messages.error(self.request, _('There are no marks available at the moment. Check back later.'))
+                return redirect(reverse_lazy('enrollment:home'))
 
         return super(StudentMarksView, self).dispatch(request, *args, **kwargs)
 
@@ -292,7 +339,7 @@ class StudentMarksView(CoordinatorBaseView, ModelFormSetView):
             marker__exam_room=self.marker.exam_room,
             student_placement__is_present=True
         ).values('student_placement').distinct().count()
-        context['previous_marker'] = Marker.objects.filter(order=self.marker.order-1,
+        context['previous_marker'] = Marker.objects.filter(order=self.marker.order - 1,
                                                            exam_room=self.marker.exam_room).first()
         return context
 
@@ -306,11 +353,11 @@ class StudentMarksView(CoordinatorBaseView, ModelFormSetView):
 
     def get_queryset(self):
         if self.marker.is_the_tiebreaker():
-            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.fragment).filter(
-                marker=self.marker, )
+            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.fragment)
+            # .filter(marker=self.marker, )  # TODO: find a more elegant solution for this issue
         elif self.marker.order > 1:
             students_marked_by_previous_marker = StudentMark.objects.filter(
-                mark__isnull=False,
+                Q(mark__isnull=False) | Q(student_placement__is_present=False),
                 marker__order=self.marker.order - 1,
                 marker__exam_room=self.marker.exam_room
             ).values('student_placement').distinct()
@@ -346,6 +393,11 @@ class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
         context['grade_fragment'] = self.fragment
         context['number_of_markers'] = range(1, self.fragment.number_of_markers + 2)
         return context
+
+    def get_extra_form_kwargs(self):
+        kwargs = super(UnacceptedStudentMarksView, self).get_extra_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get_queryset(self):
         return StudentMark.get_unaccepted_marks(self.fragment)

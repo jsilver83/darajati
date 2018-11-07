@@ -30,7 +30,7 @@ class ExamSettingsForm(forms.ModelForm):
         self.fragment = kwargs.pop('fragment')
         super(ExamSettingsForm, self).__init__(*args, **kwargs)
 
-        self.fields['default_tie_breaking_marker'].queryset = get_allowed_markers_for_a_fragment(self.fragment)
+        self.fields['default_tie_breaking_marker'].queryset = get_allowed_markers_for_a_fragment(self.fragment, True)
 
 
 class ExamShiftForm(forms.ModelForm):
@@ -164,7 +164,7 @@ class StudentMarkForm(forms.ModelForm):
         self.user = kwargs.pop('user')
         super(StudentMarkForm, self).__init__(*args, **kwargs)
         self.fields['mark'].required = False
-        self.fields['mark'].widget.attrs.update({'style': 'width:75px'})
+        self.fields['mark'].widget.attrs.update({'style': 'width:75px', 'class': 'grade_quantity'})
         if self.instance.marker.is_a_monitor:
             self.initial['is_present'] = self.instance.student_placement.is_present
         else:
@@ -173,17 +173,19 @@ class StudentMarkForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(StudentMarkForm, self).clean()
         mark = cleaned_data['mark']
-        is_present = cleaned_data.get('is_present')
 
-        # if self.instance.marker.is_a_monitor:
-        #     if is_present and not mark:
-        #         raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
-        #
-        # if self.instance.student_placement.is_present and not mark:
-        #     raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
+        if self.instance.marker.is_a_monitor:
+            is_present = cleaned_data.get('is_present')
+            if is_present and not mark:
+                raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
+            if not is_present and mark:
+                raise forms.ValidationError(_("This student is marked as absent but you gave him a mark"))
+        else:
+            if self.instance.student_placement.is_present and not mark:
+                raise forms.ValidationError(_("This student is marked as present but you didn't give him a mark"))
 
-        if not self.instance.student_placement.is_present and mark:
-            raise forms.ValidationError(_("This student is marked as absent but you gave him a mark"))
+            if not self.instance.student_placement.is_present and mark:
+                raise forms.ValidationError(_("This student is marked as absent but you gave him a mark"))
 
         return cleaned_data
 

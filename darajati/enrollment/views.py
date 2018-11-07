@@ -43,11 +43,12 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         """
          Assign section_id and get section object
         """
-        if self.kwargs.get('section_id'):
-            self.section_id = self.kwargs['section_id']
-            self.section = Section.get_section(self.section_id)
-        if Instructor.is_active_coordinator(self.request.user.instructor):
-            self.coordinator = self.request.user.instructor.coordinators
+        if request.user.is_authenticated:
+            if self.kwargs.get('section_id'):
+                self.section_id = self.kwargs['section_id']
+                self.section = Section.get_section(self.section_id)
+            if Instructor.is_active_coordinator(self.request.user.instructor):
+                self.coordinator = self.request.user.instructor.coordinators
         return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self, **kwargs):
@@ -85,6 +86,19 @@ class InstructorView(InstructorBaseView, ListView):
 
     def test_func(self, **kwargs):
         return True if Instructor.is_active_instructor(self.request.user) else False
+
+    def get_context_data(self, **kwargs):
+        context = super(InstructorView, self).get_context_data(**kwargs)
+
+        if check_if_exam_app_is_installed:
+            from exam.models import Marker
+            context['active_marking_assignments'] = Marker.objects.filter(
+                instructor__user=self.request.user,
+                exam_room__exam_shift__fragment__entry_start_date__lte=now(),
+                exam_room__exam_shift__fragment__entry_end_date__gte=now(),
+            )
+
+        return context
 
     def get_queryset(self):
         return Section.get_instructor_sections(self.request.user.instructor)
@@ -165,6 +179,18 @@ class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
     model = Section
     ordering = 'code'
     context_object_name = 'sections'
+
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorSectionView, self).get_context_data(**kwargs)
+
+        from exam.models import Marker
+        context['all_active_markers'] = Marker.objects.filter(
+            exam_room__exam_shift__fragment__course_offering=self.course_offering,
+            exam_room__exam_shift__fragment__entry_start_date__lte=now(),
+            exam_room__exam_shift__fragment__entry_end_date__gte=now(),
+        )
+
+        return context
 
     def get_queryset(self):
         queryset = super(CoordinatorSectionView, self).get_queryset()

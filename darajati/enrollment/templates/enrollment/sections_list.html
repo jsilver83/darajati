@@ -1,50 +1,115 @@
 {% extends "base.html" %}
+
+{% load humanize %}
 {% load i18n %}
 {% block content %}
-    <div class="content-panel">
-        <div class="cntnt-sec">
-            <div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
-            <div class="title-sec text-center">
-                <h3>{% trans 'Find your current enrolled sections' %}</h3>
-            </div>
-            <hr>
-            {% if sections %}
-                <table class="table table-condensed text-center">
-                    <thead>
-                    <tr>
-                        <th class="text-center">{% trans 'Semester Code' %}</th>
-                        <th class="text-center">{% trans 'Course Code' %}</th>
-                        <th class="text-center">{% trans 'Course Name' %}</th>
-                        <th class="text-center">{% trans 'Section Code' %}</th>
-                        <th class="text-center">{% trans 'Attendances' %}</th>
-                        <th class="text-center">{% trans 'Grades' %}</th>
-                        <th class="text-center">{% trans 'Students' %}</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for section in sections %}
-                        <tr>
-                            <td>{{ section.course_offering.semester.code }}</td>
-                            <td {% if section.course_offering.coordinated %} style="color:red" {% endif %}>
-                                {{ section.course_offering.course.code }}</td>
-                            <td>{{ section.course_offering.course.name }}</td>
-                            <td>{{ section.code }}</td>
-                            <td><a href="{% url 'attendance:section_attendance' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-                            <td><a href="{% url 'grade:section_grade' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
-                            <td><a href="{% url 'enrollment:section_students' section_id=section.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
-                            <td></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                {% trans 'There are no results' %}
-            {% endif %}
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			<div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+			<div class="title-sec text-center">
+				<h3>{% trans 'Find your current enrolled sections' %}</h3>
+			</div>
+			<hr>
+			{% if sections %}
+				<table class="table table-condensed text-center">
+					<thead>
+					<tr>
+						<th class="text-center">{% trans 'Semester Code' %}</th>
+						<th class="text-center">{% trans 'Course Code' %}</th>
+						<th class="text-center">{% trans 'Course Name' %}</th>
+						<th class="text-center">{% trans 'Section Code' %}</th>
+						<th class="text-center">{% trans 'Attendances' %}</th>
+						<th class="text-center">{% trans 'Grades' %}</th>
+						<th class="text-center">{% trans 'Students' %}</th>
+						<th></th>
+					</tr>
+					</thead>
+					<tbody>
+					{% for section in sections %}
+						<tr>
+							<td>{{ section.course_offering.semester.code }}</td>
+							<td {% if section.course_offering.coordinated %} style="color:red" {% endif %}>
+								{{ section.course_offering.course.code }}</td>
+							<td>{{ section.course_offering.course.name }}</td>
+							<td>{{ section.code }}</td>
+							<td><a href="{% url 'attendance:section_attendance' section_id=section.id %}"
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+							<td><a href="{% url 'grade:section_grade' section_id=section.id %}"
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+							<td><a href="{% url 'enrollment:section_students' section_id=section.id %}"
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
+							<td></td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+			{% else %}
+				{% trans 'There are no results' %}
+			{% endif %}
 
-        </div>
-    </div>
+			{% if active_marking_assignments %}
+				<br><br>
+				<div class="title-sec text-center">
+					<h3>{% trans 'Marking Assignments' %}</h3>
+				</div>
+				<hr>
+				<table class="table table-condensed text-center">
+					<thead>
+					<tr>
+						<th class="text-center">{% trans 'Semester Code' %}</th>
+						<th class="text-center">{% trans 'Course Code' %}</th>
+						<th class="text-center">{% trans 'Course Name' %}</th>
+						<th class="text-center">{% trans 'Fragment' %}</th>
+						<th class="text-center">{% trans 'Exam Room' %}</th>
+						<th class="text-center">{% trans 'Order' %}</th>
+						<th class="text-center"></th>
+						<th></th>
+					</tr>
+					</thead>
+					<tbody>
+					{% for marker in active_marking_assignments %}
+						<tr>
+							<td>{{ marker.exam_room.exam_shift.fragment.course_offering.semester.code }}</td>
+							<td
+									{% if marker.exam_room.exam_shift.fragment.course_offering.coordinated %} style="color:red" {% endif %}>
+								{{ marker.exam_room.exam_shift.fragment.course_offering.course.code }}</td>
+							<td>{{ marker.exam_room.exam_shift.fragment.course_offering.course.name }}</td>
+							<td>{{ marker.exam_room.exam_shift.fragment.short_name }}</td>
+							<td>{{ marker.exam_room }}</td>
+							<td>{{ marker.order|ordinal }}</td>
+							<td><a href="{% url 'exam:marks' marker.pk %}"
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'Enter Marks' %}</a></td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+			{% endif %}
+
+			{% if all_active_markers %}
+				<br><br>
+				<div class="title-sec text-center">
+					<h3>{% trans 'All Markers' %}</h3>
+				</div>
+				<hr>
+				<table class="table table-condensed text-center">
+					<tbody>
+					{% for marker in all_active_markers %}
+						{% ifchanged marker.exam_room %}
+							<tr>
+								<td colspan="100">{{ marker.exam_room }} -
+									{{ marker.exam_room.students.all|length }} {% trans 'Students' %}
+								</td>
+							</tr>
+							<tr>
+							<td><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}</td>
+						{% else %}
+							<td><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}</td>
+						{% endifchanged %}
+					{% endfor %}
+					</tbody>
+				</table>
+			{% endif %}
+
+		</div>
+	</div>
 {% endblock %}
