@@ -1963,3 +1963,13 @@ a {color:#000; text-decoration: none;}      /* unvisited link */
     background-color: #dff0d8 !important;
 }
 /* end of addition by joud */
+
+/* added by malnajdi */
+.grade-report {
+  overflow-y: scroll;
+}
+
+.fixedHeader-floating {
+    overflow: hidden;
+}
+/* end of addition by malnajdi */

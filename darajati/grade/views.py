@@ -1,5 +1,7 @@
+from django.db.models import Value, IntegerField
+from django.http import HttpResponseRedirect
 from extra_views import ModelFormSetView
-from django.views.generic import ListView, CreateView
+from django.views.generic import ListView, CreateView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
@@ -58,20 +60,12 @@ class GradesView(GradeBaseView, ModelFormSetView):
         context = super(GradesView, self).get_context_data(**kwargs)
         context.update({
             'enrollments': Enrollment.get_students_of_section(self.section_id),
-            'section_average': StudentGrade.get_section_average(self.section, self.grade_fragment),
+            'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
-            'course_average': StudentGrade.get_course_average(self.section, self.grade_fragment),
+            'course_average': StudentGrade.display_course_average(self.section, self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
         })
-        if self.grade_fragment.entry_in_percentages:
-            context.update({
-                'section_average': str(StudentGrade.get_section_average(self.section, self.grade_fragment)) + '%',
-                'section_objective_average': str(StudentGrade.get_section_objective_average(self.section,
-                                                                                            self.grade_fragment)
-                                                 ) + '%',
-            })
-            context['course_average'] = str(StudentGrade.get_course_average(self.section, self.grade_fragment)) + '%'
         return context
 
     def formset_valid(self, formset):
@@ -79,7 +73,15 @@ class GradesView(GradeBaseView, ModelFormSetView):
             form.user = self.request.user
             form.save(commit=False)
         messages.success(self.request, _('Grades were saved successfully'))
-        return super(GradesView, self).formset_valid(formset)
+        return HttpResponseRedirect(reverse_lazy(
+            'grade:plan_grades',
+            kwargs={
+                'section_id': self.section_id,
+                'grade_fragment_id': self.grade_fragment_id
+            }
+        ))
+        # This used to save the same object 2 times
+        # return super(GradesView, self).formset_valid(formset)
 
     def get_formset_kwargs(self):
         kwargs = super(GradesView, self).get_formset_kwargs()
@@ -104,6 +106,7 @@ class DisplayGradesView(GradeBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(DisplayGradesView, self).get_context_data(**kwargs)
         context.update({
+            'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
         })
@@ -136,3 +139,33 @@ class CreateGradeFragmentView(GradeBaseView, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('grade:section_grade', kwargs={'section_id': self.section_id})
+
+
+class GradeReportView(GradeBaseView, TemplateView):
+    template_name = 'grade/grade_report.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        fragments = GradeFragment.objects.filter(
+                course_offering=self.section.course_offering)
+
+        context.update({
+            'grades': StudentGrade.objects.filter(
+                enrollment__section=self.section,
+                enrollment__active=True,
+            ).order_by('enrollment__student__university_id', 'grade_fragment__order'),
+            'fragments': fragments
+        })
+        averages = []
+        for fragment in fragments:
+            averages.append(
+                fragment.get_section_average(self.section)
+            )
+        context.update({
+            'averages': averages
+        })
+        return context
+
+
+class GradeCourseReport(GradeBaseView, TemplateView):
+    pass

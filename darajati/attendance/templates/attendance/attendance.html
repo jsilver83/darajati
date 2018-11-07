@@ -50,6 +50,7 @@
                             <th>{% trans 'No.' %}</th>
                             <th>{% trans 'ID' %}</th>
                             <th>{% trans 'Name' %}</th>
+                            <th>{% trans 'Total Abcences' %}</th>
                             {% for period in current_periods %}
                                 <th>{{ period.start_time }}{% trans ' to ' %}{{ period.end_time }}</th>
                             {% endfor %}
@@ -68,6 +69,7 @@
                                 <td>{{ form.enrollment_id }}</td>
                                 <td>{{ form.student_university_id }}</td>
                                 <td>{{ form.student_name }}</td>
+                                <td>{{ form.total_absence }}</td>
                                 <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
                                     <div class="row">
                                         <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>
@@ -85,6 +87,7 @@
                                     <span style="display: none;">{{ form.enrollment_id }}</span>
                                     <span style="display: none;">{{ form.student_name }}</span>
                                     <span style="display: none;">{{ form.student_university_id }}</span>
+                                    <span style="display: none;">{{ form.total_absence }}</span>
                                     <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
                                         <div class="row">
                                             <div class="col-md-8">{{ form.status }}{{ form.status.errors }}</div>

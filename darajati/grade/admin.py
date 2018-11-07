@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import *
 
+from simple_history.admin import SimpleHistoryAdmin
+
 
 class GradeFragmentAdmin(admin.ModelAdmin):
     list_display = ('course_offering', 'section', 'category', 'description', 'weight', 'entry_start_date',
@@ -12,7 +14,7 @@ class LetterGradeAdmin(admin.ModelAdmin):
     list_display = ('course_offering', 'section', 'letter_grade', 'cut_off_point', 'updated_on', 'updated_by')
 
 
-class StudentGradeAdmin(admin.ModelAdmin):
+class StudentGradeAdmin(SimpleHistoryAdmin):
     list_display = ('enrollment', 'grade_fragment', 'grade_quantity', 'remarks', 'updated_on', 'updated_by')
     list_filter = ('grade_fragment',)
 

@@ -11,98 +11,119 @@
                        value="{% trans 'Generate Report' %}">
             </form>
             <div class="title-sec text-center">
-                {% if report %}
-                    {% if detail_report %}
-                        {% if sections_report %}
-                            <h3>{% trans 'Sections' %}</h3>
-                            <table class="table table-condensed text-center">
-                                <thead>
-                                <tr>
-                                    <th class="text-center">{% trans 'No.' %}</th>
-                                    <th class="text-center">{% trans 'Section Code' %}</th>
-                                    <th class="text-center">{% trans 'code' %}</th>
-                                    <th class="text-center">{% trans 'message' %}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for item in sections_report %}
+                {% if sections_report %}
+                    <h3>{% trans 'Sections' %}</h3>
+                    <table class="table table-condensed text-center">
+                        <thead>
+                        <tr>
+                            <th class="text-center">{% trans 'No.' %}</th>
+                            <th class="text-center">{% trans 'Section Code' %}</th>
+                            <th class="text-center">{% trans 'code' %}</th>
+                            <th class="text-center">{% trans 'message' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in sections_report %}
 
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ item.section.code }}</td>
-                                        <td>{{ item.code }}</td>
-                                        <td>{{ item.message }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        {% endif %}
-                        {% if enrollments_report %}
-                            <h3>{% trans 'Enrollments' %}</h3>
-                            <table class="table table-condensed text-center">
-                                <thead>
-                                <tr>
-                                    <th class="text-center">{% trans 'No.' %}</th>
-                                    <th class="text-center">{% trans 'Enrollment' %}</th>
-                                    <th class="text-center">{% trans 'code' %}</th>
-                                    <th class="text-center">{% trans 'message' %}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for item in enrollments_report %}
-
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ item.enrollment }}</td>
-                                        <td>{{ item.code }}</td>
-                                        <td>{{ item.message }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        {% endif %}
-                        {% if periods %}
-                            <h3>{% trans 'Schedualed Periods' %}</h3>
-                            <table class="table table-condensed text-center">
-                                <thead>
-                                <tr>
-                                    <th class="text-center">{% trans 'No.' %}</th>
-                                    <th class="text-center">{% trans 'Day' %}</th>
-                                    <th class="text-center">{% trans 'Start Time' %}</th>
-                                    <th class="text-center">{% trans 'End Time' %}</th>
-                                    <th class="text-center">{% trans 'Instructor' %}</th>
-                                    <th class="text-center">{% trans 'Section' %}</th>
-                                    <th class="text-center">{% trans 'code' %}</th>
-                                    <th class="text-center">{% trans 'message' %}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for item in periods %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ item.period.day }}</td>
-                                        <td>{{ item.period.start_time }}</td>
-                                        <td>{{ item.period.end_time }}</td>
-                                        <td>{{ item.period.instructor_assigned }}</td>
-                                        <td>{{ item.period.section.code }}</td>
-                                        <td>{{ item.code }}</td>
-                                        <td>{{ item.message }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        {% endif %}
-                    {% endif %}
-                    {% if sections_report %}<h3>{% trans 'Total changes will take action for sections are ' %}
-                        {{ sections_report|length }}</h3>
-                    {% endif %}
-                    {% if enrollments_report %}<h3>{% trans 'Total changes will take action for enrollments are ' %}
-                        {{ enrollments_report|length }}</h3>
-                    {% endif %}
-                    {% if periods %}<h3>{% trans 'Total changes will take action for periods are ' %}
-                        {{ periods|length }}</h3>
-                    {% endif %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.section.code }}</td>
+                                <td>{{ item.code }}</td>
+                                <td>{{ item.message }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 {% endif %}
+                {% if enrollments_report %}
+                    <h3>{% trans 'Enrollments' %}</h3>
+                    <table class="table table-condensed text-center">
+                        <thead>
+                        <tr>
+                            <th class="text-center">{% trans 'No.' %}</th>
+                            <th class="text-center">{% trans 'Enrollment' %}</th>
+                            <th class="text-center">{% trans 'code' %}</th>
+                            <th class="text-center">{% trans 'message' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in enrollments_report %}
+
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.enrollment }}</td>
+                                <td>{{ item.code }}</td>
+                                <td>{{ item.message }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                {% if periods %}
+                    <h3>{% trans 'Schedualed Periods' %}</h3>
+                    <table class="table table-condensed text-center">
+                        <thead>
+                        <tr>
+                            <th class="text-center">{% trans 'No.' %}</th>
+                            <th class="text-center">{% trans 'Day' %}</th>
+                            <th class="text-center">{% trans 'Start Time' %}</th>
+                            <th class="text-center">{% trans 'End Time' %}</th>
+                            <th class="text-center">{% trans 'Instructor' %}</th>
+                            <th class="text-center">{% trans 'Section' %}</th>
+                            <th class="text-center">{% trans 'code' %}</th>
+                            <th class="text-center">{% trans 'message' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in periods %}
+                            {% if not item.code == 'MI-VS' %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.period.day }}</td>
+                                <td>{{ item.period.start_time }}</td>
+                                <td>{{ item.period.end_time }}</td>
+                                <td>{{ item.period.instructor_assigned }}</td>
+                                <td>{{ item.period.section.code }}</td>
+                                <td>{{ item.code }}</td>
+                                <td>{{ item.message }}</td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                {% if periods %}
+                    <h3 style="color: red">{% trans 'Sections With Issues In Periods' %}</h3>
+                    <table class="table table-condensed text-center">
+                        <thead>
+                        <tr>
+                            <th class="text-center">{% trans 'Section' %}</th>
+                            <th class="text-center">{% trans 'code' %}</th>
+                            <th class="text-center">{% trans 'message' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in periods %}
+                            <tr>
+                                {% if item.code == 'MI-VS' %}
+                                    <td>{{ item.period.code }}</td>
+                                    <td>{{ item.code }}</td>
+                                    <td>{{ item.message }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                <h3>{% trans 'Total changes will take action for sections are ' %}
+                    {{ sections_report|length }}
+                </h3>
+                <h3>{% trans 'Total changes will take action for enrollments are ' %}
+                    {{ enrollments_report|length }}
+                </h3>
+                <h3>{% trans 'Total changes will take action for periods are ' %}
+                    {{ periods|length }}
+                </h3>
             </div>
         </div>
     </div>

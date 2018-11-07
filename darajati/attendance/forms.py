@@ -8,8 +8,8 @@ from .models import Attendance
 class PlainTextWidget(forms.Widget):
     def render(self, name, value, attrs=None):
         if value is not None:
-            field = "<input type='hidden' name='%s' value='%s' readonly> <span>%s</span>"\
-                    %(name, mark_safe(value), mark_safe(value))
+            field = "<input type='hidden' name='%s' value='%s' readonly> <span>%s</span>" \
+                    % (name, mark_safe(value), mark_safe(value))
         else:
             field = "<input type='hidden' name='%s' value='' readonly> <span>-</span>" % (name)
         return field
@@ -40,6 +40,8 @@ class AttendanceForm(forms.ModelForm):
         widget=PlainTextWidget, required=False)
     updated_on = forms.DateTimeField(widget=PlainTextWidget, required=False)
 
+    total_absence = forms.CharField(widget=PlainTextWidget)
+
     ORDER = ('student_name', 'status')
 
     def __init__(self, *args, **kwargs):
@@ -55,6 +57,8 @@ class AttendanceForm(forms.ModelForm):
         if self.initial['updated_on'] and not self.section.course_offering.allow_change:
             self.fields['status'].disabled = True
 
+        self.initial['total_absence'] = self.initial['enrollment'].get_enrollment_total_absence
+
     class Meta:
         model = Attendance
         fields = ['enrollment', 'status', 'attendance_instance']
@@ -68,7 +72,7 @@ class AttendanceForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        
+
         if self.cleaned_data['id']:
             self.instance.id = self.cleaned_data['id']
 
@@ -77,8 +81,8 @@ class AttendanceForm(forms.ModelForm):
             return super(AttendanceForm, self).save()
 
     def clean_status(self):
-        if 'can_give_excused_status' not in self.permissions \
-                and self.cleaned_data.get('status') == Attendance.Types.EXCUSED\
+        if 'attendance.can_give_excused_status' not in self.permissions \
+                and self.cleaned_data.get('status') == Attendance.Types.EXCUSED \
                 and 'status' in self.changed_data:
             self.add_error('status', _("You don't have permission to make this change"))
         return self.cleaned_data.get('status')

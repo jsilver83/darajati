@@ -74,7 +74,11 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         return context
 
     def get_login_url(self):
-        if self.request.user != "AnonymousUser":
+        """
+        
+        :return: 
+        """
+        if self.request.user.is_authenticated:
             return reverse_lazy('enrollment:home')
 
 
@@ -194,7 +198,9 @@ class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
 
     def get_queryset(self):
         queryset = super(CoordinatorSectionView, self).get_queryset()
-        return queryset.filter(course_offering=self.course_offering)
+        return queryset.filter(course_offering=self.course_offering).exclude(
+            scheduled_periods__isnull=True
+        )
 
 
 class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):

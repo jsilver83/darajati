@@ -5,8 +5,10 @@ from django.db.models import Sum, Count
 from django.db.models.functions import Concat
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from simple_history.models import HistoricalRecords
 
 from enrollment.utils import to_string, now, today
+from .utils import display_average_of_value
 from decimal import *
 
 User = settings.AUTH_USER_MODEL
@@ -30,12 +32,14 @@ class GradeFragment(models.Model):
 
     course_offering = models.ForeignKey(
         'enrollment.CourseOffering',
-        related_name="fragments",
+        on_delete=models.CASCADE,
+        related_name="GradeFragment",
         null=True,
         blank=False
     )
     section = models.ForeignKey(
         'enrollment.Section',
+        on_delete=models.CASCADE,
         related_name="GradeFragment",
         null=True,
         blank=True)
@@ -184,6 +188,7 @@ class GradeFragment(models.Model):
                                                     verbose_name=_('Default Tie-Breaking Marker'), )
     updated_by = models.ForeignKey(
         User,
+        on_delete=models.CASCADE,
         related_name='GradeFragment',
         null=True,
         blank=True
@@ -269,6 +274,11 @@ class GradeFragment(models.Model):
             return False
         return False
 
+    def get_section_average(self, section):
+        return StudentGrade.get_section_average(
+            section, self
+        )
+
     @property
     def get_entry_is_allowed(self):
         return self.is_entry_allowed()
@@ -284,14 +294,15 @@ class GradeFragment(models.Model):
 
 
 class LetterGrade(models.Model):
-    course_offering = models.ForeignKey('enrollment.CourseOffering', related_name="letter_grades", null=True,
+    course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
+                                        related_name="letter_grades", null=True,
                                         blank=False)
-    section = models.ForeignKey('enrollment.Section', related_name="letter_grades", null=True, blank=True)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.CASCADE, related_name="letter_grades", null=True, blank=True)
     letter_grade = models.CharField(_('Letter Grade'), max_length=5, null=True, blank=False)
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
                                         max_digits=settings.MAX_DIGITS,
                                         decimal_places=settings.MAX_DECIMAL_POINT)
-    updated_by = models.ForeignKey(User, related_name='letter_grade', null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_grade', null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), auto_now=True)
 
     # TODO: Ordering of letter grade
@@ -323,8 +334,10 @@ class StudentGrade(models.Model):
         max_digits=settings.MAX_DIGITS
     )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
-    updated_by = models.ForeignKey(User, null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     updated_on = models.DateField(_('Updated On'), null=True, blank=False)
+
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ('enrollment', 'grade_fragment')
@@ -355,16 +368,17 @@ class StudentGrade(models.Model):
         grades = StudentGrade.objects.filter(
             grade_fragment=grade_fragment,
             enrollment__section=section,
-            grade_fragment__student_total_grading=True,
+            # grade_fragment__student_total_grading=True,
             enrollment__active=True
         ).exclude(grade_quantity=None).values().aggregate(
             sum=Sum('grade_quantity'),
             count=Count('id'),
         )
         if grades['sum']:
-            section_average = round(Decimal(grades['sum'] / grades['count']), 2)
+            section_average = Decimal(grades['sum'] / grades['count'])
             if grade_fragment.entry_in_percentages:
                 section_average = section_average * 100 / grade_fragment.weight
+            section_average = section_average
             return section_average if not grades['sum'] is None else 0
         return 0
 
@@ -375,20 +389,38 @@ class StudentGrade(models.Model):
         :param grade_fragment: 
         :return: section average of all objective grade fragment 
         """
-        grades = StudentGrade.objects.filter(
-            grade_fragment__boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
-            enrollment__section=section,
-            grade_fragment__student_total_grading=True,
-            enrollment__active=True
-        ).exclude(grade_quantity=None).values().aggregate(
-            sum=Sum('grade_quantity'),
-            count=Count('id'),
+        list_of_averages = []
+        total_weight = 0
+
+        fragments = GradeFragment.objects.filter(
+            course_offering=section.course_offering,
+            boundary_type=GradeFragment.GradesBoundaries.OBJECTIVE,
+            student_total_grading=True,
         )
-        if grades['sum']:
-            section_objective_average = round(Decimal(grades['sum'] / grades['count']), 2)
-            if grade_fragment.entry_in_percentages:
-                section_objective_average = section_objective_average * 100 / grade_fragment.weight
-            return section_objective_average if not grades['sum'] is None else 0
+
+        for fragment in fragments:
+            grades = StudentGrade.objects.filter(
+                grade_fragment=fragment,
+                enrollment__section=section,
+                grade_fragment__student_total_grading=True,
+                enrollment__active=True
+            ).exclude(grade_quantity=None).values().aggregate(
+                sum=Sum('grade_quantity'),
+                count=Count('id'),
+            )
+
+            if grades['sum']:
+                total_weight += fragment.weight
+                section_average = Decimal(grades['sum'] / grades['count'])
+                list_of_averages.append(section_average)
+
+        total_average = Decimal(0)
+        for average in list_of_averages:
+            total_average += average
+        if total_average:
+            average = total_average / total_weight
+            average = average * 100
+            return display_average_of_value(average)
         return 0
 
     @staticmethod
@@ -410,9 +442,10 @@ class StudentGrade(models.Model):
             )
 
             if grades['sum']:
-                course_average = round(Decimal(grades['sum'] / grades['count']), 2)
+                course_average = Decimal(grades['sum'] / grades['count'])
                 if grade_fragment.entry_in_percentages:
                     course_average = course_average * 100 / grade_fragment.weight
+                course_average = round(course_average, 2)
                 return course_average if not grades['sum'] is None else 0
             return 0
         return False
@@ -566,3 +599,59 @@ class StudentGrade(models.Model):
                     item['grade_object'].save()
 
         return changes_list, errors
+
+    @property
+    def display_percent_grade(self):
+        if self.grade_quantity and self.grade_fragment.entry_in_percentages:
+            return round((self.grade_quantity * 100) / self.grade_fragment.weight, 2)
+
+        return self.grade_quantity
+
+    @staticmethod
+    def display_section_average(section, grade_fragment):
+        """
+        :param section: 
+        :param grade_fragment: 
+        :return: get section average of a given grade fragment 
+        """
+        # TODO: refactor to use only 1 grades function in all averages functions
+        grades = StudentGrade.objects.filter(
+            grade_fragment=grade_fragment,
+            enrollment__section=section,
+            # grade_fragment__student_total_grading=True,
+            enrollment__active=True
+        ).exclude(grade_quantity=None).values().aggregate(
+            sum=Sum('grade_quantity'),
+            count=Count('id'),
+        )
+        if grades['sum']:
+            section_average = Decimal(grades['sum'] / grades['count'])
+            section_average_percent = section_average * 100 / grade_fragment.weight
+            display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
+            return display_average if not grades['sum'] is None else ''
+        return ''
+
+    @staticmethod
+    def display_course_average(section, grade_fragment):
+        """        
+                :param section: 
+                :param grade_fragment: 
+                :return: course average for all sections of this grade fragment 
+                """
+        if section.course_offering.coordinated:
+            grades = StudentGrade.objects.filter(
+                grade_fragment=grade_fragment,
+                grade_fragment__course_offering=section.course_offering,
+                grade_fragment__student_total_grading=True,
+                enrollment__active=True
+            ).exclude(grade_quantity=None).values().aggregate(
+                sum=Sum('grade_quantity'),
+                count=Count('id'),
+            )
+
+            if grades['sum']:
+                section_average = Decimal(grades['sum'] / grades['count'])
+                section_average_percent = section_average * 100 / grade_fragment.weight
+                display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
+                return display_average if not grades['sum'] is None else ''
+        return ''

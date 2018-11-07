@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/1.10/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
-from django.utils.translation import ugettext_lazy as _
-from django.urls import reverse_lazy
 import os
+from django.urls import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-
 
     'enrollment',
     'attendance',
@@ -87,7 +86,6 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'darajati.wsgi.application'
 
 # Database
@@ -102,7 +100,7 @@ WSGI_APPLICATION = 'darajati.wsgi.application'
 
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.RemoteUserBackend',
+    'enrollment.auth.backends.CaseInsensitiveRemoteUser',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -123,6 +121,26 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Logging
+# https://docs.djangoproject.com/en/1.9/topics/logging/
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -160,18 +178,18 @@ LOGIN_REDIRECT_URL = reverse_lazy('enrollment:home')
 
 # Celery Settings
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = 'redis://redis.test.kfupm.edu.sa/'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'US/Eastern'
 
-
 # Decimal max digits
 MAX_DIGITS = 5  # 10000.00
 MAX_DECIMAL_POINT = 2  # .00
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1200  # The Limit exception i am getting is around 1012
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is around 1012
 try:
     from .local_settings import *
 except ImportError:

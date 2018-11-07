@@ -5,15 +5,24 @@ apache_server_names:
   - "{{ inventory_hostname }}"
 # required for proper SSL termination on load-balancer while using CAS
 apache_public_url: https://darajati.kfupm.edu.sa
+apache_load_balancer_ips: ["10.142.24.1", "10.142.26.1"]
+apache_proxy:
+  - path: /
+    protocol: uwsgi
+    host: localhost
+    port: 8001
+    remote_path: /
 
 database_engine: django.db.backends.postgresql
 database_name: darajati
 database_user: darajati
 # database_password: set from Vault in playbook
-database_host: postgres-1.kfupm.edu.sa
+database_host: postgres-darajati-1.kfupm.edu.sa
 database_port: 5432
 
 django_debug: no
 apache_debug: no
+
+uwsgi_http_port: 8001
 
 email_user: darajati@kfupm.edu.sa

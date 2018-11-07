@@ -28,7 +28,7 @@ class Room(models.Model):
     location = models.CharField(_('Room location'), max_length=100, null=True, blank=False)
     capacity = models.PositiveIntegerField(_('Room Capacity'), null=False, blank=False, default=0)
     # department = models.ForeignKey('enrollment.Department', related_name='rooms', null=True, blank=False)
-    updated_by = models.ForeignKey(User, null=True, blank=True)
+    updated_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
     class Meta:
@@ -184,7 +184,7 @@ class Marker(models.Model):
                     MaxValueValidator(Decimal("100.00")))
     )
     is_a_monitor = models.BooleanField(_('Is a Monitor?'), default=False)
-    updated_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Updated By'))
+    updated_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Updated By'), on_delete=models.SET_NULL)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
     def __str__(self):
@@ -239,7 +239,7 @@ class StudentPlacement(models.Model):
     exam_room = models.ForeignKey('ExamRoom', on_delete=models.CASCADE, related_name='students', null=True,
                                   verbose_name=_('Exam Room'), blank=False)
     is_present = models.BooleanField(_('Is Present?'), default=True)
-    shuffled_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Shuffled By'))
+    shuffled_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Shuffled By'), on_delete=models.SET_NULL)
     shuffled_on = models.DateTimeField(_('Shuffled On'), auto_now=True)
 
     class Meta:
@@ -286,7 +286,7 @@ class StudentMark(models.Model):
         validators=(MinValueValidator(Decimal("000.00")),
                     MaxValueValidator(Decimal("100.00")))
     )
-    updated_by = models.ForeignKey(User, null=True, blank=True)
+    updated_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
     class Meta:

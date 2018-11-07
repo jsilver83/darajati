@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
+        </div>
+        <br>
+        <div class="cntnt-sec">
+            {% if grades %}
+                <table class="table display" id="mytable" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th>{% trans 'Student Name' %}</th>
+                        <th>{% trans 'Student ID' %}</th>
+                        {% for fragment in fragments %}
+                            <th>{{ fragment.description|lower }} / {{ fragment.weight }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>{% trans 'Student Name' %}</th>
+                        <th>{% trans 'Student ID' %}</th>
+                        {% for fragment in fragments %}
+                            <th>{{ fragment.description|lower }} / {{ fragment.weight }}</th>
+                        {% endfor %}
+                    </tr>
+                    </tfoot>
+                    <tbody>
+                    {% for grade in grades %}
+                        {% ifchanged grade.enrollment.student.university_id %}
+                            <tr>
+                            <td>{{ grade.enrollment.student.english_name }}</td>
+                            <td>{{ grade.enrollment.student.university_id }}</td>
+                            <td>{{ grade.display_percent_grade }}</td>
+                        {% else %}
+                            <td>{{ grade.display_percent_grade }}</td>
+
+                        {% endifchanged %}
+                    {% endfor %}
+
+                    </tbody>
+                    <thead>
+                    <tr>
+                        <th>{% trans 'Averages' %}</th>
+                        <th></th>
+                        {% for average in averages %}
+                            <th>{{ average }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                </table>
+            {% else %}
+                {% trans 'There are no students' %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var table = $('#mytable').DataTable({
+                "pageLength": 50,
+                "scrollX": true
+            });
+        });
+    </script>
+{% endblock %}

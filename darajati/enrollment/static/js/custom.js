@@ -1,6 +1,3 @@
-$(window).load(function () {
-    $('.preloader').fadeOut(500);
-});
 $(document).ready(function(){
 	var window_height = '',header_height = '',footer_height = '', window_width = '';
 

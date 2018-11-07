@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.auth.models import User as User_model
-from .types import RoundTypes
+from .data_types import RoundTypes
 from .utils import to_string, now, today, attendance_boundary
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from simple_history.models import HistoricalRecords
@@ -29,7 +29,7 @@ class Person(models.Model):
 
 
 class Student(Person):
-    user = models.OneToOneField(User, related_name='student', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name, self.university_id)
@@ -58,7 +58,7 @@ class Student(Person):
 
 
 class Instructor(Person):
-    user = models.OneToOneField(User, related_name='instructor', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True)
 
     def __str__(self):
         return to_string(self.english_name)
@@ -153,7 +153,7 @@ class Department(models.Model):
 class Course(models.Model):
     name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
-    department = models.ForeignKey(Department, related_name='courses', null=True, blank=False)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
@@ -388,7 +388,7 @@ class Enrollment(models.Model):
     comment = models.CharField(_('Comment'), max_length=200, blank=True)
     letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=False, default='UD')
     register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
-    updated_by = models.ForeignKey(User, related_name='enrollment_creator', null=True, blank=False)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollment_creator', null=True, blank=False)
     updated_on = models.DateTimeField(_('Updated on'), auto_now=True)
     history = HistoricalRecords()
 
@@ -448,7 +448,7 @@ class Enrollment(models.Model):
         enrollments = []
         index = 1
         day, period_date = ScheduledPeriod.get_nearest_day_and_date(section_id, date, instructor)
-        periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor)
+        periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor).order_by('start_time')
         enrollment_list = Enrollment.get_students_of_section(section_id)
         count_index = 0
         for enrollment in enrollment_list:
@@ -515,12 +515,13 @@ class Enrollment(models.Model):
             periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
                 'title'
             )
-            for period in periods:
-                title = period.title
-                if title in formula:
-                    formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
-                    formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
-            result = eval(formula)
+            if periods:
+                for period in periods:
+                    title = period.title
+                    if title in formula:
+                        formula = formula.replace(title + "_A", to_string(self.get_enrollment_period_total_absence(title)))
+                        formula = formula.replace(title + "_L", to_string(self.get_enrollment_period_total_late(title)))
+                result = eval(formula)
         return result
 
     def get_enrollment_period_total_absence(self, period_title):

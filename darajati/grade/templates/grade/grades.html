@@ -3,7 +3,7 @@
 {% block content %}
     <div class="content-panel">
         <div class="cntnt-sec">
-            <div class="back-btn"> <a href="{{request.META.HTTP_REFERER}}">{% trans 'Go Back' %}</a></div>
+            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
         </div>
         <br>
         <div class="card card-outline-secondary mb-3">
@@ -38,11 +38,10 @@
                     <div class="title-sec row">
                         <div class="col-md-9">
                             <h3>{% trans 'Available Grades' %}</h3>
-                            {% if section_average %}
-                                <span style="margin-right: 5%">{% trans 'Section Average:' %} <span class="section_average">{{ section_average }}</span></span>
-                            {% endif %}
+                            <span style="margin-right: 5%">{% trans 'Section Average:' %} <span
+                                    class="section_average">{{ section_average }}</span></span>
                             {% if section_objective_average %}
-                                <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}</span>
+                                <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}%</span>
                             {% endif %}
                             {% if course_average %}
                                 <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
@@ -95,11 +94,10 @@
                         </table>
                     </div>
                 </form>
-                {% if section_average %}
-                    <span style="margin-right: 5%">{% trans 'Section Average:' %} <span class="section_average">{{ section_average }}</span></span>
-                {% endif %}
+                <span style="margin-right: 5%">{% trans 'Section Average:' %} <span
+                        class="section_average">{{ section_average }}</span></span>
                 {% if section_objective_average %}
-                    <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}</span>
+                    <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}%</span>
                 {% endif %}
                 {% if course_average %}
                     <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
@@ -117,13 +115,27 @@
         });
 
         function calculate_average() {
-            var total = 0;
+            var total = 0.0;
+            var count = 0;
+            var average = 0.0;
+            var average_in_percent = 0.0;
             $('.grade_quantity').each(function (index) {
-                var float_value = parseFloat($(this).val()) | 0;
-                total += float_value;
+                if ($(this).val() != '') {
+                    var value = parseFloat($(this).val());
+                    total += value;
+                    count += 1;
+                }
             });
-            total = total / $('.grade_quantity').length;
-            $('.section_average').html(total.toFixed(2));
+            {% if not grade_fragment.entry_in_percentages %}
+                average = total / count;
+                average_in_percent = average / {{ grade_fragment.weight }} * 100;
+            {% else %}
+                average_in_percent = total / count;
+                average = average_in_percent / 100 * {{ grade_fragment.weight }};
+            {% endif %}
+            $('.section_average').html(
+                "" + average.toFixed(4) + "  (" + average_in_percent.toFixed(4) + "%)"
+            );
         }
     </script>
 {% endblock %}

@@ -1,15 +1,15 @@
-from django.views.generic import FormView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 
 from .forms import CourseOfferingForm, GradesImportForm
-from .utils import initial_roster_creation, initial_faculty_teaching_creation
+from .utils import Synchronization
 
 from enrollment.models import CourseOffering
 from grade.models import GradeFragment, StudentGrade
 
 
-class PopulationRosterView(LoginRequiredMixin, FormView):
+class PopulationRosterView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = CourseOfferingForm
     template_name = 'banner_integration/roster_populate.html'
     success_url = reverse_lazy('banner_integration:home')
@@ -21,6 +21,9 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
     instructors = None
     periods = None
     sections = None
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def get_form_kwargs(self):
         """
@@ -35,37 +38,26 @@ class PopulationRosterView(LoginRequiredMixin, FormView):
         This will consist of the creation of the sections and assigning students to these section
           From there Faculty will be assigned to that section.
         """
-        self.section_report, self.student_report, self.enrollment_report, self.sections = initial_roster_creation(
-            form.cleaned_data['course_offering'],
-            self.request.user,
-            form.cleaned_data['commit_changes'])
-
-        self.instructors, self.periods = initial_faculty_teaching_creation(
-            form.cleaned_data['course_offering'],
-            self.sections,
-            form.cleaned_data['commit_changes'])
+        sync = Synchronization(form.cleaned_data['course_offering'], self.request.user, form.cleaned_data['commit_changes'])
+        sync.roaster_initiation()
+        sync.faculty_initiation()
+        sync.faculties_periods_report()
 
         context = self.get_context_data(**kwargs)
-        context['sections_report'] = self.section_report
-        context['enrollments_report'] = self.enrollment_report
-        context['periods'] = self.periods
-
-        context['detail_report'] = False
-        context['report'] = False
-
-        if context['sections_report'] or context['enrollments_report'] or context['periods']:
-            context['report'] = True
-
-        if form.cleaned_data.get('detail_report'):
-            context['detail_report'] = True
+        context['sections_report'] = sync.sections_report()
+        context['enrollments_report'] = sync.enrollments_report()
+        context['periods'] = sync.faculties_periods_report()
 
         return self.render_to_response(context)
 
 
-class ImportGradesView(LoginRequiredMixin, FormView):
+class ImportGradesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = GradesImportForm
     template_name = 'banner_integration/import_grades.html'
     success_url = reverse_lazy('banner_integration:home')
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def get_form_kwargs(self):
         """

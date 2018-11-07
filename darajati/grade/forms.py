@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from .models import StudentGrade, GradeFragment
-
+from .utils import display_average_of_value
 from enrollment.utils import today
 from decimal import Decimal
 
@@ -22,7 +22,7 @@ class GradesForm(forms.ModelForm):
                 decimal_places=settings.MAX_DECIMAL_POINT,
                 max_digits=settings.MAX_DIGITS,
                 required=False,
-                widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
+                widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field actual_grade'}))
 
             self.fields['grade_quantity'] = forms.DecimalField(
                 decimal_places=settings.MAX_DECIMAL_POINT,
@@ -72,7 +72,7 @@ class GradesForm(forms.ModelForm):
                     decimal_places=settings.MAX_DECIMAL_POINT,
                     max_digits=settings.MAX_DIGITS,
                     required=False,
-                    widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field'}))
+                    widget=forms.NumberInput(attrs={'disabled': 'disabled', 'class': 'thm-field actual_grade'}))
         self.fields['remarks'].required = False
 
     def save(self, commit=True):
@@ -106,15 +106,23 @@ class BaseGradesFormSet(BaseModelFormSet):
 
     def clean(self):
         # if by somehow the grade was passed greater then what it should be it will accept it. Fix later
+        count = 0
         for form in self.forms:
             if (not self.fragment.allow_change and form.cleaned_data['updated_on'] is not None) and \
                     ('grade_quantity' in form.changed_data or 'remarks' in form.changed_data):
                 raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
 
-            if form.cleaned_data['grade_quantity']:
+            # You might die if you remove this this thi ss THISSS
+            if form.cleaned_data['grade_quantity'] is not None:
                 self.average += form.cleaned_data['grade_quantity']
+                count += 1
 
-        self.average = round(self.average / len(self.forms), 2)
+        if count:
+            self.average = self.average / count
+            self.average = display_average_of_value(self.average)
+        if not self.fragment.entry_in_percentages:
+            self.average = self.average / self.fragment.weight * 100
+
 
         """
         SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
@@ -144,7 +152,7 @@ class BaseGradesFormSet(BaseModelFormSet):
                 more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
-                        _('Section average {} should be between {} and {}'.format(
+                        _('Section average {}% should be between {}% and {}%'.format(
                             self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(
@@ -155,13 +163,13 @@ class BaseGradesFormSet(BaseModelFormSet):
         """
         if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
 
-            if self.fragment.boundary_range and self.fragment.boundary_fixed_average:
+            if self.fragment.boundary_fixed_average:
 
-                less_objective_average = self.average_boundary - self.fragment.boundary_range
-                more_objective_average = self.average_boundary + self.fragment.boundary_range
+                less_objective_average = self.average_boundary - self.fragment.boundary_range_lower
+                more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
-                        _('Section average {} should be between {} and {}'.format(
+                        _('Section average }% should be between {}% and {}%'.format(
                             self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(

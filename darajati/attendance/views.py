@@ -33,10 +33,12 @@ class AttendanceBaseView(InstructorBaseView):
 
     def test_func(self, **kwargs):
         rule = super(AttendanceBaseView, self).test_func(**kwargs)
+        is_coordinator = self.section.is_coordinator_section(self.request.user.instructor)
         if rule:
             offset_date, day = get_offset_day(today(), -self.section.course_offering.attendance_entry_window)
             if self.date <= today():
-                if self.section.course_offering.semester.check_is_accessible_date(self.date, offset_date):
+                if self.section.course_offering.semester.check_is_accessible_date(self.date, offset_date) or \
+                        is_coordinator:
                     return True
                 else:
                     messages.error(self.request,
@@ -64,7 +66,7 @@ class AttendanceView(AttendanceBaseView, FormSetView):
             saved_form = form.save(commit=False)
             if saved_form:
                 saved_form.save()
-        messages.success(self.request, _('Attendance were saved successfully'))
+        messages.success(self.request, _('Your attendances were saved'))
         return super(AttendanceView, self).formset_valid(formset)
 
     # FIXME: I know i look nice-ish but i wanna be more nicer when you have time fix me please
@@ -104,6 +106,7 @@ class AttendanceView(AttendanceBaseView, FormSetView):
                       'year': self.year,
                       'month': self.month,
                       'day': self.day}
+            return reverse_lazy('attendance:section_day_attendance', kwargs=kwargs)
         return reverse_lazy('attendance:section_attendance', kwargs=kwargs)
 
 
