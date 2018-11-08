@@ -24,8 +24,15 @@ class EnrollmentAdmin(SimpleHistoryAdmin):
     history_list_display = ['letter_grade', 'section', 'active', 'comment', 'updated_by']
     list_filter = ('active', 'letter_grade', 'section__code', 'section__course_offering__course__code',
                    'section__course_offering__semester__code')
-    list_display = ('id', 'student', 'semester_code', 'course_code', 'section_code', 'register_date', 'letter_grade', 'active')
+    list_display = ('id', 'student', 'semester_code', 'course_code', 'section_code', 'register_date',
+                    'letter_grade', 'active')
     search_fields = ['student__university_id']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'updated_by':
+            field.queryset = field.queryset.filter(Q(instructor__isnull=False) or Q(is_staff=True))
+        return field
 
     def semester_code(self, obj):
         return obj.section.course_offering.semester.code
@@ -44,19 +51,20 @@ class CourseOfferingAdmin(admin.ModelAdmin):
 
 
 class CoordinatorAdmin(admin.ModelAdmin):
-    list_display = ('instructor_id', 'instructor_username', 'semester', 'course')
+    fields = ('course_offering', 'instructor')
+    list_display = ('instructor_id', 'instructor', 'semester', 'course')
 
     def instructor_id(self, obj):
         return obj.instructor.user.id
 
-    def instructor_username(self, obj):
+    def instructor(self, obj):
         return obj.instructor.user.username
 
     def semester(self, obj):
-        return obj.course_offering.semester
+        return obj.course_offering.semester.code
 
     def course(self, obj):
-        return obj.course_offering.course
+        return obj.course_offering.course.code
 
 
 admin.site.register(Semester, SemesterAdmin)
