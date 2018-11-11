@@ -26,6 +26,7 @@
 								<th>{% trans 'No.' %}</th>
 								<th>{% trans 'Start Date' %}</th>
 								<th>{% trans 'End Date' %}</th>
+								<th>{% trans 'Maximum Placeable Student' %}</th>
 								<th>{% trans 'Delete?' %}</th>
 							</tr>
 							</thead>
@@ -43,6 +44,11 @@
 									</td>
 									<td>{{ form.start_date }}{{ form.start_date.errors }}</td>
 									<td>{{ form.end_date }}{{ form.end_date.errors }}</td>
+									<td>
+										{% if form.instance.fragment %}
+											{{ form.instance.get_max_number_of_students_placements_possible }}
+										{% endif %}
+									</td>
 									<td>{{ form.DELETE }}</td>
 								</tr>
 							{% endfor %}

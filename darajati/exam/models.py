@@ -38,6 +38,7 @@ class Room(models.Model):
         return '%s - c(%d)' % (self.location, self.capacity)
 
 
+# TODO: Consider changing start/end dates to date and start/end times
 class ExamShift(models.Model):
     fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.CASCADE, related_name='exams_shifts',
                                  null=True, verbose_name=_('Fragment'), blank=False)
@@ -53,24 +54,28 @@ class ExamShift(models.Model):
                                  self.end_date.astimezone().time())
 
     @staticmethod
+    def get_exam_day(fragment):
+        if fragment:
+            return fragment.exam_date.strftime('%A').lower()
+
+    @staticmethod
     def get_shifts(fragment):
         return ExamShift.objects.filter(fragment=fragment)
 
     @staticmethod
     def get_exam_periods_at_exam_date(fragment):
-        exam_day = fragment.exam_date.strftime('%A').lower()
+        exam_day = ExamShift.get_exam_day(fragment)
 
         return ScheduledPeriod.objects.filter(section__course_offering=fragment.course_offering,
                                               day__iexact=exam_day).values('start_time', 'end_time').distinct()
 
-    @staticmethod
-    def get_exam_rooms_for_exam_shift(shift):
-        exam_day = shift.fragment.exam_date.strftime('%A').lower()
+    def get_exam_rooms_for_exam_shift(self):
+        exam_day = ExamShift.get_exam_day(self.fragment)
         # TODO: make the location in ScheduledPeriod as an instance of Location(model) in enrollments app
-        return ScheduledPeriod.objects.filter(section__course_offering=shift.fragment.course_offering,
+        return ScheduledPeriod.objects.filter(section__course_offering=self.fragment.course_offering,
                                               day__iexact=exam_day,
-                                              start_time=shift.start_date.astimezone().time(),
-                                              end_time=shift.end_date.astimezone().time()).values('location').distinct()
+                                              start_time=self.start_date.astimezone().time(),
+                                              end_time=self.end_date.astimezone().time()).values('location').distinct()
 
     @staticmethod
     def create_exam_rooms_for_shifts(fragment):
@@ -78,7 +83,7 @@ class ExamShift(models.Model):
         shifts = ExamShift.get_shifts(fragment)
 
         for shift in shifts:
-            rooms = ExamShift.get_exam_rooms_for_exam_shift(shift)
+            rooms = shift.get_exam_rooms_for_exam_shift()
             for room in rooms:
                 location = room.get('location')
                 if location:
@@ -107,6 +112,36 @@ class ExamShift(models.Model):
                                                minute=period.get('end_time', timezone.now().time()).minute)
             shift.save()
 
+    def check_issues_in_timing(self, enrollment):
+        # Check all the student periods (for the same course) in the exam date and make sure ...
+        # the current exam shift falls in any of them
+        exam_day = self.fragment.exam_date.strftime('%A').lower()
+
+        student_periods_at_exam_day = enrollment.section.scheduled_periods.filter(
+            section__course_offering=self.fragment.course_offering,
+            day__iexact=exam_day
+        ).values('start_time', 'end_time').distinct()
+
+        no_issues_in_timing = False
+        for period in student_periods_at_exam_day:
+            if self.start_date.astimezone().time() >= period.get('start_time') and \
+                    self.end_date.astimezone().time() >= period.get('end_time'):
+                no_issues_in_timing = True
+                break
+
+        return no_issues_in_timing
+
+    @property
+    def get_max_number_of_students_placements_possible(self):
+        if self.fragment:
+            enrollments = Enrollment.objects.filter(section__course_offering=self.fragment.course_offering,
+                                                    active=True)
+            count = 0
+            for enrollment in enrollments:
+                if self.check_issues_in_timing(enrollment=enrollment):
+                    count += 1
+            return count
+
 
 class ExamRoom(models.Model):
     exam_shift = models.ForeignKey('ExamShift', on_delete=models.CASCADE, related_name='exams', null=True,
@@ -133,36 +168,23 @@ class ExamRoom(models.Model):
         return self.markers.all()
 
     def can_place_enrollment(self, enrollment):
-        # Check all the student periods (for the same course) in the exam date and make sure ...
-        # the current exam shift falls in any of them
-        exam_day = self.exam_shift.fragment.exam_date.strftime('%A').lower()
+        if self.remaining_seats > 0:
+            if self.exam_shift.check_issues_in_timing(enrollment):
 
-        student_periods_at_exam_day = enrollment.section.scheduled_periods.filter(
-            section__course_offering=self.exam_shift.fragment.course_offering,
-            day__iexact=exam_day
-        ).values('start_time', 'end_time').distinct()
+                number_of_markers = self.exam_shift.fragment.number_of_markers
+                hospitable = True
 
-        no_issue_in_timing = False
-        for period in student_periods_at_exam_day:
-            if self.exam_shift.start_date.astimezone().time() >= period.get('start_time') and \
-                    self.exam_shift.end_date.astimezone().time() >= period.get('end_time'):
-                no_issue_in_timing = True
-                break
-
-        if no_issue_in_timing:
-            number_of_markers = self.exam_shift.fragment.number_of_markers
-            hospitable = True
-
-            for marker in self.get_markers():
-                if marker.order < number_of_markers:  # tiebreakers don't follow this rule
-                    hospitable = hospitable and marker.can_mark_enrollment(enrollment)
-            return hospitable
-        else:
-            return False
+                for marker in self.get_markers():
+                    if marker.order < number_of_markers:  # tiebreakers don't follow this rule
+                        hospitable = hospitable and marker.can_mark_enrollment(enrollment)
+                return hospitable
+            else:
+                return False
 
 
 class Marker(models.Model):
-    instructor = models.ForeignKey('enrollment.Instructor', on_delete=models.SET_NULL, related_name='marking', null=True,
+    instructor = models.ForeignKey('enrollment.Instructor', on_delete=models.SET_NULL, related_name='marking',
+                                   null=True,
                                    verbose_name=_('Instructor'), blank=False)
     exam_room = models.ForeignKey('ExamRoom', on_delete=models.CASCADE, related_name='markers', null=True,
                                   verbose_name=_('Instructor'), blank=False)
@@ -239,7 +261,8 @@ class StudentPlacement(models.Model):
     exam_room = models.ForeignKey('ExamRoom', on_delete=models.CASCADE, related_name='students', null=True,
                                   verbose_name=_('Exam Room'), blank=False)
     is_present = models.BooleanField(_('Is Present?'), default=True)
-    shuffled_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Shuffled By'), on_delete=models.SET_NULL)
+    shuffled_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Shuffled By'),
+                                    on_delete=models.SET_NULL)
     shuffled_on = models.DateTimeField(_('Shuffled On'), auto_now=True)
 
     class Meta:
@@ -305,20 +328,20 @@ class StudentMark(models.Model):
     def get_unaccepted_marks(fragment):
         # NOTE: THIS IS THE MOST COMPLICATED QUERY I'VE EVER WRITTEN IN DJANGO ORM SO FAR
         # because of its complexity, I assumed it will be used in the case of 2 markers and a tiebreaker
-        subquery_first_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=1)\
+        subquery_first_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=1) \
             .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
-        subquery_second_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=2)\
+        subquery_second_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=2) \
             .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
-        subquery_third_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=3)\
+        subquery_third_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=3) \
             .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
 
-        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__fragment=fragment)\
+        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__fragment=fragment) \
             .annotate(
             first_mark=Subquery(subquery_first_marker.values('weighted_mark')[:1]),
             second_mark=Subquery(subquery_second_marker.values('weighted_mark')[:1]),
-            third_mark=Subquery(subquery_third_marker.values('mark')[:1]), )\
+            third_mark=Subquery(subquery_third_marker.values('mark')[:1]), ) \
             .annotate(
-            marks_difference=Func(F('first_mark') - F('second_mark'), function='ABS', output_field=DecimalField()))\
+            marks_difference=Func(F('first_mark') - F('second_mark'), function='ABS', output_field=DecimalField())) \
             .filter(marks_difference__gt=fragment.markings_difference_tolerance)
 
         return StudentMark.objects.filter(student_placement__in=student_placement_queryset)

@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Sum, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
@@ -185,14 +186,14 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
         for marker in allowed_markers:
             assignments = self.get_queryset().filter(instructor=marker, order__in=[1, 2])
             assignments_count = assignments.count()  # if assignments else 0
-            if assignments_count < 1 or assignments_count > 1:
-                first_assignments = assignments.filter(order=1)
-                second_assignments = assignments.filter(order=2)
-                stats.append(({'marker': str(marker),
-                               'assignments': assignments_count,
-                               'first': first_assignments.count(),
-                               'second': second_assignments.count()}))
-        context['stats'] = sorted(stats, key=lambda k: k['assignments'])
+            # if assignments_count < 1 or assignments_count > 1:
+            first_assignments = assignments.filter(order=1)
+            second_assignments = assignments.filter(order=2)
+            stats.append(({'marker': str(marker),
+                           'assignments': assignments_count,
+                           'first': first_assignments.count(),
+                           'second': second_assignments.count()}))
+        context['stats'] = sorted(stats, key=lambda k: k['assignments'], reverse=True)
         return context
 
     def get_extra_form_kwargs(self):
@@ -203,61 +204,50 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
     def formset_valid(self, formset):
         self.object_list = formset.save()
 
-        # TODO: rework the shuffle algorithm to make it more fair
+        # we reworked the shuffle algorithm to make it more fair in terms of fairly distributing students in exam rooms
         if 'shuffle' in self.request.POST:
             # delete existing placements before performing the shuffle
             StudentPlacement.objects.filter(exam_room__exam_shift__fragment=self.fragment).delete()
-
             enrollments = Enrollment.objects.filter(section__course_offering=self.fragment.course_offering, active=True)
-
             exam_rooms = ExamRoom.objects.filter(exam_shift__fragment=self.fragment)
 
             if exam_rooms:
-                exam_rooms_iterator = exam_rooms.iterator()
-
                 cannot_be_placed = []
                 placement_count = 0
 
-                exam_room = exam_rooms_iterator.__next__()
+                most_available_seats_in_any_room = 0
+                for room in exam_rooms:
+                    if room.remaining_seats > most_available_seats_in_any_room:
+                        most_available_seats_in_any_room = room.remaining_seats
 
                 for enrollment in enrollments:
-                    student_placement = None
 
-                    counter = len(exam_rooms)
+                    available_rooms = []
 
-                    while counter:
-                        counter -= 1
-
-                        if exam_room.remaining_seats > 0 and exam_room.can_place_enrollment(enrollment):
-                            print(1)
-                            student_placement = StudentPlacement.objects.create(
-                                enrollment=enrollment,
-                                exam_room=exam_room,
-                                is_present=True,
-                                shuffled_by=self.request.user
-                            )
-
-                            placement_count += 1
-
-                            for marker in exam_room.get_markers():
-                                student_mark, created = StudentMark.objects.get_or_create(
-                                    student_placement=student_placement,
-                                    marker=marker)
-
-                            try:
-                                exam_room = exam_rooms_iterator.__next__()
-                            except:
-                                exam_rooms_iterator = exam_rooms.iterator()
-                                exam_room = exam_rooms_iterator.__next__()
+                    for room in exam_rooms:
+                        remaining_seats = room.remaining_seats
+                        if room.can_place_enrollment(
+                                enrollment) and remaining_seats >= most_available_seats_in_any_room:
+                            available_rooms.append({'exam_room': room, 'remaining_seats': remaining_seats})
+                            most_available_seats_in_any_room -= 1
                             break
 
-                        try:
-                            exam_room = exam_rooms_iterator.__next__()
-                        except:
-                            exam_rooms_iterator = exam_rooms.iterator()
-                            exam_room = exam_rooms_iterator.__next__()
+                    if available_rooms:
+                        available_rooms = sorted(available_rooms, key=lambda k: k['remaining_seats'], reverse=True)
+                        student_placement = StudentPlacement.objects.create(
+                            enrollment=enrollment,
+                            exam_room=available_rooms[0].get('exam_room'),
+                            is_present=True,
+                            shuffled_by=self.request.user
+                        )
 
-                    if student_placement is None:
+                        placement_count += 1
+
+                        for marker in available_rooms[0].get('exam_room').get_markers():
+                            student_mark, created = StudentMark.objects.get_or_create(
+                                student_placement=student_placement,
+                                marker=marker)
+                    else:
                         cannot_be_placed.append(enrollment.student.university_id)
 
                 if cannot_be_placed:
@@ -272,9 +262,81 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
                     messages.success(
                         self.request,
                         _('%s out of %s were shuffled successfully. Instructors can enter marks now') % (
-                        placement_count,
-                        enrollments.count())
+                            placement_count,
+                            enrollments.count())
                     )
+
+        elif 'export' in self.request.POST:
+            import csv
+            import io
+
+            # Using memory buffer
+            csv_file = io.StringIO()
+
+            writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
+
+            # Write markers CSV header
+            writer.writerow(['Room', 'Time', 'Teacher', 'Order', 'Is A Monitor?'])
+
+            # Maximum 2000 records will be fetched anyways to make this code non-abusive
+            markers = self.get_queryset()[:2000]
+
+            if markers:
+                current_exam_room = None
+
+                for marker in markers:
+                    if current_exam_room != marker.exam_room:
+                        writer.writerow([
+                            marker.exam_room.room.location,
+                            marker.exam_room.exam_shift,
+                            marker.instructor,
+                            marker.order,
+                            marker.is_a_monitor
+                        ])
+                    else:
+                        writer.writerow([
+                            '',
+                            '',
+                            marker.instructor,
+                            marker.order,
+                            marker.is_a_monitor
+                        ])
+                    current_exam_room = marker.exam_room
+
+                writer.writerow([])
+                writer.writerow([])
+
+            # Write students' placement CSV header
+            writer.writerow(['Student ID', 'Room', 'Time'])
+
+            student_placements = StudentPlacement.objects.filter(
+                exam_room__exam_shift__fragment=self.fragment
+            ).order_by('exam_room', 'enrollment')[:2000]
+
+            if student_placements:
+                current_exam_room = None
+                for student_placement in student_placements:
+                    if current_exam_room != student_placement.exam_room:
+                        writer.writerow([
+                            student_placement.exam_room.room.location,
+                            student_placement.exam_room.exam_shift,
+                            student_placement.enrollment.student.university_id
+                        ])
+                    else:
+                        writer.writerow([
+                            '',
+                            '',
+                            student_placement.enrollment.student.university_id
+                        ])
+                    current_exam_room = student_placement.exam_room
+
+            if student_placements or markers:
+                response = HttpResponse()
+                response.write(csv_file.getvalue())
+                response['Content-Disposition'] = 'attachment; filename={0}'.format('the_shuffled_students.csv')
+                return response
+            else:
+                messages.error(self.request, _('No records to export to CSV'))
 
         else:
             messages.success(self.request, _('Markers were saved successfully'))
