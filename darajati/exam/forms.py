@@ -107,17 +107,10 @@ class MarkerForm(forms.ModelForm):
         self.fields['generosity_factor'].widget.attrs.update({'step': '0.5'})
         self.fields['instructor'].widget.attrs.update({'style': 'width: 200px'})
 
-        if self.fragment.allow_markers_from_other_courses:
-            department = self.fragment.course_offering.course.department
-            self.fields['instructor'].queryset = \
-                Instructor.objects.filter(
-                    assigned_periods__section__course_offering__course__department=department
-                ).distinct()
+        if self.instance.is_the_tiebreaker():
+            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.fragment, True)
         else:
-            periods = ScheduledPeriod.objects.filter(section__course_offering=self.fragment.course_offering)
-            self.fields['instructor'].queryset = Instructor.objects.filter(
-                pk__in=periods.values('instructor_assigned').distinct()
-            )
+            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.fragment, False)
 
 
 class MarkersFormSet(BaseModelFormSet):
