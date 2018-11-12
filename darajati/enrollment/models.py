@@ -122,7 +122,7 @@ class Semester(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.description, self.code)
+        return to_string(self.code)
 
     def check_is_accessible_date(self, date, offset_date):
         """
@@ -158,7 +158,7 @@ class Course(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.name, self.code)
+        return to_string(self.code)
 
 
 class CourseOffering(models.Model):
@@ -399,7 +399,7 @@ class Enrollment(models.Model):
         ordering = ['student__university_id']
 
     def __str__(self):
-        return to_string(self.student)
+        return to_string(self.student, self.section)
 
     @property
     def _history_user(self):

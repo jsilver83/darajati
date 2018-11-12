@@ -239,6 +239,7 @@ class AttendanceInstance(models.Model):
         return AttendanceInstance.objects.filter(period=period, date=date).exists()
 
 
+# TODO: Implement History
 class Attendance(models.Model):
     class Types:
         ABSENT = 'abs'
