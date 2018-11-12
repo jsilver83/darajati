@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from darajati.mixin import ModelAdminMixin
 from .models import *
 
 from simple_history.admin import SimpleHistoryAdmin
@@ -14,9 +16,9 @@ class LetterGradeAdmin(admin.ModelAdmin):
     list_display = ('course_offering', 'section', 'letter_grade', 'cut_off_point', 'updated_on', 'updated_by')
 
 
-class StudentGradeAdmin(SimpleHistoryAdmin):
+class StudentGradeAdmin(ModelAdminMixin, SimpleHistoryAdmin):
     list_display = ('enrollment', 'grade_fragment', 'grade_quantity', 'remarks', 'updated_on', 'updated_by')
-    list_filter = ('grade_fragment',)
+    list_filter = ('grade_fragment__course_offering', 'grade_fragment',)
 
 
 admin.site.register(GradeFragment, GradeFragmentAdmin)
