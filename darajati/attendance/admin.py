@@ -18,6 +18,7 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
     search_fields = ('period', 'date', 'comment')
 
 
+# TODO: Implement History
 class AttendanceAdmin(admin.ModelAdmin):
     readonly_fields = ('updated_by',)
     list_filter = ('status',)
