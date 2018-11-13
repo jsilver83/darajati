@@ -9,11 +9,13 @@ class ScheduledPeriodAdmin(admin.ModelAdmin):
         'section__course_offering__course',
         'day',
         'title',
+        'instructor_assigned',
     )
     list_display = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
                     'end_time', 'location')
-    search_fields = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
-                     'end_time', 'location')
+    search_fields = ('section__code', 'instructor_assigned__user__username',
+                     'instructor_assigned__english_name', 'instructor_assigned__arabic_name',
+                     'day', 'title', 'start_time', 'end_time', 'location')
 
 
 class AttendanceInstanceAdmin(admin.ModelAdmin):
