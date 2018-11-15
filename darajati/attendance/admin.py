@@ -35,7 +35,15 @@ class AttendanceAdmin(admin.ModelAdmin):
                      'enrollment__student__university_id', 'status')
 
 
+class ExcuseAdmin(admin.ModelAdmin):
+    list_filter = ('excuse_type', 'includes_exams', 'created_by', 'applied_by', )
+    date_hierarchy = 'start_date'
+    list_display = ('university_id', 'student', 'start_date', 'end_date', 'excuse_type', 'includes_exams',
+                    'attachments', 'created_on', 'created_by', 'applied_on', 'applied_by', )
+    search_fields = ('university_id', 'description', 'created_by__username', 'applied_by__username', )
+
+
 admin.site.register(ScheduledPeriod, ScheduledPeriodAdmin)
 admin.site.register(AttendanceInstance, AttendanceInstanceAdmin)
 admin.site.register(Attendance, AttendanceAdmin)
-admin.site.register(Excuse)
+admin.site.register(Excuse, ExcuseAdmin)
