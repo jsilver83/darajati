@@ -15,6 +15,7 @@ urlpatterns = [
             views.StudentAttendanceSummaryView.as_view(),
             name='attendance_summary'),
 
+    path(r'excuses/', views.ExcusesListingView.as_view(), name='excuses_listing'),
     path(r'excuse-entry/', views.ExcuseEntryView.as_view(), name='excuse_entry'),
     path(r'excuse-entry-confirm/<int:pk>/', views.ExcuseEntryConfirm.as_view(), name='excuse_entry_confirm'),
 ]

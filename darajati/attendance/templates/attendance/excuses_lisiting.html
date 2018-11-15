@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			<div class="col-md-4 pull-right">
+				<a href="{% url 'attendance:excuse_entry' %}" class="btn btn-success btn-block">
+					<span class="glyphicon glyphicon-plus"></span> {% trans 'New Excuse' %}
+				</a>
+			</div>
+			<h3>{% trans 'Excuses Listing' %}</h3>
+			<hr>
+			{% if object_list %}
+				<table class="table">
+					<thead>
+					<tr>
+						<th>#</th>
+						<th>{% trans 'University ID' %}</th>
+						<th>{% trans 'Student' %}</th>
+						<th>{% trans 'Start Date' %}</th>
+						<th>{% trans 'End Date' %}</th>
+						<th>{% trans 'Type' %}</th>
+						<th>{% trans 'Includes Exams?' %}</th>
+						<th>{% trans 'Attachments' %}</th>
+						<th>{% trans 'Created' %}</th>
+						<th>{% trans 'Applied' %}</th>
+					</tr>
+					</thead>
+					<tbody>
+					{% for excuse in object_list %}
+						<tr>
+							<td>{{ excuse.pk }}</td>
+							<td>{{ excuse.university_id }}</td>
+							<td>{{ excuse.student.name }}</td>
+							<td>{{ excuse.start_date }}</td>
+							<td>{{ excuse.end_date }}</td>
+							<td>{{ excuse.get_excuse_type_display }}</td>
+							<td>{{ excuse.includes_exams|yesno }}</td>
+							<td>
+								{% if excuse.attachments %}
+								<a target="_blank" href="{{ excuse.attachments.url }}">
+									<span class="glyphicon glyphicon-file"></span></a>
+								{% endif %}
+							</td>
+							<td>{{ excuse.created_on|timesince }}&nbsp;{% trans 'by' %}&nbsp;{{ excuse.created_by }}</td>
+							<td class="{% if not excuse.applied_on %}danger{% else %}success{% endif %}">
+								{% if not excuse.applied_on %}
+									<a title="This is un-applied excuse. Click to apply it." class="btn btn-warning btn-sm" href="{% url 'attendance:excuse_entry_confirm' excuse.pk %}">{% trans 'Apply' %}</a>
+								{% else %}
+									<a title="Show Excuse" class="btn btn-default btn-sm" href="{% url 'attendance:excuse_entry_confirm' excuse.pk %}">
+										<span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> {{ excuse.applied_on|timesince }}&nbsp;{% trans 'by' %}&nbsp;{{ excuse.applied_by }}</a>
+								{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+					</tbody>
+
+				</table>
+			{% endif %}
+			<br>
+
+		</div>
+	</div>
+{% endblock %}

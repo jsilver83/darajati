@@ -111,9 +111,10 @@ class ExcuseForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(ExcuseForm, self).clean()
-        absences_or_lates = Excuse.get_attendances_to_be_excused_static(cleaned_data.get('university_id'),
-                                                                        cleaned_data.get('start_date'),
-                                                                        cleaned_data.get('end_date'))
+        absences_or_lates = Excuse.get_attendances(cleaned_data.get('university_id'),
+                                                   cleaned_data.get('start_date'),
+                                                   cleaned_data.get('end_date'),
+                                                   [Attendance.Types.LATE, Attendance.Types.ABSENT])
 
         if not absences_or_lates:
             raise ValidationError(_('This student does NOT have any absence(s) or late(s) in the specified dates'))

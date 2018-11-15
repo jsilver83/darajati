@@ -13,43 +13,52 @@
 			{{ form.excuse_type.label_tag }}:&nbsp;{{ object.get_excuse_type_display }}<br>
 			{{ form.includes_exams.label_tag }}:&nbsp;{{ object.includes_exams }}<br>
 			{% if object.attachments %}
-				{{ form.attachments.label_tag }}:&nbsp;<a target="_blank" href="{{ object.attachments.url }}">{% trans 'Download File' %}</a><br>
+				{{ form.attachments.label_tag }}:&nbsp;
+				<a target="_blank" href="{{ object.attachments.url }}">{% trans 'Download File' %}</a><br>
 			{% endif %}
 			{% if object.description %}{{ form.description.label_tag }}:&nbsp;{{ object.description }}<br>{% endif %}
 			<label>{% trans 'Created On' %}:</label>&nbsp;{{ object.created_on }}<br>
 			<label>{% trans 'Created By' %}:</label>&nbsp;{{ object.created_by }}<br>
-			{% if object.applied_on %}<label>{% trans 'Applied On' %}:</label>&nbsp;{{ object.applied_on }}<br>{% endif %}
-			{% if object.applied_by %}<label>{% trans 'Applied By' %}:</label>&nbsp;{{ object.applied_by }}<br>{% endif %}
+			{% if object.applied_on %}
+				<label>{% trans 'Applied On' %}:</label>&nbsp;{{ object.applied_on }}<br>{% endif %}
+			{% if object.applied_by %}
+				<label>{% trans 'Applied By' %}:</label>&nbsp;{{ object.applied_by }}<br>{% endif %}
+			<br>
+			<h3>
+				{% if object.applied_on %}
+					{% trans 'Excused Attednaces' %}
+				{% else %}
+					{% trans 'Attednaces To Be Excused' %}
+				{% endif %}
+			</h3>
 			<hr>
-			{% if attendances_to_be_excused %}
+			{% if attendances_to_be_shown %}
 				<table class="table">
 					<thead>
 					<tr>
 						<th>{% trans 'Semester' %}</th>
 						<th>{% trans 'Course' %}</th>
 						<th>{% trans 'Section' %}</th>
-						<th>{% trans 'Date' %}</th>
 						<th>{% trans 'Instructor' %}</th>
 						<th>{% trans 'Period' %}</th>
-						<th>{% trans 'Day' %}</th>
+						<th>{% trans 'Date' %}</th>
 						<th>{% trans 'Time' %}</th>
 						<th>{% trans 'Status' %}</th>
 					</tr>
 					</thead>
 					<tbody>
-					{% for attendance in attendances_to_be_excused %}
+					{% for attendance in attendances_to_be_shown %}
 						<tr>
 							<td>{{ attendance.enrollment.section.course_offering.semester.code }}</td>
 							<td>{{ attendance.enrollment.section.course_offering.course.code }}</td>
 							<td>{{ attendance.enrollment.section.code }}</td>
-							<td>{{ attendance.attendance_instance.date }}</td>
 							<td>{{ attendance.attendance_instance.period.instructor_assigned }}</td>
 							<td>{{ attendance.attendance_instance.period.title }}</td>
-							<td>{{ attendance.attendance_instance.period.day }}</td>
+							<td>{{ attendance.attendance_instance.date }} ({{ attendance.attendance_instance.period.day }})</td>
 							<td>
 								{{ attendance.attendance_instance.period.start_time }}&nbsp;-&nbsp;{{ attendance.attendance_instance.period.end_time }}
 							</td>
-							<td class="{% if attendance.status == 'abs' %}danger{% else %}warning{% endif %}">
+							<td class="{% if attendance.status == 'abs' %}danger{% elif  attendance.status == 'lat' %}warning{% else %}success{% endif %}">
 								{{ attendance.get_status_display }}
 							</td>
 						</tr>
@@ -60,15 +69,23 @@
 			{% endif %}
 			<br>
 			{% if not object.applied_on %}
-			<form method="post">
-				{% csrf_token %}
-				<center>
-					<button onclick="return confirm('{% trans 'Are you sure?' %}');" class="btn btn-danger btn-lg"
-					        name="reject" type="submit">{% trans 'Reject' %}</button>
-					<button onclick="return confirm('{% trans 'Are you sure?' %}');" class="btn btn-success btn-lg"
-					        name="confirm" type="submit">{% trans 'Confirm' %}</button>
-				</center>
-			</form>
+				<form method="post">
+					{% csrf_token %}
+					<div class="alert alert-warning">
+						<h4>{% trans 'IMPORTANT:' %}</h4><br>
+						<p>{% blocktrans %}
+							You have to apply this excuse after checking the list of attendances above. If they are
+							<em>ALL</em> correct, click on <b>'Confirm'</b>. Otherwise, click on <b>'Reject'</b> to
+							delete this excuse and to correct the mistakes
+						{% endblocktrans %}</p><br>
+						<div class="pull-right">
+							<button onclick="return confirm('{% trans 'Are you sure?' %}');" class="btn btn-danger btn-lg"
+							        name="reject" type="submit"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {% trans 'Reject' %}</button>&nbsp;
+							<button onclick="return confirm('{% trans 'Are you sure?' %}');" class="btn btn-success btn-lg"
+							        name="confirm" type="submit"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {% trans 'Confirm' %}</button>
+						</div><br><br>
+					</div>
+				</form>
 			{% endif %}
 		</div>
 	</div>

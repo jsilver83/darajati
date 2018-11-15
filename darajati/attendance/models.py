@@ -324,14 +324,24 @@ class Excuse(models.Model):
         return to_string(self.university_id, self.get_excuse_type_display())
 
     def clean(self):
-        if not self.end_date >= self.start_date:
-            raise ValidationError("End date should be greater than start date")
+        if self.start_date and self.end_date:
+            if not self.end_date >= self.start_date:
+                raise ValidationError("End date should be greater than start date")
 
-        if self.end_date > now():
-            raise ValidationError(_('End date can NOT be in the future'))
+            if self.end_date > now():
+                raise ValidationError(_('End date can NOT be in the future'))
+
+    @property
+    def student(self):
+        from enrollment.models import Student
+        return Student.objects.filter(university_id=self.university_id).first()
 
     def get_attendances_to_be_excused(self):
-        return self.get_attendances_to_be_excused_static(self.university_id, self.start_date, self.end_date)
+        return self.get_attendances(self.university_id, self.start_date, self.end_date,
+                                    [Attendance.Types.ABSENT, Attendance.Types.LATE, ])
+
+    def get_excused_attendances(self):
+        return self.get_attendances(self.university_id, self.start_date, self.end_date, [Attendance.Types.EXCUSED, ])
 
     def apply_excuse(self):
         attendances_and_lates_to_be_excused = self.get_attendances_to_be_excused()
@@ -343,23 +353,24 @@ class Excuse(models.Model):
                 attendance.save()
 
     @staticmethod
-    def get_attendances_to_be_excused_static(university_id, start_date, end_date):
-        all_attendances_in_the_same_dates = Attendance.objects.filter(
-            enrollment__student__university_id=university_id,
-            status__in=[Attendance.Types.ABSENT, Attendance.Types.LATE],
-            attendance_instance__date__gte=start_date,
-            attendance_instance__date__lte=end_date,
-        )
+    def get_attendances(university_id, start_date, end_date, statuses):
+        if university_id and start_date and end_date and statuses:
+            all_attendances_in_the_same_dates = Attendance.objects.filter(
+                enrollment__student__university_id=university_id,
+                status__in=statuses,
+                attendance_instance__date__gte=start_date,
+                attendance_instance__date__lte=end_date,
+            )
 
-        attendances = []
+            attendances = []
 
-        for attendance in all_attendances_in_the_same_dates:
-            attendance_start_date_time = timezone.make_aware(
-                datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.start_time))
-            attendance_end_date_time = timezone.make_aware(
-                datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.end_time))
+            for attendance in all_attendances_in_the_same_dates:
+                attendance_start_date_time = timezone.make_aware(
+                    datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.start_time))
+                attendance_end_date_time = timezone.make_aware(
+                    datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.end_time))
 
-            if attendance_start_date_time >= start_date and attendance_end_date_time <= end_date:
-                attendances.append(attendance)
+                if attendance_start_date_time >= start_date and attendance_end_date_time <= end_date:
+                    attendances.append(attendance)
 
-        return attendances
+            return attendances

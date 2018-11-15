@@ -145,6 +145,14 @@ class ExcuseEntryBaseView(UserPassesTestMixin):
         return 'attendance.can_give_excuses' in self.request.user.get_all_permissions() or self.request.user.is_superuser
 
 
+class ExcusesListingView(ExcuseEntryBaseView, ListView):
+    object = Excuse
+    template_name = 'attendance/excuses_lisiting.html'
+
+    def get_queryset(self):
+        return Excuse.objects.all().order_by('-applied_on', '-created_on')
+
+
 class ExcuseEntryView(ExcuseEntryBaseView, CreateView):
     form_class = ExcuseForm
     template_name = 'attendance/excuse_entry.html'
@@ -154,6 +162,8 @@ class ExcuseEntryView(ExcuseEntryBaseView, CreateView):
         saved.created_by = self.request.user
         saved.save()
 
+        messages.warning(self.request, _('You have to review the list of attendances (to be excused) and make sure '
+                                         'they are ALL correct!'))
         return super(ExcuseEntryView, self).form_valid(form)
 
     def get_success_url(self):
@@ -173,7 +183,8 @@ class ExcuseEntryConfirm(ExcuseEntryBaseView, TemplateView):
         context['student'] = get_object_or_404(Student, university_id=self.object.university_id)
         context['object'] = self.object
         context['form'] = ExcuseForm
-        context['attendances_to_be_excused'] = self.object.get_attendances_to_be_excused()
+        context['attendances_to_be_shown'] = self.object.get_excused_attendances() if self.object.applied_on \
+            else self.object.get_attendances_to_be_excused()
 
         return context
 
@@ -191,7 +202,4 @@ class ExcuseEntryConfirm(ExcuseEntryBaseView, TemplateView):
             self.object.delete()
             messages.warning(self.request, _('Excuse has been removed successfully...'))
 
-        return redirect(reverse_lazy('attendance:excuse_entry'))
-
-
-# TODO: add Listing page for Excuses
+        return redirect(reverse_lazy('attendance:excuses_listing'))
