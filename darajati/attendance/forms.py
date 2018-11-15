@@ -106,6 +106,7 @@ class ExcuseForm(forms.ModelForm):
             'start_date': forms.DateTimeInput(attrs={'class': 'datetimepicker3 form-control'}),
             'end_date': forms.DateTimeInput(attrs={'class': 'datetimepicker3 form-control'}),
             'description': forms.Textarea,
+            'includes_exams': forms.NullBooleanSelect,
         }
 
     def clean(self):
