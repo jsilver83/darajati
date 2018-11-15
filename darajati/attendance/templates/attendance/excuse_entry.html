@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <form method="post" enctype="multipart/form-data">
+	            {% csrf_token %}
+                {{ form.as_p }}
+
+{#	            {{ form.start_date }}<br>#}
+{#	            {{ form.end_date }}<br>#}
+{#	            {{ form.university_id }}<br>#}
+{#	            {{ form.excuse_type }}<br>#}
+{#	            {{ form.universit_id }}<br>#}
+{#	            {{ form.includes_exams }}<br>#}
+{#	            {% if show_confirm %}#}
+{#	            <input type="hidden" name="id_attachments" value="{{ file }}" />#}
+{#	            {% else %}#}
+{#	            {{ form.attachments }}<br>#}
+{#	            {% endif %}#}
+{#	            {{ form.description }}<br>#}
+	            <button type="submit" class="btn btn-lg btn-primary">{% trans 'Submit' %}</button>
+{#	            {% if show_confirm %}#}
+{#	            <button name="confirm" type="submit">{% trans 'Confirm' %}</button>#}
+{#	            {% endif %}#}
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(function () {
+        $('.datetimepicker3').datetimepicker({
+            format: 'YYYY-MM-DD H:mm:ss'
+        });
+    });
+</script>
+{% endblock scripts %}

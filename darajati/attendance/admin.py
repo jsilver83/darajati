@@ -38,3 +38,4 @@ class AttendanceAdmin(admin.ModelAdmin):
 admin.site.register(ScheduledPeriod, ScheduledPeriodAdmin)
 admin.site.register(AttendanceInstance, AttendanceInstanceAdmin)
 admin.site.register(Attendance, AttendanceAdmin)
+admin.site.register(Excuse)
