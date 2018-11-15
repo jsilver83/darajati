@@ -31,7 +31,8 @@ class AttendanceAdmin(admin.ModelAdmin):
     date_hierarchy = 'attendance_instance__date'
     list_filter = ('attendance_instance__period__section__course_offering', 'status',)
     list_display = ('attendance_instance', 'enrollment', 'status')
-    search_fields = ('attendance_instance', 'enrollment', 'status')
+    search_fields = ('enrollment__student__english_name', 'enrollment__student__arabic_name',
+                     'enrollment__student__university_id', 'status')
 
 
 admin.site.register(ScheduledPeriod, ScheduledPeriodAdmin)
