@@ -1,5 +1,6 @@
 from math import *
 from django.db import models
+from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.auth.models import User as User_model
@@ -23,6 +24,17 @@ class Person(models.Model):
     mobile = models.CharField(_('mobile'), max_length=20, null=True, blank=True)
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
+
+    @property
+    def name(self):
+        """
+        :return: translated name of the person depending on the current active language
+        """
+        lang = translation.get_language()
+        if lang == "ar":
+            return self.arabic_name
+        else:
+            return self.english_name
 
     class Meta:
         abstract = True

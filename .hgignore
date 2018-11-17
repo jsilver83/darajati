@@ -16,6 +16,8 @@ darajati/uploads
 darajati/darajati/local_settings.py
 darajati/darajati/settings/local.py
 
+uploaded_docs/*
+
 *.pyc
 *.mo
 .idea

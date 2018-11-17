@@ -1,9 +1,16 @@
-from django.db import models
+from datetime import datetime
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from darajati.validators import validate_file_extension
 from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, \
     get_next_week
+from .media_handlers import upload_excuse_attachments
+from enrollment.utils import now
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -36,7 +43,8 @@ class ScheduledPeriod(models.Model):
                                 null=True,
                                 blank=False
                                 )
-    instructor_assigned = models.ForeignKey('enrollment.Instructor', on_delete=models.CASCADE, related_name='assigned_periods')
+    instructor_assigned = models.ForeignKey('enrollment.Instructor', on_delete=models.CASCADE,
+                                            related_name='assigned_periods')
     day = models.CharField(max_length=9, null=True, blank=False, choices=Days.choices())
     title = models.CharField(max_length=20, null=True, blank=False)
     start_time = models.TimeField(_('start time'))
@@ -152,7 +160,7 @@ class ScheduledPeriod(models.Model):
             day = day_string(date)
             if last_accessible_date <= date and \
                     ScheduledPeriod.is_period_within_range(section, day, instructor) and \
-                            date <= today:
+                    date <= today:
                 period_dates.append({'date': date, 'day': day, 'section_id': section.id})
 
         # Get Previous Week Periods Dates
@@ -164,19 +172,19 @@ class ScheduledPeriod(models.Model):
                 day = day_string(date)
                 if last_accessible_date <= date and \
                         ScheduledPeriod.is_period_within_range(section, day, instructor) and \
-                                date <= today:
+                        date <= today:
                     day = day_string(date)
                     result_previous_week = {'date': date, 'day': day, 'section_id': section.id}
 
         if current_date < today and not any(
-                        item.get('date', None) == today for item in period_dates):
+                item.get('date', None) == today for item in period_dates):
             next_week = get_next_week(current_date)
             next_week = get_dates_in_between(next_week)
             for date in next_week:
                 day = day_string(date)
                 if last_accessible_date <= date and \
                         ScheduledPeriod.is_period_within_range(section, day, instructor) and \
-                                date <= today:
+                        date <= today:
                     day = day_string(date)
                     result_next_week = {'date': date, 'day': day, 'section_id': section.id}
                     break
@@ -270,3 +278,99 @@ class Attendance(models.Model):
 
     def __str__(self):
         return to_string(self.attendance_instance.period, self.enrollment.student.english_name)
+
+
+class Excuse(models.Model):
+    class Types:
+        CLINICS_MEDICAL = 'clinics_medical'
+        OUTSIDE_MEDICAL = 'outside_medical'
+        PERSONAL = 'personal'
+        OTHER = 'other'
+
+        @classmethod
+        def choices(cls):
+            return (
+                (cls.CLINICS_MEDICAL, _('Medical (KFUPM Clinics)')),
+                (cls.OUTSIDE_MEDICAL, _('Medical (Outside)')),
+                (cls.PERSONAL, _('Personal Excuse')),
+                (cls.OTHER, _('Other')),
+            )
+
+    start_date = models.DateTimeField(_('Start Date/Time'), null=True, blank=False)
+    end_date = models.DateTimeField(_('End Date/Time'), null=True, blank=False)
+    university_id = models.CharField(_('University ID'), max_length=20, null=True, blank=False)
+    excuse_type = models.CharField(_('Excuse'), max_length=30, default=Types.CLINICS_MEDICAL,
+                                   choices=Types.choices(), null=True, blank=False)
+    includes_exams = models.BooleanField(_('Includes Exams?'), blank=False, default=False)
+    attachments = models.FileField(_('Attachments'),
+                                   null=True,
+                                   blank=True,
+                                   validators=[validate_file_extension],
+                                   upload_to=upload_excuse_attachments, )
+    description = models.CharField(_('Description'), max_length=2000, null=True, blank=True)
+    created_on = models.DateTimeField(_('Created On'), auto_now_add=True, null=True, blank=False)
+    created_by = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL,
+                                   verbose_name=_('Created By'), related_name='created_excuses')
+    applied_on = models.DateTimeField(_('Applied On'), null=True, blank=True)
+    applied_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
+                                   verbose_name=_('Applied By'), related_name='applied_excuses')
+
+    class Meta:
+        permissions = (
+            ('can_give_excuses', _('Can enter excuses for students')),
+        )
+
+    def __str__(self):
+        return to_string(self.university_id, self.get_excuse_type_display())
+
+    def clean(self):
+        if self.start_date and self.end_date:
+            if not self.end_date >= self.start_date:
+                raise ValidationError("End date should be greater than start date")
+
+            if self.end_date > now():
+                raise ValidationError(_('End date can NOT be in the future'))
+
+    @property
+    def student(self):
+        from enrollment.models import Student
+        return Student.objects.filter(university_id=self.university_id).first()
+
+    def get_attendances_to_be_excused(self):
+        return self.get_attendances(self.university_id, self.start_date, self.end_date,
+                                    [Attendance.Types.ABSENT, Attendance.Types.LATE, ])
+
+    def get_excused_attendances(self):
+        return self.get_attendances(self.university_id, self.start_date, self.end_date, [Attendance.Types.EXCUSED, ])
+
+    def apply_excuse(self):
+        attendances_and_lates_to_be_excused = self.get_attendances_to_be_excused()
+
+        if attendances_and_lates_to_be_excused:
+            for attendance in attendances_and_lates_to_be_excused:
+                attendance.status = Attendance.Types.EXCUSED
+                attendance.updated_by = self.applied_by
+                attendance.save()
+
+    @staticmethod
+    def get_attendances(university_id, start_date, end_date, statuses):
+        if university_id and start_date and end_date and statuses:
+            all_attendances_in_the_same_dates = Attendance.objects.filter(
+                enrollment__student__university_id=university_id,
+                status__in=statuses,
+                attendance_instance__date__gte=start_date,
+                attendance_instance__date__lte=end_date,
+            )
+
+            attendances = []
+
+            for attendance in all_attendances_in_the_same_dates:
+                attendance_start_date_time = timezone.make_aware(
+                    datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.start_time))
+                attendance_end_date_time = timezone.make_aware(
+                    datetime.combine(attendance.attendance_instance.date, attendance.attendance_instance.period.end_time))
+
+                if attendance_start_date_time >= start_date and attendance_end_date_time <= end_date:
+                    attendances.append(attendance)
+
+            return attendances

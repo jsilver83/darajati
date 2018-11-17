@@ -1,8 +1,9 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Attendance
+from .models import Attendance, Excuse
 
 
 class PlainTextWidget(forms.Widget):
@@ -86,3 +87,35 @@ class AttendanceForm(forms.ModelForm):
                 and 'status' in self.changed_data:
             self.add_error('status', _("You don't have permission to make this change"))
         return self.cleaned_data.get('status')
+
+
+class ExcuseForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(ExcuseForm, self).__init__(*args, **kwargs)
+
+        for field in self.fields:
+            if field not in ['start_date', 'end_date', 'attachments']:
+                self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+    class Meta:
+        model = Excuse
+        fields = ['start_date', 'end_date', 'university_id', 'excuse_type', 'includes_exams', 'attachments',
+                  'description']
+        exclude = ['created_by', 'created_on', ]
+        widgets = {
+            'start_date': forms.DateTimeInput(attrs={'class': 'datetimepicker3 form-control'}),
+            'end_date': forms.DateTimeInput(attrs={'class': 'datetimepicker3 form-control'}),
+            'description': forms.Textarea,
+            'includes_exams': forms.NullBooleanSelect,
+        }
+
+    def clean(self):
+        cleaned_data = super(ExcuseForm, self).clean()
+        absences_or_lates = Excuse.get_attendances(cleaned_data.get('university_id'),
+                                                   cleaned_data.get('start_date'),
+                                                   cleaned_data.get('end_date'),
+                                                   [Attendance.Types.LATE, Attendance.Types.ABSENT])
+
+        if not absences_or_lates:
+            raise ValidationError(_('This student does NOT have any absence(s) or late(s) in the specified dates'))
+        return cleaned_data

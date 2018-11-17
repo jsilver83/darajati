@@ -83,13 +83,11 @@
     <div class="max-container fit-window">
         {% if messages %}
             <div class="mess-sec">
-                <ul class="messages">
-                    {% for message in messages %}
-                        <li
-                                {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-                        </li>
-                    {% endfor %}
-                </ul>
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% endif %}">
+	                    {{ message }}
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
 
