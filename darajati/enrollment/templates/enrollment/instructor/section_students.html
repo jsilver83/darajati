@@ -30,7 +30,7 @@
             {% for enrollment in enrollments %}
                 <tr {% if not enrollment.active %}class="danger" {% endif %}>
                     <td class="text-center">{{ forloop.counter }}</td>
-                    <td class="text-center">{{ enrollment.student.english_name|lower }}</td>
+                    <td class="text-center">{{ enrollment.student.english_name }}</td>
                     <td class="text-center">{{ enrollment.student.university_id }}</td>
                     <td class="text-center">{{ enrollment.active }}</td>
                     <td class="text-center">{{ enrollment.get_letter_grade }}</td>

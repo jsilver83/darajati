@@ -6,7 +6,7 @@
             <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
             <div class="title-sec text-center">
                 <h3>
-                    {% trans 'Find student ' %}{{ enrollment.student.english_name|lower }} {% trans 'attendances' %}
+                    {% trans 'Find student ' %}{{ enrollment.student.english_name }} {% trans 'attendances' %}
                     <br>
                     {% trans 'for section ' %}{{ section.code }}
                 </h3>
