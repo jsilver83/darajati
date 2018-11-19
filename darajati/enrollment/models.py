@@ -503,18 +503,21 @@ class Enrollment(models.Model):
         """
         :return: absence total of an enrollment 
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            status=Attendance.Types.ABSENT).count()
+        return self.attendance.filter(status=Attendance.Types.ABSENT).count()
+
+    @property
+    def get_enrollment_total_excuses(self):
+        """
+        :return: excuses total of an enrollment
+        """
+        return self.attendance.filter(status=Attendance.Types.EXCUSED).count()
 
     @property
     def get_enrollment_total_late(self):
         """
         :return: late total of an enrollment 
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            status=Attendance.Types.LATE).count()
+        return self.attendance.filter(status=Attendance.Types.LATE).count()
 
     @property
     def get_enrollment_total_deduction(self):
@@ -541,27 +544,21 @@ class Enrollment(models.Model):
         :param period_title: 
         :return: total absence of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.ABSENT).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.ABSENT).count()
 
     def get_enrollment_period_total_late(self, period_title):
         """
         :param period_title: 
         :return: total late of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.LATE).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.LATE).count()
 
     def get_enrollment_period_total_excused(self, period_title):
         """
         :param period_title: 
         :return: total excused of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.EXCUSED).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.EXCUSED).count()
