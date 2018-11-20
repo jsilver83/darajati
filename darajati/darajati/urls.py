@@ -37,8 +37,6 @@ urlpatterns += i18n_patterns(
             include('banner_integration.urls', namespace='banner_integration')),
 )
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 if settings.DEBUG:
     import debug_toolbar
 

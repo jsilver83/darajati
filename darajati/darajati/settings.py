@@ -189,7 +189,7 @@ MAX_DECIMAL_POINT = 2  # .00
 
 MAX_FILE_UPLOAD_SIZE = 2048000  # ~ 2.0 MB
 
-MEDIA_URL = '/uploaded_docs/'
+MEDIA_URL = '/media/'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is around 1012
 try:
