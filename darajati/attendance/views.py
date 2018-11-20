@@ -145,6 +145,7 @@ class ExcuseEntryBaseView(UserPassesTestMixin):
         return 'attendance.can_give_excuses' in self.request.user.get_all_permissions() or self.request.user.is_superuser
 
 
+# TODO: implement pagination and search
 class ExcusesListingView(ExcuseEntryBaseView, ListView):
     object = Excuse
     template_name = 'attendance/excuses_lisiting.html'
@@ -153,6 +154,7 @@ class ExcusesListingView(ExcuseEntryBaseView, ListView):
         return Excuse.objects.all().order_by('-applied_on', '-created_on')
 
 
+# TODO: implement excuse update view for changing fields: 'excuse_type', 'includes_exams', 'attachments', 'description'
 class ExcuseEntryView(ExcuseEntryBaseView, CreateView):
     form_class = ExcuseForm
     template_name = 'attendance/excuse_entry.html'
