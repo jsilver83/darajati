@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from enrollment.models import Coordinator, Instructor, Section, ScheduledPeriod, Enrollment
+from .utils import get_allowed_markers_for_a_fragment
 
 User = settings.AUTH_USER_MODEL
 
@@ -224,9 +225,10 @@ class Marker(models.Model):
 
         exam_day = fragment.exam_date.strftime('%A').lower()
 
-        markers_count = fragment.number_of_markers
-        markers_count = markers_count if markers_count else 0
+        markers_count = fragment.number_of_markers or 0
         rooms = ExamRoom.objects.filter(exam_shift__fragment=fragment)
+        allowed_markers_list = list(get_allowed_markers_for_a_fragment(fragment))
+
         for room in rooms:
             for i in range(1, markers_count + 2):
                 marker = Marker(exam_room=room, order=i)
@@ -241,7 +243,16 @@ class Marker(models.Model):
                     if instructors_assigned:
                         marker.instructor = instructors_assigned.first().instructor_assigned
                 elif i == markers_count + 1:
-                    marker.instructor = fragment.default_tie_breaking_marker
+                    if Marker.objects.filter(exam_room=room,
+                                             instructor=fragment.default_tie_breaking_marker).count() == 0:
+                        marker.instructor = fragment.default_tie_breaking_marker
+                else:
+                    for instructor_to_be_marker in allowed_markers_list:
+                        if Marker.objects.filter(exam_room=room, instructor=instructor_to_be_marker).count() == 0 \
+                                and instructor_to_be_marker != fragment.default_tie_breaking_marker:
+                            marker.instructor = instructor_to_be_marker
+                            allowed_markers_list.remove(instructor_to_be_marker)
+                            break
                 marker.save()
 
     def can_mark_enrollment(self, enrollment):
