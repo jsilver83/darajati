@@ -292,6 +292,10 @@ class GradeFragment(models.Model):
             return '100%'
         return self.weight
 
+    @property
+    def short_name(self):
+        return '%s - %s' %(self.category, self.description)
+
 
 class LetterGrade(models.Model):
     course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
