@@ -8,20 +8,19 @@ from .models import *
 
 
 class MarkerAdmin(SimpleHistoryAdmin):
-    history_list_display = ['instructor', 'fragment', 'room', 'order', 'generosity_factor', ]
-    list_filter = ('exam_room__exam_shift__fragment', 'instructor', 'exam_room', 'order', 'is_a_monitor', )
+    history_list_display = ['instructor', 'exam_room', 'order', 'generosity_factor', 'is_a_monitor']
+    list_filter = ('exam_room__exam_shift__settings', 'instructor', 'exam_room', 'order', 'is_a_monitor', )
     list_display = ('instructor', 'exam_room', 'order', 'generosity_factor', 'is_a_monitor', 'updated_by', )
 
 
-class StudentPlacementAdmin(SimpleHistoryAdmin):
-    history_list_display = ['enrollment', 'exam_room', 'is_present', ]
+class StudentPlacementAdmin(admin.ModelAdmin):
     list_filter = ('exam_room', 'is_present', )
     list_display = ('enrollment', 'exam_room', 'is_present', 'shuffled_by', 'shuffled_on', )
 
 
 class StudentMarkAdmin(SimpleHistoryAdmin):
     history_list_display = ['student_placement', 'marker', 'mark']
-    list_filter = ('marker__exam_room__exam_shift__fragment', 'marker__exam_room', 'marker__instructor', )
+    list_filter = ('marker__exam_room__exam_shift__settings', 'marker__exam_room', 'marker__instructor', )
     list_display = ('student_placement', 'marker', 'mark', 'get_generosity_factor', 'show_weighted_mark',
                     'updated_on', 'updated_by')
     search_fields = ('student_placement__enrollment__student__user__username', )
@@ -56,6 +55,7 @@ class RoomAdmin(admin.ModelAdmin):
     list_editable = ('location', 'capacity', )
 
 
+admin.site.register(ExamSettings)
 admin.site.register(ExamShift)
 admin.site.register(StudentPlacement, StudentPlacementAdmin)
 admin.site.register(Marker, MarkerAdmin)

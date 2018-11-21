@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Avg
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -31,32 +31,40 @@ class RoomEditView(CoordinatorBaseView, UpdateView):
     form_class = None
 
 
-class ExamSettingsView(SuccessMessageMixin, CoordinatorBaseView, UpdateView):
-    template_name = 'exam/exam_settings.html'
-    model = GradeFragment
-    pk_url_kwarg = 'grade_fragment_id'
-    form_class = ExamSettingsForm
-
+class ExamSettingsBaseView:
     def dispatch(self, request, *args, **kwargs):
-        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
+        fragment = get_object_or_404(GradeFragment, pk=self.kwargs['exam_settings_id'])
+        self.exam_settings, created = ExamSettings.objects.get_or_create(fragment=fragment)
 
-        return super(ExamSettingsView, self).dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse_lazy('exam:shifts', kwargs={'grade_fragment_id': self.fragment.pk})
+        return super(ExamSettingsBaseView, self).dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
-        kwargs = super(ExamSettingsView, self).get_form_kwargs()
-        kwargs['fragment'] = self.fragment
+        kwargs = super(ExamSettingsBaseView, self).get_form_kwargs()
+        kwargs['exam_settings'] = self.exam_settings
+        return kwargs
+
+    def get_extra_form_kwargs(self):
+        kwargs = super(ExamSettingsBaseView, self).get_extra_form_kwargs()
+        kwargs['exam_settings'] = self.exam_settings
         return kwargs
 
     def get_context_data(self, **kwargs):
-        context = super(ExamSettingsView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.fragment
+        context = super(ExamSettingsBaseView, self).get_context_data(**kwargs)
+        context['grade_fragment'] = self.exam_settings.fragment
         return context
 
 
-class ExamShiftsView(CoordinatorBaseView, ModelFormSetView):
+class ExamSettingsView(SuccessMessageMixin, ExamSettingsBaseView, CoordinatorBaseView, UpdateView):
+    template_name = 'exam/exam_settings.html'
+    model = ExamSettings
+    pk_url_kwarg = 'exam_settings_id'
+    form_class = ExamSettingsForm
+
+    def get_success_url(self):
+        return reverse_lazy('exam:shifts', kwargs={'exam_settings_id': self.exam_settings.pk})
+
+
+class ExamShiftsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
     template_name = 'exam/exam_shifts.html'
     model = ExamShift
     form_class = ExamShiftForm
@@ -65,34 +73,24 @@ class ExamShiftsView(CoordinatorBaseView, ModelFormSetView):
     can_delete = True
 
     def dispatch(self, request, *args, **kwargs):
-        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
-        if not self.fragment.exam_date:
-            return redirect(reverse_lazy('exam:settings', kwargs={'grade_fragment_id': self.fragment.pk}))
+        dispatch = super(ExamShiftsView, self).dispatch(request, *args, **kwargs)
+        if not self.exam_settings.exam_date:
+            return redirect(reverse_lazy('exam:settings', kwargs={'exam_settings_id': self.exam_settings.pk}))
 
-        if ExamShift.get_shifts(self.fragment).count() == 0:
-            ExamShift.create_shifts_for_fragment(self.fragment)
+        if ExamShift.get_shifts(self.exam_settings).count() == 0:
+            ExamShift.create_shifts_for_exam_settings(self.exam_settings)
 
-        return super(ExamShiftsView, self).dispatch(request, *args, **kwargs)
+        return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:exam_rooms', kwargs={'grade_fragment_id': self.fragment.pk})
+        return reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk})
 
     def get_queryset(self):
-        return ExamShift.get_shifts(self.fragment)
-
-    def get_context_data(self, **kwargs):
-        context = super(ExamShiftsView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.fragment
-        return context
-
-    def get_extra_form_kwargs(self):
-        kwargs = super(ExamShiftsView, self).get_extra_form_kwargs()
-        kwargs['fragment'] = self.fragment
-        return kwargs
+        return ExamShift.get_shifts(self.exam_settings)
 
     def formset_valid(self, formset):
         self.object_list = formset.save()
-        ExamShift.create_exam_rooms_for_shifts(self.fragment)
+        ExamShift.create_exam_rooms_for_shifts(self.exam_settings)
         messages.success(self.request, _('Shifts were saved successfully.'))
 
         if 'next' in self.request.POST:
@@ -104,7 +102,7 @@ class ExamShiftsView(CoordinatorBaseView, ModelFormSetView):
             return redirect(self.request.get_full_path())
 
 
-class ExamRoomsView(CoordinatorBaseView, ModelFormSetView):
+class ExamRoomsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
     template_name = 'exam/exam_rooms.html'
     model = ExamRoom
     form_class = ExamRoomForm
@@ -113,48 +111,42 @@ class ExamRoomsView(CoordinatorBaseView, ModelFormSetView):
     can_delete = True
 
     def dispatch(self, request, *args, **kwargs):
-        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
+        dispatch = super(ExamRoomsView, self).dispatch(request, *args, **kwargs)
 
-        shifts = ExamShift.objects.filter(fragment=self.fragment)
+        shifts = ExamShift.objects.filter(settings=self.exam_settings)
         if not shifts.exists():
-            return redirect(reverse_lazy('exam:shifts', kwargs={'grade_fragment_id': self.fragment.pk}))
+            return redirect(reverse_lazy('exam:shifts', kwargs={'exam_settings_id': self.exam_settings.pk}))
 
-        return super(ExamRoomsView, self).dispatch(request, *args, **kwargs)
+        return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:markers', kwargs={'grade_fragment_id': self.fragment.pk})
+        return reverse_lazy('exam:markers', kwargs={'grade_fragment_id': self.exam_settings.pk})
 
     def get_queryset(self):
-        return ExamRoom.objects.filter(exam_shift__fragment=self.fragment)
+        return ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
 
     def get_context_data(self, **kwargs):
         context = super(ExamRoomsView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.fragment
-        context['students_count'] = Enrollment.objects.filter(section__course_offering=self.fragment.course_offering,
+        context['students_count'] = Enrollment.objects.filter(section__course_offering=self.exam_settings.fragment.course_offering,
                                                               active=True).count()
         context['rooms_capacity'] = ExamRoom.objects.filter(
-            exam_shift__fragment=self.fragment
+            exam_shift__settings=self.exam_settings
         ).aggregate(Sum('capacity')).get('capacity__sum', 0)
         context['rooms_capacity'] = context['rooms_capacity'] if context['rooms_capacity'] else 0
         context['can_proceed'] = context['students_count'] < context['rooms_capacity']
         return context
 
-    def get_extra_form_kwargs(self):
-        kwargs = super(ExamRoomsView, self).get_extra_form_kwargs()
-        kwargs['fragment'] = self.fragment
-        return kwargs
-
     def formset_valid(self, formset):
         self.object_list = formset.save()
         messages.success(self.request, _('Exam rooms were saved successfully.'))
         if 'next' in self.request.POST:
-            Marker.create_markers_for_fragment(self.fragment)
+            Marker.create_markers_for_exam_settings(self.exam_settings)
             return redirect(self.get_success_url())
         else:
             return redirect(self.request.get_full_path())
 
 
-class MarkersView(CoordinatorBaseView, ModelFormSetView):
+class MarkersView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
     template_name = 'exam/markers.html'
     model = Marker
     form_class = MarkerForm
@@ -163,26 +155,26 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
     can_delete = False
 
     def dispatch(self, request, *args, **kwargs):
-        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
-        markers = Marker.objects.filter(exam_room__exam_shift__fragment=self.fragment)
-        if not markers.exists():
-            return redirect(reverse_lazy('exam:exam_rooms', kwargs={'grade_fragment_id': self.fragment.pk}))
+        dispatch = super(MarkersView, self).dispatch(request, *args, **kwargs)
 
-        return super(MarkersView, self).dispatch(request, *args, **kwargs)
+        markers = Marker.objects.filter(exam_room__exam_shift__settings=self.exam_settings)
+        if not markers.exists():
+            return redirect(reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk}))
+
+        return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:exam_rooms', kwargs={'grade_fragment_id': self.fragment.pk})
+        return reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk})
 
     def get_queryset(self):
-        return Marker.objects.filter(exam_room__exam_shift__fragment=self.fragment)
+        return Marker.objects.filter(exam_room__exam_shift__settings=self.exam_settings)
 
     def get_context_data(self, **kwargs):
         context = super(MarkersView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.fragment
-        context['number_of_markers'] = range(1, self.fragment.number_of_markers + 2)
+        context['number_of_markers'] = range(1, self.exam_settings.number_of_markers + 2)
 
         stats = []
-        allowed_markers = get_allowed_markers_for_a_fragment(self.fragment)
+        allowed_markers = get_allowed_markers_for_a_fragment(self.exam_settings.fragment)
         for marker in allowed_markers:
             assignments = self.get_queryset().filter(instructor=marker, order__in=[1, 2])
             assignments_count = assignments.count()  # if assignments else 0
@@ -196,20 +188,16 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
         context['stats'] = sorted(stats, key=lambda k: k['assignments'], reverse=True)
         return context
 
-    def get_extra_form_kwargs(self):
-        kwargs = super(MarkersView, self).get_extra_form_kwargs()
-        kwargs['fragment'] = self.fragment
-        return kwargs
-
     def formset_valid(self, formset):
         self.object_list = formset.save()
 
         # we reworked the shuffle algorithm to make it more fair in terms of fairly distributing students in exam rooms
         if 'shuffle' in self.request.POST:
             # delete existing placements before performing the shuffle
-            StudentPlacement.objects.filter(exam_room__exam_shift__fragment=self.fragment).delete()
-            enrollments = Enrollment.objects.filter(section__course_offering=self.fragment.course_offering, active=True)
-            exam_rooms = ExamRoom.objects.filter(exam_shift__fragment=self.fragment)
+            StudentPlacement.objects.filter(exam_room__exam_shift__settings=self.exam_settings).delete()
+            enrollments = Enrollment.objects.filter(
+                section__course_offering=self.exam_settings.fragment.course_offering, active=True)
+            exam_rooms = ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
 
             if exam_rooms:
                 cannot_be_placed = []
@@ -299,7 +287,7 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
             writer.writerow(['Room', 'Time', 'Student ID', 'Name', 'Email', 'Section', ])
 
             student_placements = StudentPlacement.objects.filter(
-                exam_room__exam_shift__fragment=self.fragment
+                exam_room__exam_shift__settings=self.exam_settings
             ).order_by('exam_room', 'enrollment')[:2000]
 
             if student_placements:
@@ -343,7 +331,7 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
             if not (self.marker.instructor.user == self.request.user or self.request.user.is_superuser or \
                     Coordinator.is_coordinator_of_course_offering_in_this_semester(
                         Instructor.get_instructor(self.request.user),
-                        self.marker.exam_room.exam_shift.fragment.course_offering)):
+                        self.marker.exam_room.exam_shift.settings.fragment.course_offering)):
                 messages.error(self.request, _('You are not authorised to mark this room.'))
                 return redirect(reverse_lazy('enrollment:home'))
 
@@ -356,19 +344,22 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
 
     def get_context_data(self, **kwargs):
         context = super(StudentMarksView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.marker.exam_room.exam_shift.fragment
+        context['grade_fragment'] = self.marker.exam_room.exam_shift.settings.fragment
         context['should_take_attendance'] = self.marker.is_a_monitor
         context['total_number_of_students'] = StudentMark.objects.filter(
             marker__order=self.marker.order - 1,
             marker__exam_room=self.marker.exam_room,
             student_placement__is_present=True
         ).values('student_placement').distinct().count()
+        context['section_average'] = self.get_queryset().filter(
+            mark__isnull=False, student_placement__is_present=True).aggregate(Avg('mark')).get('mark__avg')
         context['previous_marker'] = Marker.objects.filter(order=self.marker.order - 1,
                                                            exam_room=self.marker.exam_room).first()
         return context
 
     def get_extra_form_kwargs(self):
         kwargs = super(StudentMarksView, self).get_extra_form_kwargs()
+        kwargs['exam_settings'] = None
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -377,7 +368,7 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
 
     def get_queryset(self):
         if self.marker.is_the_tiebreaker():
-            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.fragment)
+            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.settings.fragment)
             # .filter(marker=self.marker, )  # TODO: find a more elegant solution for this issue
         elif self.marker.order > 1:
             students_marked_by_previous_marker = StudentMark.objects.filter(
@@ -396,7 +387,7 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
         return redirect(self.get_success_url())
 
 
-class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
+class UnacceptedStudentMarksView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
     template_name = 'exam/unaccepted_student_marks.html'
     model = StudentMark
     form_class = StudentMarkForm
@@ -405,17 +396,18 @@ class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
     can_delete = False
 
     def dispatch(self, request, *args, **kwargs):
-        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
-        marks = StudentMark.objects.filter(student_placement__exam_room__exam_shift__fragment=self.fragment)
+        # self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['grade_fragment_id'])
+        dispatch = super(UnacceptedStudentMarksView, self).dispatch(request, *args, **kwargs)
+        marks = StudentMark.objects.filter(student_placement__exam_room__exam_shift__settings=self.exam_settings)
         if not marks.exists():
-            return redirect(reverse_lazy('exam:settings', kwargs={'grade_fragment_id': self.fragment.pk}))
+            return redirect(reverse_lazy('exam:settings', kwargs={'exam_settings_id': self.exam_settings.pk}))
 
-        return super(UnacceptedStudentMarksView, self).dispatch(request, *args, **kwargs)
+        return dispatch
 
     def get_context_data(self, **kwargs):
         context = super(UnacceptedStudentMarksView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.fragment
-        context['number_of_markers'] = range(1, self.fragment.number_of_markers + 2)
+        # context['grade_fragment'] = self.fragment
+        context['number_of_markers'] = range(1, self.exam_settings.number_of_markers + 2)
         return context
 
     def get_extra_form_kwargs(self):
@@ -424,4 +416,4 @@ class UnacceptedStudentMarksView(CoordinatorBaseView, ModelFormSetView):
         return kwargs
 
     def get_queryset(self):
-        return StudentMark.get_unaccepted_marks(self.fragment)
+        return StudentMark.get_unaccepted_marks(self.exam_settings)

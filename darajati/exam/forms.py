@@ -15,25 +15,39 @@ class RoomForm(forms.ModelForm):
         exclude = ['updated_on']
 
 
-class ExamSettingsForm(forms.ModelForm):
+class ExamSettingsBaseForm:
+
+    def __init__(self, *args, **kwargs):
+        self.exam_settings = kwargs.pop('exam_settings')
+        super(ExamSettingsBaseForm, self).__init__(*args, **kwargs)
+
+        for field in self.fields:
+            if not self.fields[field].widget.attrs.get('class'):
+                self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+class ExamSettingsForm(ExamSettingsBaseForm, forms.ModelForm):
 
     class Meta:
-        model = GradeFragment
+        model = ExamSettings
         fields = ['exam_date', 'allow_markers_from_other_courses', 'allow_markers_to_mark_own_students',
                   'markings_difference_tolerance', 'number_of_markers', 'default_tie_breaking_marker', ]
 
         widgets = {
             'exam_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
+            'allow_markers_from_other_courses': forms.NullBooleanSelect,
+            'allow_markers_to_mark_own_students': forms.NullBooleanSelect,
         }
 
     def __init__(self, *args, **kwargs):
-        self.fragment = kwargs.pop('fragment')
         super(ExamSettingsForm, self).__init__(*args, **kwargs)
 
-        self.fields['default_tie_breaking_marker'].queryset = get_allowed_markers_for_a_fragment(self.fragment, True)
+        self.fields['default_tie_breaking_marker'].queryset = get_allowed_markers_for_a_fragment(
+            self.exam_settings.fragment, True
+        )
 
 
-class ExamShiftForm(forms.ModelForm):
+class ExamShiftForm(ExamSettingsBaseForm, forms.ModelForm):
 
     class Meta:
         model = ExamShift
@@ -43,9 +57,8 @@ class ExamShiftForm(forms.ModelForm):
             'end_date': forms.DateTimeInput(attrs={'class': 'form-control datetimepicker3'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        self.fragment = kwargs.pop('fragment')
-        super(ExamShiftForm, self).__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super(ExamShiftForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         cleaned_data = super(ExamShiftForm, self).clean()
@@ -59,7 +72,7 @@ class ExamShiftForm(forms.ModelForm):
 
     def save(self, commit=True):
         saved = super(ExamShiftForm, self).save(commit=False)
-        saved.fragment = self.fragment
+        saved.settings = self.exam_settings
         if commit:
             saved.save()
         return saved
@@ -70,16 +83,16 @@ class ExamShiftsFormSet(BaseModelFormSet):
         super(ExamShiftsFormSet, self).__init__(*args, **kwargs)
 
 
-class ExamRoomForm(forms.ModelForm):
+class ExamRoomForm(ExamSettingsBaseForm, forms.ModelForm):
 
     class Meta:
         model = ExamRoom
         fields = ['exam_shift', 'room', 'capacity']
 
     def __init__(self, *args, **kwargs):
-        self.fragment = kwargs.pop('fragment')
+        # self.exam_settings = kwargs.pop('exam_settings')
         super(ExamRoomForm, self).__init__(*args, **kwargs)
-        self.fields['exam_shift'].queryset = ExamShift.objects.filter(fragment=self.fragment)
+        self.fields['exam_shift'].queryset = ExamShift.objects.filter(settings=self.exam_settings)
         self.fields['exam_shift'].label_from_instance = self.label_from_instance
 
     @staticmethod
@@ -93,24 +106,23 @@ class ExamRoomsFormSet(BaseModelFormSet):
         super(ExamRoomsFormSet, self).__init__(*args, **kwargs)
 
 
-class MarkerForm(forms.ModelForm):
+class MarkerForm(ExamSettingsBaseForm, forms.ModelForm):
 
     class Meta:
         model = Marker
         fields = ['instructor', 'exam_room', 'order', 'generosity_factor', 'is_a_monitor']
 
     def __init__(self, *args, **kwargs):
-        self.fragment = kwargs.pop('fragment')
         super(MarkerForm, self).__init__(*args, **kwargs)
-        self.fields['exam_room'].queryset = ExamRoom.objects.filter(exam_shift__fragment=self.fragment)
+        self.fields['exam_room'].queryset = ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
         self.fields['generosity_factor'].widget.attrs.update({'style': 'width: 70px'})
         self.fields['generosity_factor'].widget.attrs.update({'step': '0.5'})
         self.fields['instructor'].widget.attrs.update({'style': 'width: 200px'})
 
         if self.instance.is_the_tiebreaker():
-            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.fragment, True)
+            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.exam_settings.fragment, True)
         else:
-            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.fragment, False)
+            self.fields['instructor'].queryset = get_allowed_markers_for_a_fragment(self.exam_settings.fragment)
 
 
 class MarkersFormSet(BaseModelFormSet):
@@ -142,7 +154,7 @@ class MarkersFormSet(BaseModelFormSet):
                 monitors_shifts.append(monitor_shift)
 
 
-class StudentMarkForm(forms.ModelForm):
+class StudentMarkForm(ExamSettingsBaseForm, forms.ModelForm):
     is_present = forms.NullBooleanField(label=_('Is Present?'), widget=forms.CheckboxInput)
 
     class Meta:
@@ -157,7 +169,7 @@ class StudentMarkForm(forms.ModelForm):
         self.user = kwargs.pop('user')
         super(StudentMarkForm, self).__init__(*args, **kwargs)
         self.fields['mark'].required = False
-        self.fields['mark'].widget.attrs.update({'style': 'width:75px', 'class': 'grade_quantity'})
+        self.fields['mark'].widget.attrs.update({'style': 'width:75px', 'class': 'grade_quantity', 'step': '0.50'})
         if self.instance.marker.is_a_monitor:
             self.initial['is_present'] = self.instance.student_placement.is_present
         else:

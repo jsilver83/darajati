@@ -69,12 +69,12 @@
 					<tbody>
 					{% for marker in active_marking_assignments %}
 						<tr>
-							<td>{{ marker.exam_room.exam_shift.fragment.course_offering.semester.code }}</td>
+							<td>{{ marker.exam_room.exam_shift.settings.fragment.course_offering.semester.code }}</td>
 							<td
-									{% if marker.exam_room.exam_shift.fragment.course_offering.coordinated %} style="color:red" {% endif %}>
-								{{ marker.exam_room.exam_shift.fragment.course_offering.course.code }}</td>
-							<td>{{ marker.exam_room.exam_shift.fragment.course_offering.course.name }}</td>
-							<td>{{ marker.exam_room.exam_shift.fragment.short_name }}</td>
+									{% if marker.exam_room.exam_shift.settings.fragment.course_offering.coordinated %} style="color:red" {% endif %}>
+								{{ marker.exam_room.exam_shift.settings.fragment.course_offering.course.code }}</td>
+							<td>{{ marker.exam_room.exam_shift.settings.fragment.course_offering.course.name }}</td>
+							<td>{{ marker.exam_room.exam_shift.settings.fragment.short_name }}</td>
 							<td>{{ marker.exam_room }}</td>
 							<td>{{ marker.order|ordinal }}</td>
 							<td><a href="{% url 'exam:marks' marker.pk %}"

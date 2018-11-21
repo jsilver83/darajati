@@ -10,6 +10,7 @@ from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
 from .forms import GradesImportForm
 from .utils import now
+from exam.models import Marker
 
 from grade.forms import GradeFragmentForm
 
@@ -94,13 +95,11 @@ class InstructorView(InstructorBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(InstructorView, self).get_context_data(**kwargs)
 
-        if check_if_exam_app_is_installed:
-            from exam.models import Marker
-            context['active_marking_assignments'] = Marker.objects.filter(
-                instructor__user=self.request.user,
-                exam_room__exam_shift__fragment__entry_start_date__lte=now(),
-                exam_room__exam_shift__fragment__entry_end_date__gte=now(),
-            )
+        context['active_marking_assignments'] = Marker.objects.filter(
+            instructor__user=self.request.user,
+            exam_room__exam_shift__settings__fragment__entry_start_date__lte=now(),
+            exam_room__exam_shift__settings__fragment__entry_end_date__gte=now(),
+        )
 
         return context
 

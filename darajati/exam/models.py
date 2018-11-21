@@ -1,11 +1,12 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import OuterRef, F, Subquery, Func, DecimalField
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
+from simple_history.models import HistoricalRecords
 
 from enrollment.models import Coordinator, Instructor, Section, ScheduledPeriod, Enrollment
 from .utils import get_allowed_markers_for_a_fragment
@@ -39,15 +40,58 @@ class Room(models.Model):
         return '%s - c(%d)' % (self.location, self.capacity)
 
 
+class ExamSettings(models.Model):
+    fragment = models.OneToOneField('grade.GradeFragment', on_delete=models.CASCADE,
+                                    related_name='exam_settings', null=True, blank=False,
+                                    verbose_name=_('Grade Fragment'), )
+    exam_date = models.DateField(
+        _('Exam Date'),
+        null=True,
+        blank=False,
+    )
+    allow_markers_from_other_courses = models.BooleanField(
+        _('Allow Markers From Other Courses'),
+        default=False,
+        help_text=_('If checked, it means you can assign markers in the subjective marking module from other courses '
+                    'within the same department')
+    )
+    allow_markers_to_mark_own_students = models.BooleanField(
+        _('Allow Markers To Mark Own Students'),
+        default=False,
+        help_text=_('If checked, it means the marker can mark students that he actually teaches')
+    )
+    markings_difference_tolerance = models.DecimalField(
+        _('Markings Difference Tolerance'),
+        null=True,
+        blank=False,
+        help_text=_('The maximum difference allowed between different markings of a student paper before the '
+                    'intervention of a tie-breaker'),
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT
+    )
+    number_of_markers = models.PositiveSmallIntegerField(
+        _('Number Of Markers'),
+        null=True,
+        blank=False,
+        default=2,
+        help_text=_('Indicates the number of markers that will subjectively mark students papers. If the number is 2,'
+                    'that means two markers will enter marks for each student paper and a third marker will break the '
+                    'tie if needed')
+    )
+    default_tie_breaking_marker = models.ForeignKey('enrollment.Instructor', on_delete=models.SET_NULL,
+                                                    related_name='third_marker', null=True, blank=False,
+                                                    verbose_name=_('Default Tie-Breaking Marker'), )
+
+
 # TODO: Consider changing start/end dates to date and start/end times
 class ExamShift(models.Model):
-    fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.CASCADE, related_name='exams_shifts',
-                                 null=True, verbose_name=_('Fragment'), blank=False)
+    settings = models.ForeignKey('ExamSettings', on_delete=models.CASCADE, related_name='exams_shifts',
+                                 null=True, verbose_name=_('Exam Settings'), blank=False)
     start_date = models.DateTimeField(_('Shift Start Date'), null=True, blank=False)
     end_date = models.DateTimeField(_('Shift End Date'), null=True, blank=False)
 
     class Meta:
-        ordering = ['fragment', 'start_date', ]
+        ordering = ['settings', 'start_date', ]
 
     def __str__(self):
         return '%s (%s - %s)' % (self.start_date.date(),
@@ -55,33 +99,33 @@ class ExamShift(models.Model):
                                  self.end_date.astimezone().time())
 
     @staticmethod
-    def get_exam_day(fragment):
-        if fragment:
-            return fragment.exam_date.strftime('%A').lower()
+    def get_exam_day(exam_settings):
+        if exam_settings:
+            return exam_settings.exam_date.strftime('%A').lower()
 
     @staticmethod
-    def get_shifts(fragment):
-        return ExamShift.objects.filter(fragment=fragment)
+    def get_shifts(exam_settings):
+        return ExamShift.objects.filter(settings=exam_settings)
 
     @staticmethod
-    def get_exam_periods_at_exam_date(fragment):
-        exam_day = ExamShift.get_exam_day(fragment)
+    def get_exam_periods_at_exam_date(exam_settings):
+        exam_day = ExamShift.get_exam_day(exam_settings)
 
-        return ScheduledPeriod.objects.filter(section__course_offering=fragment.course_offering,
+        return ScheduledPeriod.objects.filter(section__course_offering=exam_settings.fragment.course_offering,
                                               day__iexact=exam_day).values('start_time', 'end_time').distinct()
 
     def get_exam_rooms_for_exam_shift(self):
-        exam_day = ExamShift.get_exam_day(self.fragment)
+        exam_day = ExamShift.get_exam_day(self.settings)
         # TODO: make the location in ScheduledPeriod as an instance of Location(model) in enrollments app
-        return ScheduledPeriod.objects.filter(section__course_offering=self.fragment.course_offering,
+        return ScheduledPeriod.objects.filter(section__course_offering=self.settings.fragment.course_offering,
                                               day__iexact=exam_day,
                                               start_time=self.start_date.astimezone().time(),
                                               end_time=self.end_date.astimezone().time()).values('location').distinct()
 
     @staticmethod
-    def create_exam_rooms_for_shifts(fragment):
-        ExamRoom.objects.filter(exam_shift__fragment=fragment).delete()
-        shifts = ExamShift.get_shifts(fragment)
+    def create_exam_rooms_for_shifts(exam_settings):
+        ExamRoom.objects.filter(exam_shift__settings=exam_settings).delete()
+        shifts = ExamShift.get_shifts(exam_settings)
 
         for shift in shifts:
             rooms = shift.get_exam_rooms_for_exam_shift()
@@ -92,15 +136,15 @@ class ExamShift(models.Model):
                     ExamRoom.objects.create(exam_shift=shift, room=exam_room, capacity=exam_room.capacity)
 
     @staticmethod
-    def create_shifts_for_fragment(fragment):
-        ExamShift.get_shifts(fragment).delete()
+    def create_shifts_for_exam_settings(exam_settings):
+        ExamShift.get_shifts(exam_settings).delete()
 
-        exam_date = fragment.exam_date
-        periods = ExamShift.get_exam_periods_at_exam_date(fragment)
+        exam_date = exam_settings.exam_date
+        periods = ExamShift.get_exam_periods_at_exam_date(exam_settings)
 
         for period in periods:
             shift = ExamShift()
-            shift.fragment = fragment
+            shift.settings = exam_settings
             shift.start_date = timezone.datetime(year=exam_date.year,
                                                  month=exam_date.month,
                                                  day=exam_date.day,
@@ -116,10 +160,10 @@ class ExamShift(models.Model):
     def check_issues_in_timing(self, enrollment):
         # Check all the student periods (for the same course) in the exam date and make sure ...
         # the current exam shift falls in any of them
-        exam_day = self.fragment.exam_date.strftime('%A').lower()
+        exam_day = self.settings.exam_date.strftime('%A').lower()
 
         student_periods_at_exam_day = enrollment.section.scheduled_periods.filter(
-            section__course_offering=self.fragment.course_offering,
+            section__course_offering=self.settings.fragment.course_offering,
             day__iexact=exam_day
         ).values('start_time', 'end_time').distinct()
 
@@ -134,8 +178,9 @@ class ExamShift(models.Model):
 
     @property
     def get_max_number_of_students_placements_possible(self):
-        if self.fragment:
-            enrollments = Enrollment.objects.filter(section__course_offering=self.fragment.course_offering,
+        if self.settings:
+            print('test')
+            enrollments = Enrollment.objects.filter(section__course_offering=self.settings.fragment.course_offering,
                                                     active=True)
             count = 0
             for enrollment in enrollments:
@@ -172,7 +217,7 @@ class ExamRoom(models.Model):
         if self.remaining_seats > 0:
             if self.exam_shift.check_issues_in_timing(enrollment):
 
-                number_of_markers = self.exam_shift.fragment.number_of_markers
+                number_of_markers = self.exam_shift.settings.number_of_markers
                 hospitable = True
 
                 for marker in self.get_markers():
@@ -210,6 +255,8 @@ class Marker(models.Model):
     updated_by = models.ForeignKey(User, null=True, blank=True, verbose_name=_('Updated By'), on_delete=models.SET_NULL)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return str(self.instructor)
 
@@ -217,17 +264,17 @@ class Marker(models.Model):
         ordering = ['exam_room', 'order', 'instructor', ]
 
     def is_the_tiebreaker(self):
-        return self.order == self.exam_room.exam_shift.fragment.number_of_markers + 1
+        return self.order == self.exam_room.exam_shift.settings.number_of_markers + 1
 
     @staticmethod
-    def create_markers_for_fragment(fragment):
-        Marker.objects.filter(exam_room__exam_shift__fragment=fragment).delete()
+    def create_markers_for_exam_settings(exam_settings):
+        Marker.objects.filter(exam_room__exam_shift__settings=exam_settings).delete()
 
-        exam_day = fragment.exam_date.strftime('%A').lower()
+        exam_day = exam_settings.exam_date.strftime('%A').lower()
 
-        markers_count = fragment.number_of_markers or 0
-        rooms = ExamRoom.objects.filter(exam_shift__fragment=fragment)
-        allowed_markers_list = list(get_allowed_markers_for_a_fragment(fragment))
+        markers_count = exam_settings.number_of_markers or 0
+        rooms = ExamRoom.objects.filter(exam_shift__settings=exam_settings)
+        allowed_markers_list = list(get_allowed_markers_for_a_fragment(exam_settings.fragment))
 
         for room in rooms:
             for i in range(1, markers_count + 2):
@@ -235,7 +282,7 @@ class Marker(models.Model):
                 if i == 1:
                     marker.is_a_monitor = True
                     instructors_assigned = ScheduledPeriod.objects.filter(
-                        section__course_offering=fragment.course_offering,
+                        section__course_offering=exam_settings.fragment.course_offering,
                         day__iexact=exam_day,
                         start_time=room.exam_shift.start_date.astimezone().time(),
                         end_time=room.exam_shift.end_date.astimezone().time(),
@@ -244,19 +291,19 @@ class Marker(models.Model):
                         marker.instructor = instructors_assigned.first().instructor_assigned
                 elif i == markers_count + 1:
                     if Marker.objects.filter(exam_room=room,
-                                             instructor=fragment.default_tie_breaking_marker).count() == 0:
-                        marker.instructor = fragment.default_tie_breaking_marker
+                                             instructor=exam_settings.default_tie_breaking_marker).count() == 0:
+                        marker.instructor = exam_settings.default_tie_breaking_marker
                 else:
                     for instructor_to_be_marker in allowed_markers_list:
                         if Marker.objects.filter(exam_room=room, instructor=instructor_to_be_marker).count() == 0 \
-                                and instructor_to_be_marker != fragment.default_tie_breaking_marker:
+                                and instructor_to_be_marker != exam_settings.default_tie_breaking_marker:
                             marker.instructor = instructor_to_be_marker
                             allowed_markers_list.remove(instructor_to_be_marker)
                             break
                 marker.save()
 
     def can_mark_enrollment(self, enrollment):
-        if self.exam_room.exam_shift.fragment.allow_markers_to_mark_own_students:
+        if self.exam_room.exam_shift.settings.allow_markers_to_mark_own_students:
             return True
         else:
             return enrollment.section not in Section.get_instructor_sections(self.instructor)
@@ -283,7 +330,7 @@ class StudentPlacement(models.Model):
         return '%s %s' % (self.enrollment, self.exam_room)
 
     def are_marks_tolerable(self):
-        difference_tolerance = self.exam_room.exam_shift.fragment.markings_difference_tolerance
+        difference_tolerance = self.exam_room.exam_shift.settings.markings_difference_tolerance
 
         first_mark = self.marks.filter(marker__order=1).first().weighted_mark
         second_mark = self.marks.filter(marker__order=2).first().weighted_mark
@@ -323,6 +370,8 @@ class StudentMark(models.Model):
     updated_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True)
 
+    history = HistoricalRecords()
+
     class Meta:
         ordering = ['student_placement', 'marker', ]
 
@@ -336,7 +385,7 @@ class StudentMark(models.Model):
         return mark + generosity_factor
 
     @staticmethod
-    def get_unaccepted_marks(fragment):
+    def get_unaccepted_marks(exam_settings):
         # NOTE: THIS IS THE MOST COMPLICATED QUERY I'VE EVER WRITTEN IN DJANGO ORM SO FAR
         # because of its complexity, I assumed it will be used in the case of 2 markers and a tiebreaker
         subquery_first_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=1) \
@@ -346,13 +395,13 @@ class StudentMark(models.Model):
         subquery_third_marker = StudentMark.objects.filter(student_placement=OuterRef('pk'), marker__order=3) \
             .annotate(weighted_mark=F('mark') + F('marker__generosity_factor'))
 
-        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__fragment=fragment) \
+        student_placement_queryset = StudentPlacement.objects.filter(exam_room__exam_shift__settings=exam_settings) \
             .annotate(
             first_mark=Subquery(subquery_first_marker.values('weighted_mark')[:1]),
             second_mark=Subquery(subquery_second_marker.values('weighted_mark')[:1]),
             third_mark=Subquery(subquery_third_marker.values('mark')[:1]), ) \
             .annotate(
             marks_difference=Func(F('first_mark') - F('second_mark'), function='ABS', output_field=DecimalField())) \
-            .filter(marks_difference__gt=fragment.markings_difference_tolerance)
+            .filter(marks_difference__gt=exam_settings.markings_difference_tolerance)
 
         return StudentMark.objects.filter(student_placement__in=student_placement_queryset)
