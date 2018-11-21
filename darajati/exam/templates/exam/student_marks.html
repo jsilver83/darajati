@@ -88,13 +88,16 @@
         });
 
         function calculate_average() {
-            var total = 0;
+            var total = 0.0;
+            var count = 0.0;
             $('.grade_quantity').each(function (index) {
                 var float_value = parseFloat($(this).val()) | 0;
-                total += float_value;
+                if (float_value > 0){
+                    total += float_value;
+                    count ++;
+                }
             });
-            total = total / $('.grade_quantity').length;
-            $('.section_average').html(total.toFixed(2));
+            $('.section_average').html((total / count).toFixed(2));
         }
     </script>
 {% endblock %}
