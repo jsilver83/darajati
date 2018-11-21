@@ -27,6 +27,10 @@ class Person(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def kfupm_email(self):
+        return '%s@kfupm.edu.sa' % self.user.username
+
 
 class Student(Person):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)

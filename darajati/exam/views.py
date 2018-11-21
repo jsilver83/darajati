@@ -276,59 +276,42 @@ class MarkersView(CoordinatorBaseView, ModelFormSetView):
             writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
 
             # Write markers CSV header
-            writer.writerow(['Room', 'Time', 'Teacher', 'Order', 'Is A Monitor?'])
+            writer.writerow(['Room', 'Time', 'Teacher', 'Email', 'Order', 'Is A Monitor?', ])
 
             # Maximum 2000 records will be fetched anyways to make this code non-abusive
             markers = self.get_queryset()[:2000]
 
             if markers:
-                current_exam_room = None
-
                 for marker in markers:
-                    if current_exam_room != marker.exam_room:
-                        writer.writerow([
-                            marker.exam_room.room.location,
-                            marker.exam_room.exam_shift,
-                            marker.instructor,
-                            marker.order,
-                            marker.is_a_monitor
-                        ])
-                    else:
-                        writer.writerow([
-                            '',
-                            '',
-                            marker.instructor,
-                            marker.order,
-                            marker.is_a_monitor
-                        ])
-                    current_exam_room = marker.exam_room
+                    writer.writerow([
+                        marker.exam_room.room.location,
+                        marker.exam_room.exam_shift,
+                        marker.instructor,
+                        marker.instructor.kfupm_email,
+                        marker.order,
+                        marker.is_a_monitor
+                    ])
 
                 writer.writerow([])
                 writer.writerow([])
 
             # Write students' placement CSV header
-            writer.writerow(['Student ID', 'Room', 'Time'])
+            writer.writerow(['Room', 'Time', 'Student ID', 'Name', 'Email', 'Section', ])
 
             student_placements = StudentPlacement.objects.filter(
                 exam_room__exam_shift__fragment=self.fragment
             ).order_by('exam_room', 'enrollment')[:2000]
 
             if student_placements:
-                current_exam_room = None
                 for student_placement in student_placements:
-                    if current_exam_room != student_placement.exam_room:
-                        writer.writerow([
-                            student_placement.exam_room.room.location,
-                            student_placement.exam_room.exam_shift,
-                            student_placement.enrollment.student.university_id
-                        ])
-                    else:
-                        writer.writerow([
-                            '',
-                            '',
-                            student_placement.enrollment.student.university_id
-                        ])
-                    current_exam_room = student_placement.exam_room
+                    writer.writerow([
+                        student_placement.exam_room.room.location,
+                        student_placement.exam_room.exam_shift,
+                        student_placement.enrollment.student.university_id,
+                        student_placement.enrollment.student.english_name,
+                        student_placement.enrollment.student.kfupm_email,
+                        student_placement.enrollment.section.code,
+                    ])
 
             if student_placements or markers:
                 response = HttpResponse()
