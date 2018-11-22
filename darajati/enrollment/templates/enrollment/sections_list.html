@@ -84,6 +84,12 @@
 					</tbody>
 				</table>
 			{% endif %}
+			{% if tie_breaking_assignments %}
+				<center>
+					<a href="{% url 'exam:marks' tie_breaking_assignments.pk %}"
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'Enter Marks For Tie-breaking' %}</a>
+				</center>
+			{% endif %}
 
 			{% if all_active_markers %}
 				<br><br>
@@ -101,9 +107,9 @@
 								</td>
 							</tr>
 							<tr>
-							<td><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}</td>
+							<td><a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }} <span class="glyphicon glyphicon-pencil"></span></a></td>
 						{% else %}
-							<td><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}</td>
+							<td><a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }} <span class="glyphicon glyphicon-pencil"></span></a></td>
 						{% endifchanged %}
 					{% endfor %}
 					</tbody>

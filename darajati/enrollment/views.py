@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import F
 from django.shortcuts import redirect, render
 from django.views.generic import View, ListView, UpdateView, CreateView, FormView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -99,7 +100,15 @@ class InstructorView(InstructorBaseView, ListView):
             instructor__user=self.request.user,
             exam_room__exam_shift__settings__fragment__entry_start_date__lte=now(),
             exam_room__exam_shift__settings__fragment__entry_end_date__gte=now(),
+            order__lte=F('exam_room__exam_shift__settings__number_of_markers'),
         )
+
+        context['tie_breaking_assignments'] = Marker.objects.filter(
+            instructor__user=self.request.user,
+            exam_room__exam_shift__settings__fragment__entry_start_date__lte=now(),
+            exam_room__exam_shift__settings__fragment__entry_end_date__gte=now(),
+            order__gt=F('exam_room__exam_shift__settings__number_of_markers'),
+        ).first()
 
         return context
 
@@ -186,11 +195,10 @@ class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(CoordinatorSectionView, self).get_context_data(**kwargs)
 
-        from exam.models import Marker
         context['all_active_markers'] = Marker.objects.filter(
-            exam_room__exam_shift__fragment__course_offering=self.course_offering,
-            exam_room__exam_shift__fragment__entry_start_date__lte=now(),
-            exam_room__exam_shift__fragment__entry_end_date__gte=now(),
+            exam_room__exam_shift__settings__fragment__course_offering=self.course_offering,
+            exam_room__exam_shift__settings__fragment__entry_start_date__lte=now(),
+            exam_room__exam_shift__settings__fragment__entry_end_date__gte=now(),
         )
 
         return context

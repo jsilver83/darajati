@@ -368,8 +368,9 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
 
     def get_queryset(self):
         if self.marker.is_the_tiebreaker():
-            return StudentMark.get_unaccepted_marks(self.marker.exam_room.exam_shift.settings.fragment)
-            # .filter(marker=self.marker, )  # TODO: find a more elegant solution for this issue
+            return StudentMark.get_unaccepted_marks(
+                self.marker.exam_room.exam_shift.settings
+            ).filter(marker__order__gt=F('student_placement__exam_room__exam_shift__settings__number_of_markers'))
         elif self.marker.order > 1:
             students_marked_by_previous_marker = StudentMark.objects.filter(
                 Q(mark__isnull=False) | Q(student_placement__is_present=False),
