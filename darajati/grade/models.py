@@ -220,14 +220,19 @@ class GradeFragment(models.Model):
 
     def is_entry_allowed(self):
         """
-        :return: True if trying to access a grade fragment grades within the allowed time else False 
+        :return: True if trying to access a grade fragment grades within the allowed time
         """
         try:
-            if self.entry_start_date <= now() <= self.entry_end_date:
-                return True
+            return self.entry_start_date <= now() <= self.entry_end_date
         except GradeFragment.DoesNotExist:
-            return False
-        return False
+            pass
+
+    @property
+    def allow_subjective_marking(self):
+        """
+        :return: True if boundary_type is SUBJECTIVE_MARKING
+        """
+        return self.boundary_type == self.GradesBoundaries.SUBJECTIVE_MARKING
 
     def get_section_average(self, section):
         return StudentGrade.get_section_average(
