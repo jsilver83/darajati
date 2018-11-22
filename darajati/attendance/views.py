@@ -148,7 +148,7 @@ class ExcuseEntryBaseView(UserPassesTestMixin):
 # TODO: implement pagination and search
 class ExcusesListingView(ExcuseEntryBaseView, ListView):
     object = Excuse
-    template_name = 'attendance/excuses_lisiting.html'
+    template_name = 'attendance/excuses_listing.html'
 
     def get_queryset(self):
         return Excuse.objects.all().order_by('-applied_on', '-created_on')
