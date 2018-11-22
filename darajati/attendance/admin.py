@@ -1,5 +1,8 @@
 from django.contrib import admin
 
+from darajati.mixin import ModelAdminMixin
+from simple_history.admin import SimpleHistoryAdmin
+
 from .models import *
 
 
@@ -25,9 +28,8 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
     search_fields = ('period', 'date', 'comment')
 
 
-# TODO: Implement History
-class AttendanceAdmin(admin.ModelAdmin):
-    readonly_fields = ('updated_by',)
+class AttendanceAdmin(SimpleHistoryAdmin):
+    readonly_fields = ('updated_by', 'attendance_instance', 'enrollment')
     date_hierarchy = 'attendance_instance__date'
     list_filter = ('attendance_instance__period__section__course_offering', 'status',)
     list_display = ('attendance_instance', 'enrollment', 'status')

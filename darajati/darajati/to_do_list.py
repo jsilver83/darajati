@@ -21,5 +21,9 @@ Dec 25
 :::
 Jan 2 2018
 add last updated by in grades
+
+22 Nov 2018
+- fix error messages not being sent to ADMINS
+- fix submit buttons in all forms to make it submit only once: https://stackoverflow.com/a/2545795/853175
 """
 

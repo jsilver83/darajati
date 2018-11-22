@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from simple_history.models import HistoricalRecords
 
 from darajati.validators import validate_file_extension
 from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, \
@@ -247,7 +248,6 @@ class AttendanceInstance(models.Model):
         return AttendanceInstance.objects.filter(period=period, date=date).exists()
 
 
-# TODO: Implement History
 class Attendance(models.Model):
     class Types:
         ABSENT = 'abs'
@@ -271,10 +271,14 @@ class Attendance(models.Model):
     updated_on = models.DateTimeField(auto_now=True, null=True, blank=False)
     updated_by = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
 
+    history = HistoricalRecords()
+
     class Meta:
         permissions = (
             ('can_give_excused_status', _('Can change student status to excused')),
         )
+        # important to prevent duplicated attendances for the same period/enrollment
+        unique_together = ('attendance_instance', 'enrollment')
 
     def __str__(self):
         return to_string(self.attendance_instance.period, self.enrollment.student.english_name)
