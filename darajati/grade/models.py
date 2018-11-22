@@ -20,6 +20,7 @@ class GradeFragment(models.Model):
         SUBJECTIVE_BOUNDED = 'SUBJECTIVE_BOUNDED'
         SUBJECTIVE_BOUNDED_FIXED = 'SUBJECTIVE_BOUNDED_FIXED'
         SUBJECTIVE_FREE = 'SUBJECTIVE_FREE'
+        SUBJECTIVE_MARKING = 'SUBJECTIVE_MARKING'
 
         @classmethod
         def choices(cls):
@@ -28,6 +29,7 @@ class GradeFragment(models.Model):
                 (cls.SUBJECTIVE_BOUNDED, _('Subjective bound')),
                 (cls.SUBJECTIVE_BOUNDED_FIXED, _('Subjective bound Fixed')),
                 (cls.SUBJECTIVE_FREE, _('Subjective Free')),
+                (cls.SUBJECTIVE_MARKING, _('Subjective Marking')),
             )
 
     course_offering = models.ForeignKey(
@@ -126,12 +128,6 @@ class GradeFragment(models.Model):
         null=False,
         blank=False,
         default=True
-    )
-    allow_subjective_marking = models.BooleanField(
-        _('Allow Subjective Marking'),
-        null=False,
-        blank=False,
-        default=False
     )
     student_total_grading = models.BooleanField(
         _('Calculate In Student Grading?'),
