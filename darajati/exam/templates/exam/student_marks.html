@@ -5,7 +5,7 @@
 	<div class="content-panel">
 		<br>
 		{% include 'exam/snippets/course_offering_details.html' %}
-		{% if formset|length < total_number_of_students %}
+		{% if show_warning %}
 		<div class="alert alert-warning alert-dismissable">
 			{% trans 'The previous marker' %} <b>{{ previous_marker }}</b> {% trans "didn't enter marks for all present students." %}
 			{% trans 'He only eneterend' %} {{ formset|length }} {% trans 'out of' %} {{ total_number_of_students }}...
