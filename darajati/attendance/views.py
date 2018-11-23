@@ -61,15 +61,12 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
     def get_initial(self):
         if self.coordinator:
-            return Enrollment.get_students_enrollment(self.section_id, self.date)
-        return Enrollment.get_students_enrollment(self.section_id, self.date, self.request.user.instructor)
+            return Enrollment.get_students_attendances_initial_data(self.section_id, self.date)
+        return Enrollment.get_students_attendances_initial_data(self.section_id, self.date, self.request.user.instructor)
 
     def formset_valid(self, formset):
         for form in formset:
-            form.user = self.request.user
-            saved_form = form.save(commit=False)
-            if saved_form:
-                saved_form.save()
+            form.save()
         messages.success(self.request, _('Your attendances were saved'))
         return super(AttendanceView, self).formset_valid(formset)
 
@@ -96,6 +93,14 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
         context['current_date'] = period_date
         context['today'] = today()
+
+        enrollments = Enrollment.get_students_of_section(self.section_id).filter(active=True)
+        context['students_attendances_summaries'] = [{
+            'pk': enrollment.pk,
+            'deduction': enrollment.get_enrollment_total_deduction
+        } for enrollment in enrollments]
+        context['section_id'] = self.section_id
+
         return context
 
     def get_extra_form_kwargs(self):
@@ -134,7 +139,7 @@ class StudentAttendanceSummaryView(InstructorBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(StudentAttendanceSummaryView, self).get_context_data(**kwargs)
         context.update({
-            'enrollment': Enrollment.objects.get(id=self.enrollment_id),
+            'enrollment': get_object_or_404(Enrollment, pk=self.enrollment_id),
             'section': self.section
         })
         return context
