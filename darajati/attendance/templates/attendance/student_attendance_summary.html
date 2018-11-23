@@ -1,36 +1,51 @@
 {% extends "base.html" %}
 {% load i18n staticfiles %}
 {% block content %}
-    <div class="content-panel">
-        <div class="cntnt-sec">
-            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
-            <div class="title-sec text-center">
-                <h3>
-                    {% trans 'Find student ' %}{{ enrollment.student.english_name }} {% trans 'attendances' %}
-                    <br>
-                    {% trans 'for section ' %}{{ section.code }}
-                </h3>
-            </div>
-            <table class="table table-condensed text-center">
-                <thead>
-                <tr>
-                    <th class="text-center">{% trans 'Date' %}</th>
-                    <th class="text-center">{% trans 'Day' %}</th>
-                    <th class="text-center">{% trans 'Time' %}</th>
-                    <th class="text-center">{% trans 'Status' %}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in attendances %}
-                    <tr>
-                        <td>{{ item.attendance_instance.date }}</td>
-                        <td>{{ item.attendance_instance.period.day }}</td>
-                        <td>{{ item.attendance_instance.period.start_time }} {% trans ' to ' %} {{ item.attendance_instance.period.end_time }}</td>
-                        <td>{{ item.get_status_display }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			<div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
+			<div class="title-sec text-center">
+				<h3>
+					{% trans 'Find student ' %}{{ enrollment.student.english_name }} {% trans 'attendances' %}
+					<br>
+					{% trans 'for section ' %}{{ section.code }}
+				</h3>
+			</div>
+			<div class="card card-outline-secondary mb-3">
+				<div class="card-block">
+					<blockquote class="card-blockquote">
+						<p>{% trans 'Name' %}: <b>{{ enrollment.student.name }}</b></p>
+						<p>{% trans 'KFUPM ID' %}: <b>{{ enrollment.student.university_id }}</b></p>
+						<p>{% trans 'Section' %}: <b>{{ enrollment.section }}</b></p>
+						<p>{% trans 'Active' %}: <b>{{ enrollment.active }}</b></p>
+						<p>{% trans 'Letter Grade' %}: <b>{{ enrollment.letter_grade }}</b></p>
+						<p>{% trans 'Absences' %}: <b>{{ enrollment.get_enrollment_total_absence }}</b></p>
+						<p>{% trans 'Lates' %}: <b>{{ enrollment.get_enrollment_total_late }}</b></p>
+						<p>{% trans 'Excuses' %}: <b>{{ enrollment.get_enrollment_total_excuses }}</b></p>
+						<p>{% trans 'Deduction' %}: <b>{{ enrollment.get_enrollment_total_deduction }}</b></p>
+					</blockquote>
+				</div>
+			</div>
+			<table class="table table-condensed text-center">
+				<thead>
+				<tr>
+					<th class="text-center">{% trans 'Date' %}</th>
+					<th class="text-center">{% trans 'Day' %}</th>
+					<th class="text-center">{% trans 'Time' %}</th>
+					<th class="text-center">{% trans 'Status' %}</th>
+				</tr>
+				</thead>
+				<tbody>
+				{% for item in attendances %}
+					<tr class="{% if item.status == 'abs' %}danger{% elif item.status == 'lat' %}warning{% elif item.status == 'exc' %}success{% endif %}">
+						<td>{{ item.attendance_instance.date }}</td>
+						<td>{{ item.attendance_instance.period.day }}</td>
+						<td>{{ item.attendance_instance.period.start_time }} {% trans ' to ' %} {{ item.attendance_instance.period.end_time }}</td>
+						<td>{{ item.get_status_display }}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
 {% endblock %}
