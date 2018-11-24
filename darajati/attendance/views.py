@@ -150,9 +150,10 @@ class ExcuseEntryBaseView(UserPassesTestMixin):
         return Instructor.can_give_excuses(self.request.user)
 
 
-# TODO: implement pagination and search
+# TODO: implement search by ID and dates
 class ExcusesListingView(ExcuseEntryBaseView, ListView):
     object = Excuse
+    paginate_by = 10
     template_name = 'attendance/excuses_listing.html'
 
     def get_queryset(self):

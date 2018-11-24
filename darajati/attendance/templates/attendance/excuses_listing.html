@@ -38,8 +38,8 @@
 							<td>{{ excuse.includes_exams|yesno }}</td>
 							<td>
 								{% if excuse.attachments %}
-								<a target="_blank" href="{{ excuse.attachments.url }}">
-									<span class="glyphicon glyphicon-file"></span></a>
+									<a target="_blank" href="{{ excuse.attachments.url }}">
+										<span class="glyphicon glyphicon-file"></span></a>
 								{% endif %}
 							</td>
 							<td>{{ excuse.created_on|timesince }}&nbsp;{% trans 'by' %}&nbsp;{{ excuse.created_by }}</td>
@@ -48,7 +48,8 @@
 									<a title="This is un-applied excuse. Click to apply it." class="btn btn-warning btn-sm" href="{% url 'attendance:excuse_entry_confirm' excuse.pk %}">{% trans 'Apply' %}</a>
 								{% else %}
 									<a title="Show Excuse" class="btn btn-default btn-sm" href="{% url 'attendance:excuse_entry_confirm' excuse.pk %}">
-										<span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> {{ excuse.applied_on|timesince }}&nbsp;{% trans 'by' %}&nbsp;{{ excuse.applied_by }}</a>
+										<span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> {{ excuse.applied_on|timesince }}&nbsp;{% trans 'by' %}&nbsp;{{ excuse.applied_by }}
+									</a>
 								{% endif %}
 							</td>
 						</tr>
@@ -58,6 +59,9 @@
 				</table>
 			{% endif %}
 			<br>
+			<hr>
+			<br>
+			{% include 'snippets/pagination.html' %}
 
 		</div>
 	</div>
