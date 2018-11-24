@@ -231,12 +231,12 @@ class CourseOffering(models.Model):
     @staticmethod
     def get_current_course_offerings():
         """
-        :return: current semester course_offering_id and course code 
+        :return: current semester course_offering_id and 'semester code - course code'
         """
-        return CourseOffering.objects.filter(
-            semester__start_date__lte=now(),
-            semester__end_date__gte=now()
-        ).values_list('id', 'course__code')
+        return [(course_offering.pk, str(course_offering))
+                for course_offering in CourseOffering.objects.filter(
+                semester__start_date__lte=now(),
+                semester__end_date__gte=now())]
 
 
 class Section(models.Model):
