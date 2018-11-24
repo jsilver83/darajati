@@ -1,15 +1,19 @@
-from extra_views import FormSetView
-from django.views.generic import ListView
-from django.urls import reverse_lazy
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db.models import F
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse_lazy
 from django.utils.dateparse import parse_date
-from .forms import AttendanceForm
-from .models import ScheduledPeriod, Attendance
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic import ListView, CreateView, UpdateView, FormView, TemplateView
+from django.views.generic.base import View
+from extra_views import FormSetView
 
-from enrollment.utils import today, day_string, get_offset_day
-from enrollment.models import Enrollment
+from enrollment.models import Enrollment, Student, Instructor
+from enrollment.utils import today, get_offset_day, now
 from enrollment.views import InstructorBaseView
+from .forms import AttendanceForm, ExcuseForm
+from .models import ScheduledPeriod, Attendance, Excuse
 
 
 class AttendanceBaseView(InstructorBaseView):
@@ -57,15 +61,12 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
     def get_initial(self):
         if self.coordinator:
-            return Enrollment.get_students_enrollment(self.section_id, self.date)
-        return Enrollment.get_students_enrollment(self.section_id, self.date, self.request.user.instructor)
+            return Enrollment.get_students_attendances_initial_data(self.section_id, self.date)
+        return Enrollment.get_students_attendances_initial_data(self.section_id, self.date, self.request.user.instructor)
 
     def formset_valid(self, formset):
         for form in formset:
-            form.user = self.request.user
-            saved_form = form.save(commit=False)
-            if saved_form:
-                saved_form.save()
+            form.save()
         messages.success(self.request, _('Your attendances were saved'))
         return super(AttendanceView, self).formset_valid(formset)
 
@@ -92,6 +93,14 @@ class AttendanceView(AttendanceBaseView, FormSetView):
 
         context['current_date'] = period_date
         context['today'] = today()
+
+        enrollments = Enrollment.get_students_of_section(self.section_id).filter(active=True)
+        context['students_attendances_summaries'] = [{
+            'pk': enrollment.pk,
+            'deduction': enrollment.get_enrollment_total_deduction
+        } for enrollment in enrollments]
+        context['section_id'] = self.section_id
+
         return context
 
     def get_extra_form_kwargs(self):
@@ -130,7 +139,75 @@ class StudentAttendanceSummaryView(InstructorBaseView, ListView):
     def get_context_data(self, **kwargs):
         context = super(StudentAttendanceSummaryView, self).get_context_data(**kwargs)
         context.update({
-            'enrollment': Enrollment.objects.get(id=self.enrollment_id),
+            'enrollment': get_object_or_404(Enrollment, pk=self.enrollment_id),
             'section': self.section
         })
         return context
+
+
+class ExcuseEntryBaseView(UserPassesTestMixin):
+    def test_func(self):
+        return Instructor.can_give_excuses(self.request.user)
+
+
+# TODO: implement search by ID and dates
+class ExcusesListingView(ExcuseEntryBaseView, ListView):
+    object = Excuse
+    paginate_by = 10
+    template_name = 'attendance/excuses_listing.html'
+
+    def get_queryset(self):
+        return Excuse.objects.all().order_by('-applied_on', '-created_on')
+
+
+# TODO: implement excuse update view for changing fields: 'excuse_type', 'includes_exams', 'attachments', 'description'
+class ExcuseEntryView(ExcuseEntryBaseView, CreateView):
+    form_class = ExcuseForm
+    template_name = 'attendance/excuse_entry.html'
+
+    def form_valid(self, form):
+        saved = form.save(commit=False)
+        saved.created_by = self.request.user
+        saved.save()
+
+        messages.warning(self.request, _('You have to review the list of attendances (to be excused) and make sure '
+                                         'they are ALL correct!'))
+        return super(ExcuseEntryView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('attendance:excuse_entry_confirm', args=(self.object.pk, ))
+
+
+class ExcuseEntryConfirm(ExcuseEntryBaseView, TemplateView):
+    template_name = 'attendance/excuse_entry_confirm.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = get_object_or_404(Excuse, pk=self.kwargs['pk'])
+
+        return super(ExcuseEntryConfirm, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(ExcuseEntryConfirm, self).get_context_data(**kwargs)
+        context['student'] = get_object_or_404(Student, university_id=self.object.university_id)
+        context['object'] = self.object
+        context['form'] = ExcuseForm
+        context['attendances_to_be_shown'] = self.object.get_excused_attendances() if self.object.applied_on \
+            else self.object.get_attendances_to_be_excused()
+
+        return context
+
+    def post(self, *args, **kwargs):
+        if 'confirm' in self.request.POST:
+            self.object.applied_on = now()
+            self.object.applied_by = self.request.user
+            self.object.save()
+
+            self.object.apply_excuse()
+
+            messages.success(self.request, _('Excuse #%s has been applied successfully.') % self.object.pk)
+
+        elif 'reject' in self.request.POST:
+            self.object.delete()
+            messages.warning(self.request, _('Excuse has been removed successfully...'))
+
+        return redirect(reverse_lazy('attendance:excuses_listing'))

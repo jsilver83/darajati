@@ -18,6 +18,7 @@ from django.urls import re_path, include, path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.auth import views
+from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = i18n_patterns(

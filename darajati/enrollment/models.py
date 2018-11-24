@@ -1,5 +1,6 @@
 from math import *
 from django.db import models
+from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.auth.models import User as User_model
@@ -23,6 +24,17 @@ class Person(models.Model):
     mobile = models.CharField(_('mobile'), max_length=20, null=True, blank=True)
     personal_email = models.EmailField(_('personal email'), null=True, blank=False)
     active = models.BooleanField(_('is_active'), blank=False, default=False)
+
+    @property
+    def name(self):
+        """
+        :return: translated name of the person depending on the current active language
+        """
+        lang = translation.get_language()
+        if lang == "ar":
+            return self.arabic_name
+        else:
+            return self.english_name
 
     class Meta:
         abstract = True
@@ -89,6 +101,8 @@ class Instructor(Person):
             return instructor.active
         return False
 
+    # FIXME: this shouldnt be a static method since it is passing instructor as first argument...
+    # FIXME: ... Moreover, passing no instructor will just throw an exception in the ORM
     @staticmethod
     def is_active_coordinator(instructor=None):
         """
@@ -113,6 +127,10 @@ class Instructor(Person):
             return None
         return self
 
+    @staticmethod
+    def can_give_excuses(user):
+        return 'attendance.can_give_excuses' in user.get_all_permissions() or user.is_superuser
+
 
 class Semester(models.Model):
     start_date = models.DateField(_('Start date'))
@@ -126,7 +144,7 @@ class Semester(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.description, self.code)
+        return to_string(self.code)
 
     def check_is_accessible_date(self, date, offset_date):
         """
@@ -162,7 +180,7 @@ class Course(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.name, self.code)
+        return to_string(self.code)
 
 
 class CourseOffering(models.Model):
@@ -221,12 +239,12 @@ class CourseOffering(models.Model):
     @staticmethod
     def get_current_course_offerings():
         """
-        :return: current semester course_offering_id and course code 
+        :return: current semester course_offering_id and 'semester code - course code'
         """
-        return CourseOffering.objects.filter(
-            semester__start_date__lte=now(),
-            semester__end_date__gte=now()
-        ).values_list('id', 'course__code')
+        return [(course_offering.pk, str(course_offering))
+                for course_offering in CourseOffering.objects.filter(
+                semester__start_date__lte=now(),
+                semester__end_date__gte=now())]
 
 
 class Section(models.Model):
@@ -348,6 +366,7 @@ class Coordinator(models.Model):
     def __str__(self):
         return to_string(self.course_offering, self.instructor)
 
+    # FIXME: instructor param cannot be None or else the ORM will throw an exception
     @staticmethod
     def get_coordinator(instructor=None):
         """        
@@ -403,7 +422,7 @@ class Enrollment(models.Model):
         ordering = ['student__university_id']
 
     def __str__(self):
-        return to_string(self.student)
+        return to_string(self.student, self.section)
 
     @property
     def _history_user(self):
@@ -436,12 +455,20 @@ class Enrollment(models.Model):
         return Enrollment.objects.filter(section=section_id)
 
     @staticmethod
+    def get_enrollments_of_section_with_students_data(section_id):
+        """
+        :return: list of all students for a giving section ID
+        """
+        return Enrollment.objects.select_related('student').filter(section=section_id)
+
+    @staticmethod
     def is_enrollment_exists(student, section):
         return Enrollment.objects.filter(student=student, section=section).exists()
 
     @staticmethod
-    def get_students_enrollment(section_id, date, instructor=None):
+    def get_students_attendances_initial_data(section_id, date, instructor=None):
         # FIXME: If possible make me nicer, i look like an ugly method *cry*
+        # FIXEDU: stop bitchin'! do u think u look nicer now?! DRAMA QUEEN FUNCTION *sigh*
         """
         :param section_id:
         :param date:
@@ -450,11 +477,22 @@ class Enrollment(models.Model):
            If the giving day is not exist get the nearest one
         """
         enrollments = []
-        index = 1
         day, period_date = ScheduledPeriod.get_nearest_day_and_date(section_id, date, instructor)
         periods = ScheduledPeriod.get_section_periods_of_day(section_id, day, instructor).order_by('start_time')
-        enrollment_list = Enrollment.get_students_of_section(section_id)
+        enrollment_list = Enrollment.get_enrollments_of_section_with_students_data(section_id)
         count_index = 0
+
+        attendance_instances = []
+        for period in periods:
+            attendance_instance_temp, created = AttendanceInstance.objects.select_related('period').get_or_create(
+                period=period, date=period_date)
+            attendance_instances.append(attendance_instance_temp)
+
+        attendances = list(Attendance.objects.select_related('enrollment').filter(
+            enrollment__in=enrollment_list,
+            attendance_instance__in=attendance_instances)
+        )
+
         for enrollment in enrollment_list:
             if enrollment.active is False:
                 count_index += 1
@@ -462,32 +500,30 @@ class Enrollment(models.Model):
             else:
                 count_index += 1
 
-            for period in periods:
-                id = 0
+            for attendance_instance in attendance_instances:
+                attendance_id = 0
                 updated_by = None
                 updated_on = None
-                attendance_instance, created = AttendanceInstance.objects.get_or_create(period=period, date=period_date)
-                try:
-                    attendance = Attendance.objects.get(enrollment=enrollment, attendance_instance=attendance_instance)
-                    status = attendance.status
-                    updated_by = attendance.updated_by
-                    updated_on = attendance.updated_on
-                    id = attendance.id
-                except Attendance.DoesNotExist:
-                    status = Attendance.Types.PRESENT
+                status = None
+                for attendance in attendances:
+                    if attendance.enrollment == enrollment and attendance.attendance_instance == attendance_instance:
+                        status = attendance.status
+                        updated_by = attendance.updated_by
+                        updated_on = attendance.updated_on
+                        attendance_id = attendance.id
 
                 enrollments.append(dict(enrollment=enrollment,
+                                        enrollment_pk=enrollment.pk,
                                         student_name=enrollment.student.english_name,
-                                        enrollment_id=count_index,
+                                        count_index=count_index,
                                         student_university_id=enrollment.student.university_id,
-                                        period=period,
+                                        period=attendance_instance.period,
                                         attendance_instance=attendance_instance,
-                                        status=status,
-                                        id=id,
-                                        index=index,
+                                        status=status or Attendance.Types.PRESENT,
+                                        id=attendance_id,
                                         updated_by=updated_by,
                                         updated_on=updated_on))
-            index += 1
+
         return enrollments
 
     @property
@@ -495,18 +531,21 @@ class Enrollment(models.Model):
         """
         :return: absence total of an enrollment 
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            status=Attendance.Types.ABSENT).count()
+        return self.attendance.filter(status=Attendance.Types.ABSENT).count()
+
+    @property
+    def get_enrollment_total_excuses(self):
+        """
+        :return: excuses total of an enrollment
+        """
+        return self.attendance.filter(status=Attendance.Types.EXCUSED).count()
 
     @property
     def get_enrollment_total_late(self):
         """
         :return: late total of an enrollment 
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            status=Attendance.Types.LATE).count()
+        return self.attendance.filter(status=Attendance.Types.LATE).count()
 
     @property
     def get_enrollment_total_deduction(self):
@@ -533,27 +572,21 @@ class Enrollment(models.Model):
         :param period_title: 
         :return: total absence of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.ABSENT).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.ABSENT).count()
 
     def get_enrollment_period_total_late(self, period_title):
         """
         :param period_title: 
         :return: total late of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.LATE).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.LATE).count()
 
     def get_enrollment_period_total_excused(self, period_title):
         """
         :param period_title: 
         :return: total excused of a a given period_title and enrollment
         """
-        return Attendance.objects.filter(
-            enrollment__id=self.id,
-            attendance_instance__period__title=period_title,
-            status=Attendance.Types.EXCUSED).count()
+        return self.attendance.filter(attendance_instance__period__title=period_title,
+                                      status=Attendance.Types.EXCUSED).count()

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+    <div class="content-panel">
+        <div class="cntnt-sec">
+            <form method="post" enctype="multipart/form-data" class="form-horizontal">
+	            {% csrf_token %}
+                {% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+	            <button type="submit" class="btn btn-lg btn-primary pull-right">{% trans 'Submit' %}</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+{#I went the extra mile here because the user(s) of this form is not tech-savvy and his work ethics is questionable!!#}
+{#So when he asked me to make the datetime format in the datepicker show AM/PM, i spent 4 hours to make it happen#}
+{#I wanted to make this form and the datetimepicker as usable as possible so that he wont have any excuses not #}
+{#to use it#}
+    $(function () {
+        $('.datetimepicker3').datetimepicker({
+            format: 'YYYY-MM-DD h:mm A',
+	        sideBySide: true,
+	        stepping: 5
+        });
+        $('.datetimepicker3').each(function() {
+            $(this).val(reformat($(this).val()));
+        });
+
+        $('.datetimepicker3').on('dp.hide', function (e){
+	        $(this).val(e.date.format('YYYY-MM-DD H:mm'));
+        });
+    });
+    function reformat(str){
+        var m = moment(str, 'YYYY-MM-DD h:mm A');
+        if (m.isValid()){
+            return m.format('YYYY-MM-DD H:mm');}
+    }
+</script>
+{% endblock scripts %}

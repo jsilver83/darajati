@@ -277,7 +277,7 @@ class Synchronization(object):
         """
         :return:
         """
-        for self.section in self.all_sections:
+        for self.section in self.sections:
             faculties_periods = self.get_section_faculties(self.section)
             for self.faculty_period in faculties_periods:
                 if not self.faculty_period['email'] and not self.faculty_period['user']:

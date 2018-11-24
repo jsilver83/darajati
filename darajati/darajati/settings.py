@@ -46,11 +46,9 @@ INSTALLED_APPS = [
     'simple_history',
     'django_celery_results',
     'impersonate',
-    # 'debug_toolbar',
 ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -64,6 +62,10 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'darajati.urls'
 
@@ -188,6 +190,10 @@ CELERY_TIMEZONE = 'US/Eastern'
 # Decimal max digits
 MAX_DIGITS = 5  # 10000.00
 MAX_DECIMAL_POINT = 2  # .00
+
+MAX_FILE_UPLOAD_SIZE = 2048000  # ~ 2.0 MB
+
+MEDIA_URL = '/media/'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is around 1012
 try:
