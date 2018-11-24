@@ -1,0 +1,24 @@
+{% load i18n %}
+
+<div class="btn-group">
+	<div class="dropdown">
+		<button class="btn dropdown-toggle" type="button" data-toggle="dropdown"
+		        style="background-color: #237d40;border-color: white;">
+			{% trans 'Welcome' %} <b>{{ user_full_name }}</b>
+			<span class="caret"></span></button>
+		<ul class="dropdown-menu">
+			{% if can_see_admin_controls %}
+				<li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
+			{% endif %}
+			{% if can_give_excuses %}
+				<li><a href="{% url 'attendance:excuses_listing' %}">{% trans 'Excuses' %}</a></li>
+			{% endif %}
+			{% if is_coordinator %}
+				<li><a href="{% url 'enrollment:coordinator' %}">{% trans 'Coordinated Courses' %}</a></li>
+			{% endif %}
+			<li><a href="{% url 'enrollment:instructor' %}">{% trans 'Teaching Sections' %}</a></li>
+			<li role="presentation" class="divider"></li>
+			<li><a href="{% url 'logout' %}">{% trans 'Logout' %}</a></li>
+		</ul>
+	</div>
+</div>

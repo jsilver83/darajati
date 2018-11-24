@@ -1,4 +1,5 @@
 {% load static i18n %}
+{% load navigation_menu %}
 <!DOCTYPE html>
 {% if LANGUAGE_CODE == 'ar' %}
     <html lang="en" dir="rtl">
@@ -49,26 +50,7 @@
             </a>
         </div>
         <div class="rgt-head">
-            <!-- Split button -->
-            <div class="btn-group">
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"
-                            style="background-color: #237d40;border-color: white;">
-                        {% trans 'Welcome! ' %}{{ request.user.username }}
-                        <span class="caret"></span></button>
-                    <ul class="dropdown-menu">
-                        {% if user.is_superuser %}
-                            <li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
-                        {% endif %}
-                        {% if coordinator %}
-                            <li><a href="{% url 'enrollment:coordinator' %}">{% trans 'Coordinated courses' %}</a></li>
-                            <li><a href="{% url 'enrollment:instructor' %}">{% trans 'Instructed section' %}</a></li>
-                        {% endif %}
-                        <li role="presentation" class="divider"></li>
-                        <li><a href="{% url 'logout' %}">{% trans 'Logout' %}</a></li>
-                    </ul>
-                </div>
-            </div>
+            {% user_menu %}
             {% if LANGUAGE_CODE == 'ar' %}
                 <a href="/en{{ request.get_full_path|slice:'3:' }}" class="lang en en-font">English</a>
             {% endif %}
