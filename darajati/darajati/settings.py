@@ -44,11 +44,9 @@ INSTALLED_APPS = [
     'simple_history',
     'django_celery_results',
     'impersonate',
-    # 'debug_toolbar',
 ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -62,6 +60,10 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'darajati.urls'
 
