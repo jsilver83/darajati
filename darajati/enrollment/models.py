@@ -123,6 +123,10 @@ class Instructor(Person):
             return None
         return self
 
+    @staticmethod
+    def can_give_excuses(user):
+        return 'attendance.can_give_excuses' in user.get_all_permissions() or user.is_superuser
+
 
 class Semester(models.Model):
     start_date = models.DateField(_('Start date'))

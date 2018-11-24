@@ -9,7 +9,7 @@ from django.views.generic import ListView, CreateView, UpdateView, FormView, Tem
 from django.views.generic.base import View
 from extra_views import FormSetView
 
-from enrollment.models import Enrollment, Student
+from enrollment.models import Enrollment, Student, Instructor
 from enrollment.utils import today, get_offset_day, now
 from enrollment.views import InstructorBaseView
 from .forms import AttendanceForm, ExcuseForm
@@ -147,7 +147,7 @@ class StudentAttendanceSummaryView(InstructorBaseView, ListView):
 
 class ExcuseEntryBaseView(UserPassesTestMixin):
     def test_func(self):
-        return 'attendance.can_give_excuses' in self.request.user.get_all_permissions() or self.request.user.is_superuser
+        return Instructor.can_give_excuses(self.request.user)
 
 
 # TODO: implement pagination and search
