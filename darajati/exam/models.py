@@ -157,6 +157,7 @@ class ExamShift(models.Model):
                                                minute=period.get('end_time', timezone.now().time()).minute)
             shift.save()
 
+    # FIXME: very expensive function in terms of performance. Needs REWORK
     def check_issues_in_timing(self, enrollment):
         # Check all the student periods (for the same course) in the exam date and make sure ...
         # the current exam shift falls in any of them
@@ -179,7 +180,6 @@ class ExamShift(models.Model):
     @property
     def get_max_number_of_students_placements_possible(self):
         if self.settings:
-            print('test')
             enrollments = Enrollment.objects.filter(section__course_offering=self.settings.fragment.course_offering,
                                                     active=True)
             count = 0
