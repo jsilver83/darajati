@@ -33,8 +33,8 @@ class RoomEditView(CoordinatorBaseView, UpdateView):
 
 class ExamSettingsBaseView:
     def dispatch(self, request, *args, **kwargs):
-        fragment = get_object_or_404(GradeFragment, pk=self.kwargs['exam_settings_id'])
-        self.exam_settings, created = ExamSettings.objects.get_or_create(fragment=fragment)
+        self.fragment = get_object_or_404(GradeFragment, pk=self.kwargs['fragment_id'])
+        self.exam_settings, created = ExamSettings.objects.get_or_create(fragment=self.fragment)
 
         return super(ExamSettingsBaseView, self).dispatch(request, *args, **kwargs)
 
@@ -50,18 +50,20 @@ class ExamSettingsBaseView:
 
     def get_context_data(self, **kwargs):
         context = super(ExamSettingsBaseView, self).get_context_data(**kwargs)
-        context['grade_fragment'] = self.exam_settings.fragment
+        context['grade_fragment'] = self.fragment
         return context
 
 
 class ExamSettingsView(SuccessMessageMixin, ExamSettingsBaseView, CoordinatorBaseView, UpdateView):
     template_name = 'exam/exam_settings.html'
     model = ExamSettings
-    pk_url_kwarg = 'exam_settings_id'
     form_class = ExamSettingsForm
 
+    def get_object(self, queryset=None):
+        return self.exam_settings
+
     def get_success_url(self):
-        return reverse_lazy('exam:shifts', kwargs={'exam_settings_id': self.exam_settings.pk})
+        return reverse_lazy('exam:shifts', kwargs={'fragment_id': self.fragment.pk})
 
 
 class ExamShiftsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
@@ -75,7 +77,7 @@ class ExamShiftsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView
     def dispatch(self, request, *args, **kwargs):
         dispatch = super(ExamShiftsView, self).dispatch(request, *args, **kwargs)
         if not self.exam_settings.exam_date:
-            return redirect(reverse_lazy('exam:settings', kwargs={'exam_settings_id': self.exam_settings.pk}))
+            return redirect(reverse_lazy('exam:settings', kwargs={'fragment_id': self.fragment.pk}))
 
         if ExamShift.get_shifts(self.exam_settings).count() == 0:
             ExamShift.create_shifts_for_exam_settings(self.exam_settings)
@@ -83,7 +85,7 @@ class ExamShiftsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView
         return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk})
+        return reverse_lazy('exam:exam_rooms', kwargs={'fragment_id': self.fragment.pk})
 
     def get_queryset(self):
         return ExamShift.get_shifts(self.exam_settings)
@@ -115,12 +117,12 @@ class ExamRoomsView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView)
 
         shifts = ExamShift.objects.filter(settings=self.exam_settings)
         if not shifts.exists():
-            return redirect(reverse_lazy('exam:shifts', kwargs={'exam_settings_id': self.exam_settings.pk}))
+            return redirect(reverse_lazy('exam:shifts', kwargs={'fragment_id': self.fragment.pk}))
 
         return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:markers', kwargs={'grade_fragment_id': self.exam_settings.pk})
+        return reverse_lazy('exam:markers', kwargs={'fragment_id': self.fragment.pk})
 
     def get_queryset(self):
         return ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
@@ -159,12 +161,12 @@ class MarkersView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
 
         markers = Marker.objects.filter(exam_room__exam_shift__settings=self.exam_settings)
         if not markers.exists():
-            return redirect(reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk}))
+            return redirect(reverse_lazy('exam:exam_rooms', kwargs={'fragment_id': self.fragment.pk}))
 
         return dispatch
 
     def get_success_url(self):
-        return reverse_lazy('exam:exam_rooms', kwargs={'exam_settings_id': self.exam_settings.pk})
+        return reverse_lazy('exam:exam_rooms', kwargs={'fragment_id': self.fragment.pk})
 
     def get_queryset(self):
         return Marker.objects.filter(exam_room__exam_shift__settings=self.exam_settings)
