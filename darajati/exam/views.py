@@ -1,3 +1,5 @@
+from math import floor, ceil
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -58,6 +60,7 @@ class ExamSettingsView(SuccessMessageMixin, ExamSettingsBaseView, CoordinatorBas
     template_name = 'exam/exam_settings.html'
     model = ExamSettings
     form_class = ExamSettingsForm
+    success_message = _('Exam settings has been updated successfully')
 
     def get_object(self, queryset=None):
         return self.exam_settings
@@ -198,32 +201,34 @@ class MarkersView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
             # delete existing placements before performing the shuffle
             StudentPlacement.objects.filter(exam_room__exam_shift__settings=self.exam_settings).delete()
             enrollments = Enrollment.objects.filter(
-                section__course_offering=self.exam_settings.fragment.course_offering, active=True)
-            exam_rooms = ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
+                section__course_offering=self.exam_settings.fragment.course_offering, active=True).order_by('?')
+            enrollments_count = enrollments.count()
+            exam_rooms = ExamRoom.objects.filter(exam_shift__settings=self.exam_settings).order_by('?')
 
             if exam_rooms:
                 cannot_be_placed = []
                 placement_count = 0
 
-                most_available_seats_in_any_room = 0
-                for room in exam_rooms:
-                    if room.remaining_seats > most_available_seats_in_any_room:
-                        most_available_seats_in_any_room = room.remaining_seats
-
                 for enrollment in enrollments:
+                    most_available_seats_in_any_room = 0
+                    for room in exam_rooms:
+                        if room.remaining_seats_percentage > most_available_seats_in_any_room:
+                            most_available_seats_in_any_room = room.remaining_seats_percentage
 
                     available_rooms = []
 
                     for room in exam_rooms:
-                        remaining_seats = room.remaining_seats
+                        remaining_seats_percentage = room.remaining_seats_percentage
                         if room.can_place_enrollment(
-                                enrollment) and remaining_seats >= most_available_seats_in_any_room:
-                            available_rooms.append({'exam_room': room, 'remaining_seats': remaining_seats})
-                            most_available_seats_in_any_room -= 1
-                            break
+                                enrollment):
+                            available_rooms.append({'exam_room': room,
+                                                    'remaining_seats_percentage': remaining_seats_percentage})
+
+                            if remaining_seats_percentage >= most_available_seats_in_any_room:
+                                break
 
                     if available_rooms:
-                        available_rooms = sorted(available_rooms, key=lambda k: k['remaining_seats'], reverse=True)
+                        available_rooms = sorted(available_rooms, key=lambda k: k['remaining_seats_percentage'], reverse=True)
                         student_placement = StudentPlacement.objects.create(
                             enrollment=enrollment,
                             exam_room=available_rooms[0].get('exam_room'),
@@ -238,7 +243,7 @@ class MarkersView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
                                 student_placement=student_placement,
                                 marker=marker)
                     else:
-                        cannot_be_placed.append(enrollment.student.university_id)
+                        cannot_be_placed.append((enrollment.student.university_id, enrollment.section.code))
 
                 if cannot_be_placed:
                     messages.warning(
@@ -357,7 +362,8 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
             mark__isnull=False, student_placement__is_present=True).aggregate(Avg('mark')).get('mark__avg')
         context['previous_marker'] = Marker.objects.filter(order=self.marker.order - 1,
                                                            exam_room=self.marker.exam_room).first()
-        context['show_warning'] = self.get_queryset().count() > context['total_number_of_students'] and not self.marker.is_the_tiebreaker()
+        context['show_warning'] = self.get_queryset().count() > context['total_number_of_students'] \
+                                  and not self.marker.is_the_tiebreaker() and context['previous_marker']
         return context
 
     def get_extra_form_kwargs(self):

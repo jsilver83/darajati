@@ -82,6 +82,9 @@ class ExamSettings(models.Model):
                                                     related_name='third_marker', null=True, blank=False,
                                                     verbose_name=_('Default Tie-Breaking Marker'), )
 
+    def __str__(self):
+        return str(self.fragment)
+
 
 # TODO: Consider changing start/end dates to date and start/end times
 class ExamShift(models.Model):
@@ -171,7 +174,7 @@ class ExamShift(models.Model):
         no_issues_in_timing = False
         for period in student_periods_at_exam_day:
             if self.start_date.astimezone().time() >= period.get('start_time') and \
-                    self.end_date.astimezone().time() >= period.get('end_time'):
+                     self.end_date.astimezone().time() <= period.get('end_time'):
                 no_issues_in_timing = True
                 break
 
@@ -204,11 +207,15 @@ class ExamRoom(models.Model):
 
     @property
     def students_count(self):
-        return len(self.students.all())
+        return len(self.students)
 
     @property
     def remaining_seats(self):
         return self.capacity - self.students_count
+
+    @property
+    def remaining_seats_percentage(self):
+        return (self.capacity - self.students_count)/self.capacity * 100
 
     def get_markers(self):
         return self.markers.all()
