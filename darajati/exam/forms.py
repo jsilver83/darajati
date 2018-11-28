@@ -113,11 +113,11 @@ class MarkerForm(ExamSettingsBaseForm, forms.ModelForm):
         fields = ['instructor', 'exam_room', 'order', 'generosity_factor', 'is_a_monitor']
         widgets = {
             'exam_room': forms.HiddenInput,
+            'order': forms.HiddenInput,
         }
 
     def __init__(self, *args, **kwargs):
         super(MarkerForm, self).__init__(*args, **kwargs)
-        # self.fields['exam_room'].queryset = ExamRoom.objects.filter(exam_shift__settings=self.exam_settings)
         self.fields['generosity_factor'].widget.attrs.update({'style': 'width: 70px'})
         self.fields['generosity_factor'].widget.attrs.update({'step': '0.5'})
         self.fields['instructor'].widget.attrs.update({'style': 'width: 200px'})
