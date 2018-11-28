@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n staticfiles %}
+{% load utils_tags %}
 
 {% block content %}
 	<div class="content-panel">
@@ -24,7 +25,7 @@
 							<button class="thm-btn small-btn"
 							        name="shuffle"
 							        type="submit"
-									onclick="return confirm('{% trans "Are you sure? All entered marks for the below markers will be lost!" %}');">
+							        onclick="return confirm('{% trans "Are you sure? All entered marks for the below markers will be lost!" %}');">
 								<span class="glyphicon glyphicon-equalizer" aria-hidden="true"></span> {% trans 'Save and Shuffle' %}
 							</button>
 						</div>
@@ -34,15 +35,17 @@
 						<table class="table">
 							<thead>
 							<tr>
+								<th></th>
 								{% for i in number_of_markers %}
-								<th colspan="3" style="text-align: center">{% trans 'Marker' %} # {{ i }}</th>
+									<th colspan="3" style="text-align: center">{% trans 'Marker' %} # {{ i }}</th>
 								{% endfor %}
 							</tr>
 							<tr>
+								<th>#</th>
 								{% for i in number_of_markers %}
-								<th>{% trans 'Instructor' %}</th>
-								<th>{% trans 'Is a Monitor' %}</th>
-								<th>{% trans 'Generosity Factor' %}</th>
+									<th>{% trans 'Instructor' %}</th>
+									<th>{% trans 'Is a Monitor' %}</th>
+									<th>{% trans 'Generosity Factor' %}</th>
 								{% endfor %}
 							</tr>
 							</thead>
@@ -57,25 +60,40 @@
 										</td>
 									</tr>
 									<tr>
-										<td>{{ form.id }}{{ form.non_field_errors }}
-											{{ form.instructor }}{{ form.instructor.errors }}
-											{{ form.exam_room.errors }}{{ form.order.errors }}
-											<div style="display: none">
-											{{ form.exam_room }}{{ form.order }}
+									<td>{% counter_for_parallel_formsets forloop.counter 3 %}</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.id }}{{ form.non_field_errors }}
+												{{ form.instructor }}{{ form.instructor.errors }}
+												{{ form.exam_room.errors }}{{ form.order.errors }}
+												{{ form.exam_room }}{{ form.order }}
 											</div>
-										</td>
-										<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
-										<td>{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</td>
+										</div>
+									</td>
+									<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</div>
+										</div>
+									</td>
 								{% else %}
-										<td>{{ form.id }}{{ form.non_field_errors }}
-											{{ form.instructor }}{{ form.instructor.errors }}
-											<div style="display: none">
-											{{ form.order }}{{ form.order.errors }}
-											{{ form.exam_room }}{{ form.exam_room.errors }}
-											</div>
-										</td>
-										<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
-										<td>{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">{{ form.id }}{{ form.non_field_errors }}
+												{{ form.instructor }}{{ form.instructor.errors }}
+												{{ form.order }}{{ form.order.errors }}
+												{{ form.exam_room }}{{ form.exam_room.errors }}</div>
+										</div>
+									</td>
+									<td>{{ form.is_a_monitor }}{{ form.is_a_monitor.errors }}</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.generosity_factor }}{{ form.generosity_factor.errors }}</div>
+										</div>
+									</td>
 								{% endifchanged %}
 							{% endfor %}
 							</tbody>
@@ -84,13 +102,13 @@
 				</form>
 
 				{% if stats %}
-				<br>
-				<div>
-					<h2>{% trans 'Statistics' %}</h2>
-					<hr>
-					<div class="thm-table odd period-cntnt">
-						<table class="table">
-							<thead>
+					<br>
+					<div>
+						<h2>{% trans 'Statistics' %}</h2>
+						<hr>
+						<div class="thm-table odd period-cntnt">
+							<table class="table">
+								<thead>
 								<tr>
 									<th>#</th>
 									<th>{% trans 'Marker' %}</th>
@@ -98,21 +116,21 @@
 									<th>{% trans 'First Markings' %}</th>
 									<th>{% trans 'Second Markings' %}</th>
 								</tr>
-							</thead>
-							<tbody>
-							{% for stat in stats %}
-								<tr>
-									<td>{{ forloop.counter }}</td>
-									<td>{{ stat.marker }}</td>
-									<td>{{ stat.assignments }}</td>
-									<td>{{ stat.first }} {% trans 'assignment(s)' %}</td>
-									<td>{{ stat.second }} {% trans 'assignment(s)' %}</td>
-								</tr>
-							{% endfor %}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+								{% for stat in stats %}
+									<tr>
+										<td>{{ forloop.counter }}</td>
+										<td>{{ stat.marker }}</td>
+										<td>{{ stat.assignments }}</td>
+										<td>{{ stat.first }} {% trans 'assignment(s)' %}</td>
+										<td>{{ stat.second }} {% trans 'assignment(s)' %}</td>
+									</tr>
+								{% endfor %}
+								</tbody>
+							</table>
+						</div>
 					</div>
-				</div>
 				{% endif %}
 			{% else %}
 				{% trans 'There are no rooms' %}
