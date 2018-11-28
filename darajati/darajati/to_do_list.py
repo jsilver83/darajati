@@ -25,5 +25,18 @@ add last updated by in grades
 22 Nov 2018
 - fix error messages not being sent to ADMINS
 - fix submit buttons in all forms to make it submit only once: https://stackoverflow.com/a/2545795/853175
+
+26 Nov 2018
+URGENT:
+- fix the grades to be in 4 decimal points instead of 2
+- make sure the imported grades (in percentages) are being in proper decimal formats
+
+27 Nov 2018
+URGENT:
+- investigate whether to have averages in database views or stored values in a table that has is_dirty flag.
+    The flag can be an indication whether we should recalculate/update the values on read
+
+28 Nov 2018
+- add a flag to ExamSettings to ignore students class timings checks
 """
 
