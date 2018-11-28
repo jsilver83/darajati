@@ -39,7 +39,7 @@ urlpatterns = [
         name='markers'
         ),
 
-    re_path(r'^marks/(?P<fragment_id>[0-9]+)/$',
+    re_path(r'^marks/(?P<marker_id>[0-9]+)/$',
         views.StudentMarksView.as_view(),
         name='marks'
         ),
