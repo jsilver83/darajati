@@ -55,9 +55,16 @@ class RoomAdmin(admin.ModelAdmin):
     list_editable = ('location', 'capacity', )
 
 
+class ExamRoomAdmin(admin.ModelAdmin):
+    list_display = ('exam_shift', 'room', 'capacity', 'remaining_seats', )
+    list_filter = ('exam_shift__settings__fragment__course_offering', 'exam_shift__settings', 'exam_shift', 'room', )
+    list_editable = ('capacity', )
+
+
 admin.site.register(ExamSettings)
 admin.site.register(ExamShift)
 admin.site.register(StudentPlacement, StudentPlacementAdmin)
 admin.site.register(Marker, MarkerAdmin)
 admin.site.register(StudentMark, StudentMarkAdmin)
 admin.site.register(Room, RoomAdmin)
+admin.site.register(ExamRoom, ExamRoomAdmin)
