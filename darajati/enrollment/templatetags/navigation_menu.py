@@ -10,12 +10,15 @@ def user_menu(context):
     user = context['request'].user
 
     if user.is_authenticated:
-        user_full_name = user.instructor.name
-
         # TODO: Add a user group called 'Admins' and include it in the condition below
         can_see_admin_controls = user.is_superuser
 
-        is_coordinator = Coordinator.objects.filter(instructor=user.instructor).exists()
+        if hasattr(user, 'instructor'):
+            is_coordinator = Coordinator.objects.filter(instructor=user.instructor).exists()
+            user_full_name = user.instructor.name
+        else:
+            is_coordinator = False
+            user_full_name = '%s %s' % (user.first_name, user.last_name)
 
         can_give_excuses = Instructor.can_give_excuses(user)
 
