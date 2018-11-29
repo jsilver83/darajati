@@ -1,4 +1,5 @@
-from math import floor, ceil
+import csv
+import io
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -262,9 +263,6 @@ class MarkersView(ExamSettingsBaseView, CoordinatorBaseView, ModelFormSetView):
                     )
 
         elif 'export' in self.request.POST:
-            import csv
-            import io
-
             # Using memory buffer
             csv_file = io.StringIO()
 
@@ -434,4 +432,59 @@ class CoordinatorMarkersListing(ExamSettingsBaseView, CoordinatorBaseView, ListV
     template_name = 'exam/coordinator_markers_listing.html'
 
     def get_queryset(self):
-        return Marker.objects.filter(exam_room__exam_shift__settings__fragment=self.kwargs['fragment_id'])
+        return Marker.objects.filter(exam_room__exam_shift__settings__fragment=self.fragment.pk)
+
+    def post(self, request, *args, **kwargs):
+        if 'export' in request.POST:
+            # Using memory buffer
+            csv_file = io.StringIO()
+
+            writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
+
+            number_of_markers = self.fragment.exam_settings.number_of_markers
+
+            temp = []
+            for i in range(1, number_of_markers + 2):
+                temp.append('Marker# ' + str(i))
+                temp.append('Mark')
+                temp.append('Weighted Mark')
+
+            # Write markers CSV header
+            writer.writerow(['Room', 'Time', 'Student Name', 'KFUPM ID', 'Is Present', 'FINAL MARK', ] + temp)
+
+            student_placements = StudentPlacement.objects.filter(
+                exam_room__exam_shift__settings__fragment=self.fragment
+            ).order_by(
+                'exam_room',
+                'enrollment__student__university_id',
+            )
+
+            if student_placements:
+                for student_placement in student_placements:
+                    temp = [
+                        student_placement.exam_room.room.location,
+                        student_placement.exam_room.exam_shift,
+                        student_placement.enrollment.student.name,
+                        student_placement.enrollment.student.university_id,
+                        student_placement.is_present,
+                        student_placement.final_mark,
+                    ]
+
+                    for i in range(1, number_of_markers + 2):
+                        temp.append(student_placement.marks.filter(marker__order=i).first().marker.instructor)
+                        temp.append(student_placement.marks.filter(marker__order=i).first().mark)
+                        temp.append(student_placement.marks.filter(marker__order=i).first().weighted_mark)
+
+                    writer.writerow(temp)
+
+                writer.writerow([])
+                writer.writerow([])
+
+            if student_placements:
+                response = HttpResponse()
+                response.write(csv_file.getvalue())
+                response['Content-Disposition'] = 'attachment; filename={0}'.format('all_students_marks.csv')
+                return response
+            else:
+                messages.error(self.request, _('No records to export to CSV'))
+
