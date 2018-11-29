@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -196,6 +197,11 @@ MAX_FILE_UPLOAD_SIZE = 2048000  # ~ 2.0 MB
 MEDIA_URL = '/media/'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is around 1012
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}
+
 try:
     from .local_settings import *
 except ImportError:
