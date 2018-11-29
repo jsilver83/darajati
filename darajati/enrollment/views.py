@@ -192,22 +192,6 @@ class CoordinatorSectionView(CoordinatorEditBaseView, ListView):
     ordering = 'code'
     context_object_name = 'sections'
 
-    def get_context_data(self, **kwargs):
-        context = super(CoordinatorSectionView, self).get_context_data(**kwargs)
-
-        previous_or_current_fragments = GradeFragment.objects.filter(
-            course_offering=self.course_offering,
-            entry_start_date__lte=now(),
-            boundary_type=GradeFragment.GradesBoundaries.SUBJECTIVE_MARKING,
-        ).order_by('-entry_start_date')
-
-        if previous_or_current_fragments.exists():
-            context['all_active_markers'] = Marker.objects.filter(
-                exam_room__exam_shift__settings__fragment=previous_or_current_fragments.first(),
-            )
-
-        return context
-
     def get_queryset(self):
         queryset = super(CoordinatorSectionView, self).get_queryset()
         return queryset.filter(course_offering=self.course_offering).exclude(

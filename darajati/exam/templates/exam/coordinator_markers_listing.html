@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% load humanize %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		{% include 'exam/snippets/course_offering_details.html' %}
+		<div class="cntnt-sec">
+			<div class="title-sec text-center">
+				<h3>{% trans 'All Markers' %}</h3>
+			</div>
+			{% if object_list %}
+			<table class="table table-condensed text-center">
+				<tbody>
+				{% for marker in object_list %}
+					{% ifchanged marker.exam_room %}
+						<tr>
+							<td colspan="100" style="font-weight: bold">{{ marker.exam_room }} -
+								{{ marker.exam_room.students.all|length }} {% trans 'Student' %}{{ marker.exam_room.students.all|length|pluralize }}
+							</td>
+						</tr>
+						<tr>
+						<td class="success">
+							<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}
+								<span class="glyphicon glyphicon-pencil"></span></a></td>
+					{% else %}
+						<td class="success">
+							<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}
+								<span class="glyphicon glyphicon-pencil"></span></a></td>
+					{% endifchanged %}
+				{% endfor %}
+				</tbody>
+			</table>
+			{% else %}
+			<h4>{% trans 'No Markers yet' %} !!</h4>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

@@ -427,3 +427,11 @@ class UnacceptedStudentMarksView(ExamSettingsBaseView, CoordinatorBaseView, Mode
 
     def get_queryset(self):
         return StudentMark.get_unaccepted_marks(self.exam_settings)
+
+
+class CoordinatorMarkersListing(ExamSettingsBaseView, CoordinatorBaseView, ListView):
+    model = Marker
+    template_name = 'exam/coordinator_markers_listing.html'
+
+    def get_queryset(self):
+        return Marker.objects.filter(exam_room__exam_shift__settings__fragment=self.kwargs['fragment_id'])

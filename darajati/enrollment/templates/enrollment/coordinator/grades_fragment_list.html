@@ -75,6 +75,10 @@
 											<li>
 												<a href="{% url 'exam:settings' fragment.id %}">{% trans 'Subjective Marking (RESTART Process!)' %}</a>
 											</li>
+											<li>
+												<a href="{% url 'exam:coordinator_markers_listing' fragment.id %}">{% trans 'Edit Marks' %}</a>
+											</li>
+
 										</ul>
 									</div>
 								{% else %}

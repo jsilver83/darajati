@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
-{% load humanize %}
 {% load i18n %}
 {% block content %}
 	<div class="content-panel">
@@ -90,32 +89,6 @@
 							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'Enter Marks For Tie-breaking' %}</a>
 				</center>
 			{% endif %}
-
-			{% if all_active_markers %}
-				<br><br>
-				<div class="title-sec text-center">
-					<h3>{% trans 'All Markers' %}</h3>
-				</div>
-				<hr>
-				<table class="table table-condensed text-center">
-					<tbody>
-					{% for marker in all_active_markers %}
-						{% ifchanged marker.exam_room %}
-							<tr>
-								<td colspan="100">{{ marker.exam_room }} -
-									{{ marker.exam_room.students.all|length }} {% trans 'Students' %}
-								</td>
-							</tr>
-							<tr>
-							<td><a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }} <span class="glyphicon glyphicon-pencil"></span></a></td>
-						{% else %}
-							<td><a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }} <span class="glyphicon glyphicon-pencil"></span></a></td>
-						{% endifchanged %}
-					{% endfor %}
-					</tbody>
-				</table>
-			{% endif %}
-
 		</div>
 	</div>
 {% endblock %}
