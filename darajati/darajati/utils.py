@@ -1,6 +1,15 @@
+from decimal import *
+
+from django.conf import settings
+
 """
  ABOUT: this file is supposed to hold utility functions that are shared across apps
 """
+
+
+def decimal(value):
+    getcontext().prec = settings.MAX_DIGITS
+    return round(Decimal(value), settings.MAX_DECIMAL_POINT)
 
 
 def size_format(b):

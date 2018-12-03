@@ -7,6 +7,7 @@
 		<br>
 		{% include 'exam/snippets/course_offering_details.html' %}
 		<div class="cntnt-sec">
+			<h4>{% trans 'Overall Average' %}: <span class="badge success">{{ overall_average }} %</span></h4>
 			<form method="post">
 				{% csrf_token %}
 				<div class="title-sec row">
@@ -37,12 +38,16 @@
 								</td>
 							</tr>
 							<tr>
-							<td class="success">
-								<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}
+							<td class="success" style="width: {{ cell_width }}%">
+								<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block {% if marker.is_average_too_high_or_low == 'TOO-HIGH' %}btn-danger{% elif marker.is_average_too_high_or_low == 'TOO-LOW' %}btn-warning{% else %}btn-default{% endif %}"><b>{{ marker.order|ordinal }}</b>
+									{{ marker.instructor }}{% if marker.marks_average %}
+										<small>({% trans 'AVG' %}: {{ marker.marks_average }})</small>{% endif %}
 									<span class="glyphicon glyphicon-pencil"></span></a></td>
 						{% else %}
-							<td class="success">
-								<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block btn-default"><b>{{ marker.order|ordinal }}</b> {{ marker.instructor }}
+							<td class="success" style="width: {{ cell_width }}%">
+								<a href="{% url 'exam:marks' marker.pk %}" class="btn btn-block {% if marker.is_average_too_high_or_low == 'TOO-HIGH' %}btn-danger{% elif marker.is_average_too_high_or_low == 'TOO-LOW' %}btn-warning{% else %}btn-default{% endif %}"><b>{{ marker.order|ordinal }}</b>
+									{{ marker.instructor }}{% if marker.marks_average %}
+										<small>({% trans 'AVG' %}: {{ marker.marks_average }})</small>{% endif %}
 									<span class="glyphicon glyphicon-pencil"></span></a></td>
 						{% endifchanged %}
 					{% endfor %}

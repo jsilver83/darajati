@@ -1,5 +1,6 @@
 import csv
 import io
+from math import floor
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -433,6 +434,13 @@ class CoordinatorMarkersListing(ExamSettingsBaseView, CoordinatorBaseView, ListV
 
     def get_queryset(self):
         return Marker.objects.filter(exam_room__exam_shift__settings__fragment=self.fragment.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super(CoordinatorMarkersListing, self).get_context_data(**kwargs)
+        context['overall_average'] = self.fragment.exam_settings.overall_average
+        context['cell_width'] = floor(100/(self.fragment.exam_settings.number_of_markers+1))
+
+        return context
 
     def post(self, request, *args, **kwargs):
         if 'export' in request.POST:

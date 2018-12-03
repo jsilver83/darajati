@@ -3,12 +3,13 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import OuterRef, F, Subquery, Func, DecimalField
+from django.db.models import OuterRef, F, Subquery, Func, DecimalField, Avg
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from enrollment.models import Coordinator, Instructor, Section, ScheduledPeriod, Enrollment
+from darajati.utils import decimal
 from .utils import get_allowed_markers_for_a_fragment
 
 User = settings.AUTH_USER_MODEL
@@ -84,6 +85,14 @@ class ExamSettings(models.Model):
 
     def __str__(self):
         return str(self.fragment)
+
+    @property
+    def overall_average(self):
+        try:
+            return decimal(StudentMark.objects.filter(
+                marker__exam_room__exam_shift__settings=self).aggregate(Avg('mark')).get('mark__avg', 0.00))
+        except:
+            return 0.00
 
 
 # TODO: Consider changing start/end dates to date and start/end times
@@ -314,6 +323,23 @@ class Marker(models.Model):
             return True
         else:
             return enrollment.section not in Section.get_instructor_sections(self.instructor)
+
+    @property
+    def marks_average(self):
+        try:
+            return decimal(self.markings.filter(
+                student_placement__is_present=True).aggregate(Avg('mark')).get('mark__avg', 0.00))
+        except:
+            return 0.00
+
+    @property
+    def is_average_too_high_or_low(self):
+        difference = self.exam_room.exam_shift.settings.overall_average - self.marks_average
+        if abs(difference) >= self.exam_room.exam_shift.settings.markings_difference_tolerance:
+            if difference < 0:
+                return 'TOO-HIGH'
+            else:
+                return 'TOO-LOW'
 
 
 class StudentPlacement(models.Model):
