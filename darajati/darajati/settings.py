@@ -39,11 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
-    'enrollment',
-    'attendance',
-    'grade',
-    'exam',
-    'banner_integration',
+    'enrollment.apps.EnrollmentConfig',
+    'attendance.apps.AttendanceConfig',
+    'grade.apps.GradeConfig',
+    'exam.apps.ExamConfig',
+    'banner_integration.apps.BannerIntegrationConfig',
+
     'simple_history',
     'django_celery_results',
     'impersonate',
