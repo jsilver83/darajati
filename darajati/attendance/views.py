@@ -97,6 +97,9 @@ class AttendanceView(AttendanceBaseView, FormSetView):
         enrollments = Enrollment.get_students_of_section(self.section_id).filter(active=True)
         context['students_attendances_summaries'] = [{
             'pk': enrollment.pk,
+            'absences': enrollment.get_enrollment_total_absence,
+            'lates': enrollment.get_enrollment_total_late,
+            'excuses': enrollment.get_enrollment_total_excuses,
             'deduction': enrollment.get_enrollment_total_deduction
         } for enrollment in enrollments]
         context['section_id'] = self.section_id
