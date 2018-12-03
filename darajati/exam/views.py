@@ -332,19 +332,30 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             self.marker = get_object_or_404(Marker, pk=self.kwargs['marker_id'])
+            self.is_coordinator = Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                Instructor.get_instructor(self.request.user),
+                self.marker.exam_room.exam_shift.settings.fragment.course_offering
+            )
 
             # check if user can mark
-            if not (self.marker.instructor.user == self.request.user or self.request.user.is_superuser or \
-                    Coordinator.is_coordinator_of_course_offering_in_this_semester(
-                        Instructor.get_instructor(self.request.user),
-                        self.marker.exam_room.exam_shift.settings.fragment.course_offering)):
+            if not (self.marker.instructor.user == self.request.user
+                    or self.request.user.is_superuser or self.is_coordinator):
                 messages.error(self.request, _('You are not authorised to mark this room.'))
                 return redirect(reverse_lazy('enrollment:home'))
 
+            queryset = self.get_queryset()
+
             # if no marks, redirect to main page with an error message
-            if not self.get_queryset().exists():
+            if not queryset.exists():
                 messages.error(self.request, _('There are no marks available at the moment. Check back later.'))
                 return redirect(reverse_lazy('enrollment:home'))
+
+            # if fragment doesnt allow change
+            if not self.marker.exam_room.exam_shift.settings.fragment.allow_change:
+                if queryset.filter(updated_by__isnull=False).exists() \
+                        and not (self.request.user.is_superuser or self.is_coordinator):
+                    messages.error(self.request, _('You are not allowed to change marks'))
+                    return redirect(reverse_lazy('enrollment:home'))
 
         return super(StudentMarksView, self).dispatch(request, *args, **kwargs)
 
@@ -372,6 +383,10 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
         return kwargs
 
     def get_success_url(self):
+        if self.is_coordinator or self.request.user.is_superuser:
+            return reverse_lazy('exam:coordinator_markers_listing',
+                                kwargs={'fragment_id': self.marker.exam_room.exam_shift.settings.fragment.pk})
+
         return reverse_lazy('enrollment:home')
 
     def get_queryset(self):
