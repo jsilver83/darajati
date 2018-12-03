@@ -216,7 +216,10 @@ class ExamRoom(models.Model):
 
     @property
     def students_count(self):
-        return len(self.students)
+        try:
+            return self.students.count()
+        except:
+            return 0
 
     @property
     def remaining_seats(self):
