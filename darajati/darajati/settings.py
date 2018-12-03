@@ -190,8 +190,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'US/Eastern'
 
 # Decimal max digits
-MAX_DIGITS = 5  # 10000.00
-MAX_DECIMAL_POINT = 2  # .00
+MAX_DIGITS = 10  # 10000000.00
+MAX_DECIMAL_POINT = 4  # .0000
+
+# project_context = decimal.getcontext()
+# project_context.prec = MAX_DIGITS
+# decimal.DefaultContext = project_context
 
 MAX_FILE_UPLOAD_SIZE = 2048000  # ~ 2.0 MB
 
