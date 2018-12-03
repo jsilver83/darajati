@@ -368,8 +368,7 @@ class StudentMarksView(LoginRequiredMixin, ModelFormSetView):
             marker__exam_room=self.marker.exam_room,
             student_placement__is_present=True
         ).values('student_placement').distinct().count()
-        context['section_average'] = self.get_queryset().filter(
-            mark__isnull=False, student_placement__is_present=True).aggregate(Avg('mark')).get('mark__avg')
+        context['section_average'] = self.marker.marks_average
         context['previous_marker'] = Marker.objects.filter(order=self.marker.order - 1,
                                                            exam_room=self.marker.exam_room).first()
         context['show_warning'] = self.get_queryset().count() > context['total_number_of_students'] \
