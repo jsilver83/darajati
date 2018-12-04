@@ -20,7 +20,7 @@ urlpatterns = [
             views.CreateGradeFragmentView.as_view(),
             name='create_grade_fragment'),
 
-    re_path(r'^section/(?P<section_id>[0-9]+)/grades-report/$',
-            views.GradeReportView.as_view(),
-            name='section_grade_report'),
+    # re_path(r'^section/(?P<section_id>[0-9]+)/grades-report/$',
+    #         views.GradeReportView.as_view(),
+    #         name='section_grade_report'),
 ]
