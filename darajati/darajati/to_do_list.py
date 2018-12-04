@@ -38,5 +38,8 @@ URGENT:
 
 28 Nov 2018
 - add a flag to ExamSettings to ignore students class timings checks
+
+4 Dec 2018
+- change the functions that calculate averages to make it use the section and course averages database view
 """
 
