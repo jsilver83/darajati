@@ -54,11 +54,6 @@ class InstructorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin):
         return super(InstructorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self, **kwargs):
-
-        if not self.section:
-            messages.error(self.request, _('This is not a valid section'))
-            return False
-
         is_instructor_section = self.section.is_instructor_section(self.request.user.instructor)
         is_coordinator = self.section.is_coordinator_section(self.request.user.instructor)
 

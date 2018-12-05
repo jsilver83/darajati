@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import Value
 from django.db.models import Sum, Count
 from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from simple_history.models import HistoricalRecords
@@ -165,10 +166,7 @@ class GradeFragment(models.Model):
         :param grade_fragment_id: an integer number 
         :return: a GradeFragment instance if exists else None
         """
-        try:
-            return GradeFragment.objects.get(id=grade_fragment_id)
-        except GradeFragment.DoesNotExist:
-            return None
+        return get_object_or_404(GradeFragment, pk=grade_fragment_id)
 
     @staticmethod
     def get_section_grade_fragments(section):

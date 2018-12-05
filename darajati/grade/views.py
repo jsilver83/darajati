@@ -32,6 +32,12 @@ class GradeFragmentView(GradeBaseView, ListView):
     def get_queryset(self):
         return GradeFragment.get_section_grade_fragments(self.section)
 
+    def get_context_data(self, **kwargs):
+        context = super(GradeFragmentView, self).get_context_data(**kwargs)
+        context['is_coordinator'] = self.section.is_coordinator_section(self.request.user.instructor)
+
+        return context
+
 
 class GradesView(GradeBaseView, ModelFormSetView):
     template_name = 'grade/grades.html'
@@ -43,11 +49,7 @@ class GradesView(GradeBaseView, ModelFormSetView):
     def test_func(self, **kwargs):
         rules = super(GradesView, self).test_func(**kwargs)
         if rules:
-            if not self.grade_fragment:
-                messages.error(self.request, _('Please enter a valid grade plan'))
-                return False
-
-            if not self.grade_fragment.is_entry_allowed():
+            if not (self.grade_fragment.is_entry_allowed() or self.section.is_coordinator_section(self.request.user.instructor)):
                 messages.error(self.request, _('You are not allowed to enter the marks'))
                 return False
             return True

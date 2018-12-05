@@ -1,5 +1,6 @@
 from math import *
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -285,10 +286,7 @@ class Section(models.Model):
         :param section_id:
         :return: an object of the giving section_id
         """
-        try:
-            return Section.objects.get(id=section_id)
-        except Section.DoesNotExist:
-            return None
+        return get_object_or_404(Section, pk=section_id)
 
     @staticmethod
     def get_current_semesters_sections():

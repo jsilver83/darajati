@@ -38,23 +38,23 @@
                 </thead>
                 <tbody>
                 {% for grade_fragment in grade_fragments %}
-                    <tr>
-                        <td>{{ grade_fragment.order }}</td>
-                        <td>{{ grade_fragment.category }}</td>
-                        <td>{{ grade_fragment.description }}</td>
-                        <td>{{ grade_fragment.weight }}</td>
-                        <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
-                        <td>{{ grade_fragment.get_boundary_type_display }}</td>
-                        {% if grade_fragment.get_entry_is_allowed %}
-                            <td>
-                                <a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
-                        {% else %}
-                            <td>
-                                <a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-                                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
-                        {% endif %}
-                    </tr>
+	                <tr>
+		                <td>{{ grade_fragment.order }}</td>
+		                <td>{{ grade_fragment.category }}</td>
+		                <td>{{ grade_fragment.description }}</td>
+		                <td>{{ grade_fragment.weight }}</td>
+		                <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
+		                <td>{{ grade_fragment.get_boundary_type_display }}</td>
+		                {% if grade_fragment.get_entry_is_allowed or is_coordinator %}
+			                <td>
+				                <a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+				                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+		                {% else %}
+			                <td>
+				                <a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
+				                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
+		                {% endif %}
+	                </tr>
                 {% endfor %}
                 </tbody>
             </table>
