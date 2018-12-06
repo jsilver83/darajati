@@ -71,7 +71,7 @@
                                 <tr>
                                 <td>{{ form.count_index }} {{ form.enrollment }}</td>
                                 <td>{{ form.student_university_id }}</td>
-                                <td><a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.enrollment_pk.value %}">{{ form.student_name.value|truncatechars:25 }}&nbsp;&nbsp;<small><span class="glyphicon glyphicon-new-window"></span></small></a></td>
+                                <td><span style="display: none">{{ form.student_name }}</span><a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.enrollment_pk.value %}">{{ form.student_name.value|truncatechars:25 }}&nbsp;&nbsp;<small><span class="glyphicon glyphicon-new-window"></span></small></a></td>
                                 <td>
                                     {# a code to loop through the list of deductions for all students passed in the #}
 	                                {# context and find the relevant student absences #}
