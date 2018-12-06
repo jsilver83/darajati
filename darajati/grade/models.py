@@ -1,16 +1,18 @@
+from decimal import *
+
+from django.conf import settings
 from django.db import models
 from django.db import transaction
-from django.db.models import Value
 from django.db.models import Sum, Count
+from django.db.models import Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from simple_history.models import HistoricalRecords
 
 from enrollment.utils import to_string, now, today
 from .utils import display_average_of_value
-from decimal import *
+from darajati.utils import decimal
 
 User = settings.AUTH_USER_MODEL
 
@@ -617,3 +619,55 @@ class StudentGrade(models.Model):
                 display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
                 return display_average if not grades['sum'] is None else ''
         return ''
+
+
+# NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
+class SectionsAveragesView(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
+    grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    category = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    weight = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_sectionsaveragesview'
+
+    def __str__(self):
+        if self.grade_fragment.entry_in_percentages:
+            return str(decimal(self.grades_average_percentage)) + '%'
+        else:
+            return str(decimal(self.grades_average))
+
+
+# NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
+class CoursesAveragesView(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.DO_NOTHING)
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    category = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    weight = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_coursesaveragesview'
+
+    def __str__(self):
+        if self.grade_fragment.entry_in_percentages:
+            return str(decimal(self.grades_average_percentage)) + '%'
+        else:
+            return str(decimal(self.grades_average))
