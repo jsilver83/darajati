@@ -1,155 +1,180 @@
 {% extends "base.html" %}
 {% load i18n staticfiles %}
 {% block content %}
-    <div class="content-panel">
-        <div class="back-btn"> <a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
-        <br>
-        <div class="cntnt-sec">
-            {% if formset.forms %}
-                <form method="post">
-                <div class="title-sec row">
-                    <div class="col-md-9">
-                        <h3>{% trans 'Available attendance days for section ' %}{{ section.code }}</h3>
-                        <p>{% trans 'Select one to show the attendance' %}</p>
-                    </div>
-                    <div class="col-md-3 text-right">
-                        <input class="thm-btn small-btn save-btn" type="submit" value="{% trans 'Save' %}">
-                    </div>
-                </div>
-                <div class="btn-group avail-attend-days">
-                    {% if previous_week %}
-                        <a href="{% url 'attendance:section_day_attendance' year=previous_week.date.year month=previous_week.date.month day=previous_week.date.day section_id=previous_week.section_id %}"
-                           class="btn green days" role="button">{% trans 'Previous Week' %}
-                            <span class="attend-date">{{ previous_week.day }}, {{ previous_week.date }}</span>
-                        </a>
-                    {% endif %}
-                    {% for period in periods %}
-                        {% if period.date == current_date %}
-                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
-                               class="btn green days active-period" role="button"> {{ period.day }}
-                                <span class="attend-date">{{ period.date }}</span>
-                            </a>
-                        {% else %}
-                            <a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
-                               class="btn green days" role="button"> {{ period.day }}
-                                <span class="attend-date">{{ period.date }}</span>
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                    {% if next_week %}
-                        <a href="{% url 'attendance:section_day_attendance' year=next_week.date.year month=next_week.date.month day=next_week.date.day section_id=next_week.section_id %}"
-                           class="btn green days" role="button">{% trans 'Next Week' %}
-                            <span class="attend-date">{{ next_week.day }}, {{ next_week.date }}</span>
-                        </a>
-                    {% endif %}
-                </div>
-                <div class="thm-table odd period-cntnt">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>{% trans 'No.' %}</th>
-                            <th>{% trans 'ID' %}</th>
-                            <th>{% trans 'Name' %}</th>
-                            <th title="{% trans 'Unexcused Absences' %}">A</th>
-                            <th title="{% trans 'Lates' %}">L</th>
-                            <th title="{% trans 'Excuses' %}">E</th>
-                            <th title="{% trans 'Deductions' %}">D</th>
-                            {% for period in current_periods %}
-                                <th>{{ period.start_time }}{% trans ' to ' %}{{ period.end_time }}</th>
-                            {% endfor %}
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {{ formset.non_field_errors }}
-                        {% csrf_token %}
-                        {{ formset.management_form }}
-                        {% for form in formset %}
-                            {{ form.enrollment }}
-                            {{ form.id }}
-                            {{ form.attendance_instance }}
-                            {% ifchanged form.enrollment.value %}
-                                <tr>
-                                <td>{{ form.count_index }} {{ form.enrollment }}</td>
-                                <td>{{ form.student_university_id }}</td>
-                                <td><span style="display: none">{{ form.student_name }}</span><a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.enrollment_pk.value %}">{{ form.student_name.value|truncatechars:25 }}&nbsp;&nbsp;<small><span class="glyphicon glyphicon-new-window"></span></small></a></td>
-                                <td>
-                                    {# a code to loop through the list of deductions for all students passed in the #}
-	                                {# context and find the relevant student absences #}
-                                    {% for summary in students_attendances_summaries %}
-	                                    {% ifequal summary.pk form.enrollment_pk.value %}
-		                                    {{ summary.absences }}
-	                                    {% endifequal %}
-                                    {% endfor %}
-                                </td>
-	                            <td>
-                                    {# check comment from the previosu td #}
-                                    {% for summary in students_attendances_summaries %}
-	                                    {% ifequal summary.pk form.enrollment_pk.value %}
-		                                    {{ summary.lates }}
-	                                    {% endifequal %}
-                                    {% endfor %}
-                                </td>
-	                            <td>
-                                    {# check comment from the previosu td #}
-                                    {% for summary in students_attendances_summaries %}
-	                                    {% ifequal summary.pk form.enrollment_pk.value %}
-		                                    {{ summary.excuses }}
-	                                    {% endifequal %}
-                                    {% endfor %}
-                                </td>
-	                            <td>
-                                    {# check comment from the previosu td #}
-                                    {% for summary in students_attendances_summaries %}
-	                                    {% ifequal summary.pk form.enrollment_pk.value %}
-		                                    {{ summary.deduction }}
-	                                    {% endifequal %}
-                                    {% endfor %}
-                                </td>
+	<div class="content-panel">
+		<div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+		<br>
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-9">
+							<h3>{% trans 'Attendance Entry For Section ' %}{{ section.code }}</h3>
+							<p>{% trans 'Click on a day below to enter attendance for that day' %}</p>
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-md-9">
+							<p>
+								<b>{% trans 'Table Legends' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Attendance Deduction' %}
+							</p>
+						</div>
+						<div class="col-md-3 text-right">
+							<button class="thm-btn btn-block" type="submit">
+								<span class="glyphicon glyphicon-save-file"></span> {% trans 'Submit Attendance' %}</button>
+						</div>
+					</div>
+					<div class="btn-group avail-attend-days">
+						{% if previous_week %}
+							<a href="{% url 'attendance:section_day_attendance' year=previous_week.date.year month=previous_week.date.month day=previous_week.date.day section_id=previous_week.section_id %}"
+							   class="btn green days" role="button">{% trans 'Previous Week' %}
+								<span class="attend-date">{{ previous_week.day }}, {{ previous_week.date }}</span>
+							</a>
+						{% endif %}
+						{% for period in periods %}
+							{% if period.date == current_date %}
+								<a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
+								   class="btn green days active-period" role="button"> {{ period.day }}
+									<span class="attend-date">{{ period.date }}</span>
+								</a>
+							{% else %}
+								<a href="{% url 'attendance:section_day_attendance' year=period.date.year month=period.date.month day=period.date.day section_id=period.section_id %}"
+								   class="btn green days" role="button"> {{ period.day }}
+									<span class="attend-date">{{ period.date }}</span>
+								</a>
+							{% endif %}
+						{% endfor %}
+						{% if next_week %}
+							<a href="{% url 'attendance:section_day_attendance' year=next_week.date.year month=next_week.date.month day=next_week.date.day section_id=next_week.section_id %}"
+							   class="btn green days" role="button">{% trans 'Next Week' %}
+								<span class="attend-date">{{ next_week.day }}, {{ next_week.date }}</span>
+							</a>
+						{% endif %}
+					</div>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'ID' %}</th>
+								<th>{% trans 'Name' %}</th>
+								<th title="{% trans 'Unexcused Absences' %}">A</th>
+								<th title="{% trans 'Lates' %}">L</th>
+								<th title="{% trans 'Excuses' %}">E</th>
+								<th title="{% trans 'Deductions' %}">D</th>
+								{% for period in current_periods %}
+									<th>{{ period.start_time }}{% trans ' to ' %}{{ period.end_time }}</th>
+								{% endfor %}
+							</tr>
+							</thead>
+							<tbody>
+							{{ formset.non_field_errors }}
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								{{ form.enrollment }}
+								{{ form.id }}
+								{{ form.attendance_instance }}
+								{% ifchanged form.enrollment.value %}
+									<tr>
+									<td>{{ form.count_index }} {{ form.enrollment }}</td>
+									<td>{{ form.student_university_id }}</td>
+									<td>
+										<span style="display: none">{{ form.student_name }}</span><a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.enrollment_pk.value %}">{{ form.student_name.value|truncatechars:23 }}&nbsp;&nbsp;<small>
+										<span class="glyphicon glyphicon-new-window"></span></small>
+									</a></td>
+									<td>
+										{# a code to loop through the list of deductions for all students passed in the #}
+										{# context and find the relevant student absences #}
+										{% for summary in students_attendances_summaries %}
+											{% ifequal summary.pk form.enrollment_pk.value %}
+												{{ summary.absences }}
+											{% endifequal %}
+										{% endfor %}
+									</td>
+									<td>
+										{# check comment from the previosu td #}
+										{% for summary in students_attendances_summaries %}
+											{% ifequal summary.pk form.enrollment_pk.value %}
+												{{ summary.lates }}
+											{% endifequal %}
+										{% endfor %}
+									</td>
+									<td>
+										{# check comment from the previosu td #}
+										{% for summary in students_attendances_summaries %}
+											{% ifequal summary.pk form.enrollment_pk.value %}
+												{{ summary.excuses }}
+											{% endifequal %}
+										{% endfor %}
+									</td>
+									<td>
+										{# check comment from the previosu td #}
+										{% for summary in students_attendances_summaries %}
+											{% ifequal summary.pk form.enrollment_pk.value %}
+												{{ summary.deduction }}
+											{% endifequal %}
+										{% endfor %}
+									</td>
 
-                                <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
-                                    <div class="row">
-                                        <div class="col-md-9">{{ form.non_field_errors }}{{ form.status }}{{ form.status.errors }}</div>
-                                        <div class="col-md-3 info">
-	                                        <span class="glyphicon glyphicon-info-sign info-icon"></span>
-                                            <div class="info-cntnt">
-                                                <span>Updated By : {{ form.updated_by }}</span>
-                                                <span>Updated On : {{ form.updated_on }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            {% else %}
-                                {% if form.id.value != None %}
-                                    <span style="display: none;">{{ form.count_index }}{{ form.student_name }}{{ form.student_university_id }}{{ form.total_absence }}</span>
-                                    <td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
-                                        <div class="row">
-                                            <div class="col-md-9">{{ form.non_field_errors }}{{ form.status }}{{ form.status.errors }}</div>
-                                            <div class="col-md-3 info">
-                                                <span class="glyphicon glyphicon-info-sign info-icon"></span>
-                                                <div class="info-cntnt">
-                                                    <span>Updated By : {{ form.updated_by }}</span>
-                                                    <span>Updated On : {{ form.updated_on }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                {% endif %}
-                            {% endifchanged %}
-                        {% endfor %}
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-	            <br>
-	            <p><b>{% trans 'Table Legends' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Deductions' %}</p>
-            {% else %}
-                {% trans 'There are no students' %}
-            {% endif %}
-            </form>
-        </div>
-    </div>
+									<td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
+										<div class="row">
+											<div class="col-md-9">
+												{{ form.non_field_errors }}{{ form.status }}{{ form.status.errors }}</div>
+											<div class="col-md-3 info">
+												<span class="glyphicon glyphicon-info-sign info-icon"></span>
+												<div class="info-cntnt">
+													<span>Updated By : {{ form.updated_by }}</span>
+													<span>Updated On : {{ form.updated_on }}</span>
+												</div>
+											</div>
+										</div>
+									</td>
+								{% else %}
+									{% if form.id.value != None %}
+										<span style="display: none;">{{ form.count_index }}{{ form.student_name }}{{ form.student_university_id }}{{ form.total_absence }}</span>
+										<td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
+											<div class="row">
+												<div class="col-md-9">
+													{{ form.non_field_errors }}{{ form.status }}{{ form.status.errors }}</div>
+												<div class="col-md-3 info">
+													<span class="glyphicon glyphicon-info-sign info-icon"></span>
+													<div class="info-cntnt">
+														<span>Updated By : {{ form.updated_by }}</span>
+														<span>Updated On : {{ form.updated_on }}</span>
+													</div>
+												</div>
+											</div>
+										</td>
+									{% endif %}
+								{% endifchanged %}
+							{% endfor %}
+							</tr>
+							</tbody>
+						</table>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-md-9">
+							<p>
+								<b>{% trans 'Table Legends' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Attendance Deduction' %}
+							</p>
+						</div>
+						<div class="col-md-3 text-right">
+							<button class="thm-btn btn-block" type="submit">
+								<span class="glyphicon glyphicon-save-file"></span>  {% trans 'Submit Attendance' %}</button>
+						</div>
+					</div>
+				</form>
+			{% else %}
+				{% trans 'There are no students' %}
+			{% endif %}
+
+		</div>
+	</div>
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'js/custom-attendance.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/custom-attendance.js' %}"></script>
 {% endblock %}

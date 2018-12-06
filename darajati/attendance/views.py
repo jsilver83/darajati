@@ -1,12 +1,10 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import F
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.dateparse import parse_date
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import ListView, CreateView, UpdateView, FormView, TemplateView
-from django.views.generic.base import View
+from django.views.generic import ListView, CreateView, TemplateView
 from extra_views import FormSetView
 
 from enrollment.models import Enrollment, Student, Instructor
@@ -67,8 +65,16 @@ class AttendanceView(AttendanceBaseView, FormSetView):
     def formset_valid(self, formset):
         for form in formset:
             form.save()
-        messages.success(self.request, _('Your attendances were saved'))
+        messages.success(self.request, _('Attendances were saved successfully'))
         return super(AttendanceView, self).formset_valid(formset)
+
+    def get(self, request, *args, **kwargs):
+        all_messages_content = [msg.message for msg in list(messages.get_messages(request))]
+        if _('Attendances were saved successfully') not in all_messages_content:
+            messages.add_message(request, messages.WARNING,
+                                 _('Make sure that you see the success message after submitting attendance. '
+                                   'OR ELSE, attendance was NOT saved properly and you have to report it as a BUG'))
+        return super().get(request, *args, **kwargs)
 
     # FIXME: I know i look nice-ish but i wanna be more nicer when you have time fix me please
     def get_context_data(self, **kwargs):
