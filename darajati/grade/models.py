@@ -200,14 +200,18 @@ class GradeFragment(models.Model):
         :param section: 
         :return: a string to present the boundary of subjective fragment 
         """
+        boundary_range_lower = self.boundary_range_lower or 0
+        boundary_range_upper = self.boundary_range_upper or 0
+        boundary_fixed_average = self.boundary_fixed_average or 0
+
         if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED:
             average = StudentGrade.get_section_objective_average(
                 section,
                 self
             )
             if average:
-                lower = average - self.boundary_range_lower
-                upper = average + self.boundary_range_upper
+                lower = average - boundary_range_lower
+                upper = average + boundary_range_upper
                 if self.entry_in_percentages:
                     return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
                 return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
