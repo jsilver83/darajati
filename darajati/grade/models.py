@@ -346,6 +346,7 @@ class StudentGrade(models.Model):
             return section_average if not grades['sum'] is None else 0
         return 0
 
+    # TODO: rework and use view
     @staticmethod
     def get_section_objective_average(section, grade_fragment):
         """
@@ -630,6 +631,7 @@ class SectionsAveragesView(models.Model):
     course_code = models.CharField(max_length=20)
     section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
     grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    boundary_type = models.CharField(max_length=24)
     category = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     weight = models.DecimalField(max_digits=10, decimal_places=4)
@@ -656,6 +658,7 @@ class CoursesAveragesView(models.Model):
     course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
     course_code = models.CharField(max_length=20)
     grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    boundary_type = models.CharField(max_length=24)
     category = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     weight = models.DecimalField(max_digits=10, decimal_places=4)
