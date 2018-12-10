@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
               S.ID SECTION_ID, 
               S.CODE SECTION_CODE, 
               G.GRADE_FRAGMENT_ID, 
+              F.BOUNDARY_TYPE,
               F.CATEGORY, 
               F.DESCRIPTION, 
               F.WEIGHT,    
@@ -36,9 +37,11 @@ class Migration(migrations.Migration):
               ENROLLMENT_SEMESTER SEM ON O.SEMESTER_ID = SEM.ID INNER JOIN
               GRADE_GRADEFRAGMENT F ON G.GRADE_FRAGMENT_ID = F.ID
             WHERE 
-              G.GRADE_QUANTITY IS NOT NULL
+              G.GRADE_QUANTITY IS NOT NULL AND
+              E.ACTIVE = TRUE
             GROUP BY 
               G.GRADE_FRAGMENT_ID, 
+              F.BOUNDARY_TYPE,
               F.CATEGORY, 
               F.DESCRIPTION, 
               F.WEIGHT, 
