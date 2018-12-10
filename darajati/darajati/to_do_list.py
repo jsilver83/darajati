@@ -41,5 +41,13 @@ URGENT:
 
 4 Dec 2018
 - change the functions that calculate averages to make it use the section and course averages database view
+
+10 Dec 2018
+- fix validation for grade_fragment entry page for different boundaries
+- fix bug that enables instructor to edit grades evn if they are not coordinators
+- the button show grade is not shown if show grades for instructor is false
+- implement formset for all fragments for show_flags for coordinator
+- in subjective marking, fix averages to calculate based on weighted mark
+- In the “unaccepted marks” report in writing fragments, add the room and section for the student
 """
 
