@@ -90,7 +90,9 @@ class GradeFragment(models.Model):
         _('Show in Teacher Report'),
         null=False,
         blank=False,
-        default=True
+        default=True,
+        help_text=_('This flag will control whether teachers are be able to see grades of this fragment '
+                    'in darajati or in BI')
     )
     show_student_report = models.BooleanField(
         _('Show in Student Report'),
@@ -216,20 +218,31 @@ class GradeFragment(models.Model):
                     return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
                 return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
         if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
-            lower = self.boundary_fixed_average - self.boundary_range_lower
-            upper = self.boundary_fixed_average + self.boundary_range_upper
+            lower = boundary_fixed_average - boundary_range_lower
+            upper = boundary_fixed_average + boundary_range_upper
             if self.entry_in_percentages:
                 return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
             return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
 
-    def is_entry_allowed(self):
+    def is_entry_allowed_for_instructor(self, section, instructor):
         """
-        :return: True if trying to access a grade fragment grades within the allowed time
+        :return: True if the teacher is  trying to access a grade fragment grades within the allowed time
         """
         try:
-            return self.entry_start_date <= now() <= self.entry_end_date
+            entry_allowed = self.entry_start_date <= now() <= self.entry_end_date
+            if not entry_allowed:
+                return section.is_coordinator_section(instructor)
+            return entry_allowed
         except GradeFragment.DoesNotExist:
             pass
+
+    def is_viewable_for_instructor(self, section, instructor):
+        """
+        :return: True if the teacher is able to see the fragment grades in reports
+        """
+        if not self.show_teacher_report:
+            return section.is_coordinator_section(instructor)
+        return self.show_teacher_report
 
     @property
     def allow_subjective_marking(self):
@@ -242,10 +255,6 @@ class GradeFragment(models.Model):
         return StudentGrade.get_section_average(
             section, self
         )
-
-    @property
-    def get_entry_is_allowed(self):
-        return self.is_entry_allowed()
 
     @property
     def get_weight(self):
