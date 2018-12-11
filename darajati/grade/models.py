@@ -1,16 +1,18 @@
+from decimal import *
+
+from django.conf import settings
 from django.db import models
 from django.db import transaction
-from django.db.models import Value
 from django.db.models import Sum, Count
+from django.db.models import Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from simple_history.models import HistoricalRecords
 
 from enrollment.utils import to_string, now, today
 from .utils import display_average_of_value
-from decimal import *
+from darajati.utils import decimal
 
 User = settings.AUTH_USER_MODEL
 
@@ -88,7 +90,9 @@ class GradeFragment(models.Model):
         _('Show in Teacher Report'),
         null=False,
         blank=False,
-        default=True
+        default=True,
+        help_text=_('This flag will control whether teachers are be able to see grades of this fragment '
+                    'in darajati or in BI')
     )
     show_student_report = models.BooleanField(
         _('Show in Student Report'),
@@ -198,32 +202,47 @@ class GradeFragment(models.Model):
         :param section: 
         :return: a string to present the boundary of subjective fragment 
         """
+        boundary_range_lower = self.boundary_range_lower or 0
+        boundary_range_upper = self.boundary_range_upper or 0
+        boundary_fixed_average = self.boundary_fixed_average or 0
+
         if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED:
             average = StudentGrade.get_section_objective_average(
                 section,
                 self
             )
             if average:
-                lower = average - self.boundary_range_lower
-                upper = average + self.boundary_range_upper
+                lower = average - boundary_range_lower
+                upper = average + boundary_range_upper
                 if self.entry_in_percentages:
                     return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
                 return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
         if self.boundary_type == self.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
-            lower = self.boundary_fixed_average - self.boundary_range_lower
-            upper = self.boundary_fixed_average + self.boundary_range_upper
+            lower = boundary_fixed_average - boundary_range_lower
+            upper = boundary_fixed_average + boundary_range_upper
             if self.entry_in_percentages:
                 return 'This section average should be between ' + str(lower) + '% and ' + str(upper) + '%'
             return 'This section average should be between ' + str(lower) + ' and ' + str(upper)
 
-    def is_entry_allowed(self):
+    def is_entry_allowed_for_instructor(self, section, instructor):
         """
-        :return: True if trying to access a grade fragment grades within the allowed time
+        :return: True if the teacher is  trying to access a grade fragment grades within the allowed time
         """
         try:
-            return self.entry_start_date <= now() <= self.entry_end_date
+            entry_allowed = self.entry_start_date <= now() <= self.entry_end_date
+            if not entry_allowed:
+                return section.is_coordinator_section(instructor)
+            return entry_allowed
         except GradeFragment.DoesNotExist:
             pass
+
+    def is_viewable_for_instructor(self, section, instructor):
+        """
+        :return: True if the teacher is able to see the fragment grades in reports
+        """
+        if not self.show_teacher_report:
+            return section.is_coordinator_section(instructor)
+        return self.show_teacher_report
 
     @property
     def allow_subjective_marking(self):
@@ -236,10 +255,6 @@ class GradeFragment(models.Model):
         return StudentGrade.get_section_average(
             section, self
         )
-
-    @property
-    def get_entry_is_allowed(self):
-        return self.is_entry_allowed()
 
     @property
     def get_weight(self):
@@ -344,6 +359,7 @@ class StudentGrade(models.Model):
             return section_average if not grades['sum'] is None else 0
         return 0
 
+    # TODO: rework and use view
     @staticmethod
     def get_section_objective_average(section, grade_fragment):
         """
@@ -617,3 +633,57 @@ class StudentGrade(models.Model):
                 display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
                 return display_average if not grades['sum'] is None else ''
         return ''
+
+
+# NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
+class SectionsAveragesView(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
+    grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    boundary_type = models.CharField(max_length=24)
+    category = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    weight = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_sectionsaveragesview'
+
+    def __str__(self):
+        if self.grade_fragment.entry_in_percentages:
+            return str(decimal(self.grades_average_percentage)) + '%'
+        else:
+            return str(decimal(self.grades_average))
+
+
+# NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
+class CoursesAveragesView(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.DO_NOTHING)
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
+    boundary_type = models.CharField(max_length=24)
+    category = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    weight = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_coursesaveragesview'
+
+    def __str__(self):
+        if self.grade_fragment.entry_in_percentages:
+            return str(decimal(self.grades_average_percentage)) + '%'
+        else:
+            return str(decimal(self.grades_average))

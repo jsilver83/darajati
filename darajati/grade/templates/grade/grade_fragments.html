@@ -1,70 +1,68 @@
 {% extends "base.html" %}
 {% load i18n staticfiles %}
 {% block content %}
-    <div class="content-panel">
-        <div class="cntnt-sec">
-            <div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
-            <div class="title-sec text-center">
-                <h3>{% trans 'Course:' %} {{ section.course_offering.course.name }}</h3>
-                <p>{% trans 'Find your current enrolled sections grades plans' %}</p>
-            </div>
-            {% if not section.course_offering.coordinated %}
-                <div class="float-right">
-                    <a class="thm-btn small-btn outline-btn-dgrey"
-                       href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
-                        {% trans 'Create New Grade Plan' %}</a>
-                </div>
-            {% endif %}
-{#            <div class="float-right">#}
-{#                <a class="thm-btn small-btn outline-btn-dgrey"#}
-{#                   href="{% url 'grade:section_grade_report' section_id=section_id %}">#}
-{#                    {% trans 'Grades Report' %}</a>#}
-{#            </div>#}
-        </div>
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			<div class="back-btn"><a href="{% url 'enrollment:home' %}">{% trans 'Go Back' %}</a></div>
+			<div class="title-sec text-center">
+				<h3>{% trans 'Course:' %} {{ section.course_offering.course.name }}</h3>
+				<p>{% trans 'Find your current enrolled sections grades plans' %}</p>
+			</div>
+			{% if not section.course_offering.coordinated %}
+				<div class="float-right">
+					<a class="thm-btn small-btn outline-btn-dgrey"
+					   href="{% url 'grade:create_grade_fragment' section_id=section_id %}">
+						{% trans 'Create New Grade Plan' %}</a>
+				</div>
+			{% endif %}
+			{#            <div class="float-right">#}
+			{#                <a class="thm-btn small-btn outline-btn-dgrey"#}
+			{#                   href="{% url 'grade:section_grade_report' section_id=section_id %}">#}
+			{#                    {% trans 'Grades Report' %}</a>#}
+			{#            </div>#}
+		</div>
 
-        {% if grade_fragments %}
+		{% if grade_fragments_objects %}
+			<table class="table table-condensed text-center">
+				<thead>
+				<tr>
+					<th class="text-center">{% trans 'No.' %}</th>
+					<th class="text-center">{% trans 'Category' %}</th>
+					<th class="text-center">{% trans 'Description' %}</th>
+					<th class="text-center">{% trans 'Weight' %}</th>
+					<th class="text-center">{% trans 'Entry Date' %}</th>
+					<th class="text-center">{% trans 'Type' %}</th>
+					<th class="text-center">{% trans 'Grades' %}</th>
+				</tr>
+				</thead>
+				<tbody>
+				{% for object in grade_fragments_objects %}
+					<tr>
+						<td>{{ object.grade_fragment.order }}</td>
+						<td>{{ object.grade_fragment.category }}</td>
+						<td>{{ object.grade_fragment.description }}</td>
+						<td>{{ object.grade_fragment.weight }}</td>
+						<td>{{ object.grade_fragment.entry_start_date }} to {{ object.entry_end_date }}</td>
+						<td>{{ object.grade_fragment.get_boundary_type_display }}</td>
+						{% if object.editable %}
+							<td>
+								<a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=object.grade_fragment.id %}"
+								   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+						{% elif object.viewable %}
+							<td>
+								<a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=object.grade_fragment.id %}"
+								   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
+						{% endif %}
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		{% else %}
+			<br>
+			<h4>
+				{% trans 'There are no results' %}
+			</h4>
+		{% endif %}
 
-            <table class="table table-condensed text-center">
-                <thead>
-                <tr>
-                    <th class="text-center">{% trans 'No.' %}</th>
-                    <th class="text-center">{% trans 'Category' %}</th>
-                    <th class="text-center">{% trans 'Description' %}</th>
-                    <th class="text-center">{% trans 'Weight' %}</th>
-                    <th class="text-center">{% trans 'Entry Date' %}</th>
-                    <th class="text-center">{% trans 'Type' %}</th>
-                    <th class="text-center">{% trans 'Grades' %}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for grade_fragment in grade_fragments %}
-	                <tr>
-		                <td>{{ grade_fragment.order }}</td>
-		                <td>{{ grade_fragment.category }}</td>
-		                <td>{{ grade_fragment.description }}</td>
-		                <td>{{ grade_fragment.weight }}</td>
-		                <td>{{ grade_fragment.entry_start_date }} to {{ grade_fragment.entry_end_date }}</td>
-		                <td>{{ grade_fragment.get_boundary_type_display }}</td>
-		                {% if grade_fragment.get_entry_is_allowed or is_coordinator %}
-			                <td>
-				                <a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-				                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
-		                {% else %}
-			                <td>
-				                <a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=grade_fragment.id %}"
-				                   class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
-		                {% endif %}
-	                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <br>
-            <h4>
-                {% trans 'There are no results' %}
-            </h4>
-        {% endif %}
-
-    </div>
-    </div>
+	</div>
 {% endblock %}

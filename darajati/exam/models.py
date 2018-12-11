@@ -416,9 +416,15 @@ class StudentMark(models.Model):
 
     @property
     def weighted_mark(self):
-        mark = self.mark if self.mark else Decimal(0)
-        generosity_factor = self.marker.generosity_factor if self.marker.generosity_factor else Decimal(0)
-        return mark + generosity_factor
+        mark = self.mark or decimal(0)
+        generosity_factor = self.marker.generosity_factor or decimal(0)
+
+        if 0 <= mark + generosity_factor <= 100:
+            return decimal(mark + generosity_factor)
+        elif generosity_factor > 100:
+            return decimal(100)
+        else:
+            return decimal(0)
 
     @staticmethod
     def get_unaccepted_marks(exam_settings):

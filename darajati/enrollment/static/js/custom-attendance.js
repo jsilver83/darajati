@@ -6,7 +6,6 @@ $(function () {
     $(window).data('beforeunload', window.onbeforeunload);
 
 
-
     var confirmOnPageExit = function (e) {
         // If we haven't been passed the event get the window.event
         e = e || window.event;
@@ -52,5 +51,9 @@ $(function () {
             $(this).parent("div").parent("div").parent("td").removeClass("success");
             $(this).parent("div").parent("div").parent("td").removeClass("error");
         }
+    });
+
+    $(".alert-warning").delay(4000).slideUp(500, function () {
+        $(this).alert('close');
     });
 });

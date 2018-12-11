@@ -1,16 +1,14 @@
-from django.db.models import Value, IntegerField
-from django.http import HttpResponseRedirect
-from extra_views import ModelFormSetView
-from django.views.generic import ListView, CreateView, TemplateView
-from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
-
-from .models import GradeFragment, StudentGrade
-from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
+from django.views.generic import ListView, CreateView, TemplateView
+from extra_views import ModelFormSetView
 
 from enrollment.models import Enrollment
 from enrollment.views import InstructorBaseView
+from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
+from .models import GradeFragment, StudentGrade
 
 
 class GradeBaseView(InstructorBaseView):
@@ -25,17 +23,21 @@ class GradeBaseView(InstructorBaseView):
         return super(GradeBaseView, self).dispatch(request, *args, **kwargs)
 
 
-class GradeFragmentView(GradeBaseView, ListView):
+class GradeFragmentView(GradeBaseView, TemplateView):
     template_name = 'grade/grade_fragments.html'
-    context_object_name = 'grade_fragments'
-
-    def get_queryset(self):
-        return GradeFragment.get_section_grade_fragments(self.section)
 
     def get_context_data(self, **kwargs):
         context = super(GradeFragmentView, self).get_context_data(**kwargs)
-        context['is_coordinator'] = self.section.is_coordinator_section(self.request.user.instructor)
-
+        grade_fragments = GradeFragment.get_section_grade_fragments(self.section)
+        grade_fragments_list = []
+        for grade_fragment in grade_fragments:
+            is_entry_allowed = grade_fragment.is_entry_allowed_for_instructor(self.section, self.request.user.instructor)
+            is_viewable = grade_fragment.is_viewable_for_instructor(self.section, self.request.user.instructor)
+            if is_entry_allowed:
+                grade_fragments_list.append({'grade_fragment': grade_fragment, 'editable': True, 'viewable': True})
+            elif is_viewable:
+                grade_fragments_list.append({'grade_fragment': grade_fragment, 'editable': False, 'viewable': True})
+        context['grade_fragments_objects'] = grade_fragments_list
         return context
 
 
@@ -48,12 +50,10 @@ class GradesView(GradeBaseView, ModelFormSetView):
 
     def test_func(self, **kwargs):
         rules = super(GradesView, self).test_func(**kwargs)
-        if rules:
-            if not (self.grade_fragment.is_entry_allowed() or self.section.is_coordinator_section(self.request.user.instructor)):
-                messages.error(self.request, _('You are not allowed to enter the marks'))
-                return False
-            return True
-        return False
+        if not (self.grade_fragment.is_entry_allowed_for_instructor(self.section, self.request.user.instructor)):
+            messages.error(self.request, _('You are not allowed to enter the marks'))
+            return False
+        return True and rules
 
     def get_queryset(self):
         return StudentGrade.get_section_grades(self.section_id, self.grade_fragment_id)
@@ -96,6 +96,13 @@ class DisplayGradesView(GradeBaseView, ListView):
     template_name = 'grade/view_grades.html'
     model = StudentGrade
     context_object_name = 'grades'
+
+    def test_func(self, **kwargs):
+        rules = super(DisplayGradesView, self).test_func(**kwargs)
+        if not (self.grade_fragment.is_viewable_for_instructor(self.section, self.request.user.instructor)):
+            messages.error(self.request, _('You are not allowed to enter the marks'))
+            return False
+        return True and rules
 
     def get_queryset(self):
         queryset = super(DisplayGradesView, self).get_queryset()
