@@ -42,12 +42,12 @@
 						<td>{{ object.grade_fragment.category }}</td>
 						<td>{{ object.grade_fragment.description }}</td>
 						<td>{{ object.grade_fragment.weight }}</td>
-						<td>{{ object.grade_fragment.entry_start_date }} to {{ object.entry_end_date }}</td>
+						<td{% if object.editable %} class="warning"{% endif %}>{{ object.grade_fragment.entry_start_date }} to {{ object.entry_end_date }}</td>
 						<td>{{ object.grade_fragment.get_boundary_type_display }}</td>
 						{% if object.editable %}
 							<td>
 								<a href="{% url 'grade:plan_grades' section_id=section_id  grade_fragment_id=object.grade_fragment.id %}"
-								   class="thm-btn small-btn outline-btn-dgrey">{% trans 'Edit' %}</a></td>
+								   class="thm-btn small-btn outline-btn-dgrey btn-success">{% trans 'Edit' %}</a></td>
 						{% elif object.viewable %}
 							<td>
 								<a href="{% url 'grade:view_grades' section_id=section_id  grade_fragment_id=object.grade_fragment.id %}"
