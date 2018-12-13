@@ -169,7 +169,7 @@ class BaseGradesFormSet(BaseModelFormSet):
                 more_objective_average = self.average_boundary + self.fragment.boundary_range_upper
                 if not less_objective_average <= self.average <= more_objective_average:
                     raise forms.ValidationError(
-                        _('Section average }% should be between {}% and {}%'.format(
+                        _('Section average {}% should be between {}% and {}%'.format(
                             self.average, less_objective_average, more_objective_average)))
             else:
                 raise forms.ValidationError(
