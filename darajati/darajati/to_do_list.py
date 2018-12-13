@@ -49,5 +49,9 @@ URGENT:
 - implement formset for all fragments for show_flags for coordinator
 - in subjective marking, fix averages to calculate based on weighted mark
 - In the “unaccepted marks” report in writing fragments, add the room and section for the student
+
+11 Dec 2018
+- remove readonly from grades when viewer is the coordinator
+- investigate if instructors changed grades after submitting
 """
 
