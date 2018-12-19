@@ -687,3 +687,23 @@ class CoursesAveragesView(models.Model):
             return str(decimal(self.grades_average_percentage)) + '%'
         else:
             return str(decimal(self.grades_average))
+
+
+# NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
+class SectionsObjectiveAveragesView(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
+    weights_sum = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_objective_average = models.DecimalField(max_digits=10, decimal_places=4)
+    grades_objective_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_sectionsobjectiveaveragesview'
+
+    def __str__(self):
+        return str(decimal(self.grades_objective_average_percentage)) + '%'
