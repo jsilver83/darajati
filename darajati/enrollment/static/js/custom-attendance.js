@@ -22,7 +22,7 @@ $(function () {
     };
 
 
-    $("input[type=submit]").mousedown(function () {
+    $("button[type=submit]").mousedown(function () {
         window.onbeforeunload = null;
         window.onbeforeunload = $(window).data('beforeunload');
     });
