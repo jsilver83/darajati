@@ -2,9 +2,6 @@
 {% load i18n staticfiles %}
 {% block content %}
     <div class="content-panel">
-        <div class="cntnt-sec">
-            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
-        </div>
         <br>
         <div class="cntnt-sec">
             {% if grades %}
