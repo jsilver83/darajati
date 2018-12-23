@@ -42,7 +42,7 @@
 						<td>{{ object.grade_fragment.category }}</td>
 						<td>{{ object.grade_fragment.description }}</td>
 						<td>{{ object.grade_fragment.weight }}</td>
-						<td{% if object.editable %} class="warning"{% endif %}>{{ object.grade_fragment.entry_start_date }} to {{ object.entry_end_date }}</td>
+						<td{% if object.editable %} class="warning"{% endif %}>{{ object.grade_fragment.entry_start_date }} to {{ object.grade_fragment.entry_end_date }}</td>
 						<td>{{ object.grade_fragment.get_boundary_type_display }}</td>
 						{% if object.editable %}
 							<td>
