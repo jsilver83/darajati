@@ -10,18 +10,13 @@
             <div class="card card-outline-secondary mb-3">
                 <div class="card-block">
                     <blockquote class="card-blockquote">
-                        <p>{% trans 'Semester: ' %}<span
-                                style="color:red">{{ gradefragment.course_offering.semester.description }}</span></p>
-                        <p>{% trans 'Course: ' %}<span
-                                style="color:red">{{ gradefragment.course_offering.course }}</span></p>
-                        <p>{% trans 'Grade Fragment Category: ' %}<span
-                                style="color:red">{{ gradefragment.category }}</span></p>
-                        <p>{% trans 'Grade Fragment Description: ' %}<span
-                                style="color:red">{{ gradefragment.description }}</span></p>
-                        <p>{% trans 'Grade Fragment weight: ' %}<span
-                                style="color:red">{{ gradefragment.weight }}</span></p>
+                        <p>{% trans 'Semester: ' %}<span>{{ gradefragment.course_offering.semester.description }}</span></p>
+                        <p>{% trans 'Course: ' %}<span>{{ gradefragment.course_offering.course }}</span></p>
+                        <p>{% trans 'Grade Fragment Category: ' %}<span>{{ gradefragment.category }}</span></p>
+                        <p>{% trans 'Grade Fragment Description: ' %}<span>{{ gradefragment.description }}</span></p>
+                        <p>{% trans 'Grade Fragment weight: ' %}<span>{{ gradefragment.weight }}</span></p>
                         <q style="color:red">
-                            {% trans 'Please be away that any students grade assosiated to this grade fragment will be deleted as well' %}
+                            {% trans 'Please be aware that any grades assosiated with this fragment will be deleted as well' %}
                         </q>
                     </blockquote>
                 </div>

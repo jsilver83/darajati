@@ -6,18 +6,12 @@
         <div class="card card-outline-secondary mb-3">
             <div class="card-block">
                 <blockquote class="card-blockquote">
-                    <p>{% trans 'Semester: ' %}<span
-                            style="color:red">{{ grade_fragment.course_offering.semester.description }}</span></p>
-                    <p>{% trans 'Course: ' %}<span
-                            style="color:red">{{ grade_fragment.course_offering.course }}</span></p>
-                    <p>{% trans 'Grade Fragment Category: ' %}<span
-                            style="color:red">{{ grade_fragment.category }}</span></p>
-                    <p>{% trans 'Grade Fragment Description: ' %}<span
-                            style="color:red">{{ grade_fragment.description }}</span></p>
-                    <p>{% trans 'Grade Fragment Weight: ' %}<span
-                            style="color:red">{{ grade_fragment.weight }}</span></p>
-                    <p>{% trans 'Grade Fragment Type: ' %}<span
-                            style="color:red">{{ grade_fragment.get_boundary_type_display }}</span></p>
+                    <p>{% trans 'Semester: ' %}<span>{{ grade_fragment.course_offering.semester.description }}</span></p>
+                    <p>{% trans 'Course: ' %}<span>{{ grade_fragment.course_offering.course }}</span></p>
+                    <p>{% trans 'Grade Fragment Category: ' %}<span>{{ grade_fragment.category }}</span></p>
+                    <p>{% trans 'Grade Fragment Description: ' %}<span>{{ grade_fragment.description }}</span></p>
+                    <p>{% trans 'Grade Fragment Weight: ' %}<span>{{ grade_fragment.weight }}</span></p>
+                    <p>{% trans 'Grade Fragment Type: ' %}<span>{{ grade_fragment.get_boundary_type_display }}</span></p>
                     {% if boundary %}
                         <span><strong>{{ boundary }}</strong></span>
                     {% endif %}

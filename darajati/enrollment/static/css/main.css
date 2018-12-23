@@ -1962,6 +1962,11 @@ a {color:#000; text-decoration: none;}      /* unvisited link */
 .table .success {
     background-color: #dff0d8 !important;
 }
+
+blockquote.card-blockquote p span, blockquote.card-blockquote p b{
+  color: #007d40!important;
+  font-weight: bold;
+}
 /* end of addition by joud */
 
 /* added by malnajdi */

@@ -7,16 +7,11 @@
 		<div class="card card-outline-secondary mb-3">
 			<div class="card-block">
 				<blockquote class="card-blockquote">
-					<p>{% trans 'Course' %}: <span
-							style="color:red">{{ grade_fragment.course_offering }}</span></p>
-					<p>{% trans 'Grade Fragment Category: ' %}<span
-							style="color:red">{{ grade_fragment.category }}</span></p>
-					<p>{% trans 'Grade Fragment Description: ' %}<span
-							style="color:red">{{ grade_fragment.description }}</span></p>
-					<p>{% trans 'Marker' %}: <span
-							style="color:red">{{ marker }} ({{ marker_order }})</span></p>
-					<p>{% trans 'Room' %}: <span
-							style="color:red">{{ marker.room }}</span></p>
+					<p>{% trans 'Course' %}: <span>{{ grade_fragment.course_offering }}</span></p>
+					<p>{% trans 'Grade Fragment Category: ' %}<span>{{ grade_fragment.category }}</span></p>
+					<p>{% trans 'Grade Fragment Description: ' %}<span>{{ grade_fragment.description }}</span></p>
+					<p>{% trans 'Marker' %}: <span>{{ marker }} ({{ marker_order }})</span></p>
+					<p>{% trans 'Room' %}: <span>{{ marker.room }}</span></p>
 					{% if not grade_fragment.allow_change %}
 						<q style="color:red">
 							{% trans '*Note: You can not change a student grade after submitting it.' %}
