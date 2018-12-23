@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import ListView, CreateView, TemplateView
 from extra_views import ModelFormSetView
 
-from enrollment.models import Enrollment
+from enrollment.models import Section
 from enrollment.views import InstructorBaseView
 from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
 from .models import GradeFragment, StudentGrade
@@ -48,6 +49,31 @@ class GradesView(GradeBaseView, ModelFormSetView):
     formset_class = BaseGradesFormSet
     extra = 0
 
+    is_change_allowed = False
+
+    def dispatch(self, request, *args, **kwargs):
+        grade_fragment = get_object_or_404(GradeFragment, pk=kwargs.get('grade_fragment_id'))
+        section = get_object_or_404(Section, pk=kwargs.get('section_id'))
+
+        self.is_change_allowed = grade_fragment.is_change_allowed_for_instructor(
+            section, self.request.user.instructor
+        )
+
+        # SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
+        if grade_fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
+            average_boundary = StudentGrade.get_section_objective_average(section, grade_fragment)
+            if not average_boundary:
+                messages.error(request, _('There is no objective average yet, make sure objective grades are entered'))
+                return redirect(reverse_lazy('enrollment:home'))
+
+        # SUBJECTIVE_BOUND_FIXED require boundary_fixed_average to not be null. If null show an error
+        if (grade_fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED
+                and not grade_fragment.boundary_fixed_average):
+            messages.error(request, _('There is no fixed average for this grade plan'))
+            return redirect(reverse_lazy('enrollment:home'))
+
+        return super().dispatch(request, *args, **kwargs)
+
     def test_func(self, **kwargs):
         rules = super(GradesView, self).test_func(**kwargs)
         if not (self.grade_fragment.is_entry_allowed_for_instructor(self.section, self.request.user.instructor)):
@@ -61,11 +87,12 @@ class GradesView(GradeBaseView, ModelFormSetView):
     def get_context_data(self, **kwargs):
         context = super(GradesView, self).get_context_data(**kwargs)
         context.update({
-            'enrollments': Enrollment.get_students_of_section(self.section_id),
             'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
+            'section': self.section,
             'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
             'course_average': StudentGrade.display_course_average(self.section, self.grade_fragment),
             'grade_fragment': self.grade_fragment,
+            'is_change_allowed': self.is_change_allowed,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
         })
         return context
@@ -85,10 +112,18 @@ class GradesView(GradeBaseView, ModelFormSetView):
         # This used to save the same object 2 times
         # return super(GradesView, self).formset_valid(formset)
 
+    def get_extra_form_kwargs(self):
+        kwargs = super().get_extra_form_kwargs()
+        kwargs['user'] = self.request.user
+        print(self.is_change_allowed)
+        kwargs['is_change_allowed'] = self.is_change_allowed
+        return kwargs
+
     def get_formset_kwargs(self):
         kwargs = super(GradesView, self).get_formset_kwargs()
         kwargs['fragment'] = GradeFragment.get_grade_fragment(self.grade_fragment_id)
         kwargs['section'] = self.section
+        kwargs['is_coordinator'] = self.section.is_coordinator_section(self.request.user.instructor)
         return kwargs
 
 

@@ -1,115 +1,132 @@
 {% extends "base.html" %}
-{% load i18n staticfiles %}
+{% load i18n staticfiles humanize %}
 {% block content %}
-    <div class="content-panel">
-        <div class="cntnt-sec">
-            <div class="back-btn"><a href="{{ request.META.HTTP_REFERER }}">{% trans 'Go Back' %}</a></div>
-        </div>
-        <br>
-        <div class="card card-outline-secondary mb-3">
-            <div class="card-block">
-                <blockquote class="card-blockquote">
-                    <p>{% trans 'Semester: ' %}<span
-                            style="color:red">{{ grade_fragment.course_offering.semester.description }}</span></p>
-                    <p>{% trans 'Course: ' %}<span
-                            style="color:red">{{ grade_fragment.course_offering.course }}</span></p>
-                    <p>{% trans 'Grade Fragment Category: ' %}<span
-                            style="color:red">{{ grade_fragment.category }}</span></p>
-                    <p>{% trans 'Grade Fragment Description: ' %}<span
-                            style="color:red">{{ grade_fragment.description }}</span></p>
-                    <p>{% trans 'Grade Fragment Weight: ' %}<span
-                            style="color:red">{{ grade_fragment.weight }}</span></p>
-                    <p>{% trans 'Grade Fragment Type: ' %}<span
-                            style="color:red">{{ grade_fragment.get_boundary_type_display }}</span></p>
-                    {% if boundary %}
-                        <span><strong>{{ boundary }}</strong></span>
-                    {% endif %}
-                    {% if not grade_fragment.allow_change %}
-                        <q style="color:red">
-                            {% trans '*Note: You can not change a student grade after submitting it.' %}
-                        </q>
-                    {% endif %}
-                </blockquote>
-            </div>
-        </div>
-        <div class="cntnt-sec">
-            {% if formset.forms %}
-                <form method="post">
-                    <div class="title-sec row">
-                        <div class="col-md-9">
-                            <h3>{% trans 'Available Grades' %}</h3>
-                            <span style="margin-right: 5%">{% trans 'Section Average:' %} <span
-                                    class="section_average">{{ section_average }}</span></span>
-                            {% if section_objective_average %}
-                                <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}%</span>
-                            {% endif %}
-                            {% if course_average %}
-                                <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-3 text-right">
-                            <input class="thm-btn small-btn" type="submit" value="{% trans 'Save' %}">
-                        </div>
-                    </div>
-                    <div class="thm-table odd period-cntnt">
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th>{% trans 'No.' %}</th>
-                                <th>{% trans 'Student ID' %}</th>
-                                <th>{% trans 'Full Name' %}</th>
-                                <th>{% trans 'Student Grade' %}</th>
-                                {% if grade_fragment.entry_in_percentages %}
-                                    <th>{% trans 'Actual Student Grade' %}</th>
-                                {% endif %}
-                                <th>{% trans 'Remark' %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% csrf_token %}
-                            {{ formset.management_form }}
-                            {% for form in formset %}
-                                {% for enrollment in enrollments %}
-                                    {% ifequal enrollment.id|stringformat:"s" form.enrollment.value|stringformat:"s" %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>{{ enrollment.student.university_id }}</td>
-                                            <td>{{ enrollment.student.english_name }}</td>
-                                            <td>{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</td>
-                                            {% if form.actual_grade %}
-                                                <td>{{ form.actual_grade }}</td>
-                                            {% endif %}
-                                            <td>{{ form.remarks }}</td>
-                                            {{ form.id }}
-                                            {{ form.enrollment }}
-                                            {{ form.grade_fragment_id }}
-                                            {{ form.enrollment_id }}
-                                            {{ form.grade_fragment }}
-                                            {{ form.updated_on }}
-                                        </tr>
-                                    {% endifequal %}
-                                {% endfor %}
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </form>
-                <span style="margin-right: 5%">{% trans 'Section Average:' %} <span
-                        class="section_average">{{ section_average }}</span></span>
-                {% if section_objective_average %}
-                    <span style="margin-right: 5%">{% trans 'Section Objective Average:' %} {{ section_objective_average }}%</span>
-                {% endif %}
-                {% if course_average %}
-                    <span>{% trans 'Coordinated Course Average:' %} {{ course_average }}</span>
-                {% endif %}
-            {% else %}
-                {% trans 'There are no students' %}
-            {% endif %}
-        </div>
-    </div>
+	<br>
+	<div class="content-panel">
+		<div class="card card-outline-secondary mb-3">
+			<div class="card-block">
+				<blockquote class="card-blockquote">
+					<p>{% trans 'Semester: ' %}<span>{{ grade_fragment.course_offering.semester.description }}</span>
+					</p>
+					<p>{% trans 'Course: ' %}<span>{{ grade_fragment.course_offering.course }}</span></p>
+					<p>{% trans 'Section: ' %}<span>{{ section.code }}</span></p>
+					<p>{% trans 'Being Taught By: ' %}<span>{{ section.teachers }}</span></p>
+					<p>{% trans 'Grade Fragment Category: ' %}<span>{{ grade_fragment.category }}</span></p>
+					<p>{% trans 'Grade Fragment Description: ' %}<span>{{ grade_fragment.description }}</span></p>
+					<p>{% trans 'Grade Fragment Weight: ' %}<span>{{ grade_fragment.weight }}</span></p>
+					<p>{% trans 'Grade Fragment Type: ' %}<span>{{ grade_fragment.get_boundary_type_display }}</span>
+					</p>
+					<div class="alert alert-warning">
+						<div class="row">
+							<div class="col-md-4">{% trans 'Average:' %}
+								<b class="section_average">{{ section_average }}</b></div>
+							<div class="col-md-4">{% if section_objective_average %}
+								{% trans 'Objective Average:' %} <b>{{ section_objective_average }}%</b>
+							{% endif %}</div>
+							<div class="col-md-4">{% if course_average %}
+								{% trans 'Course Average:' %} <b>{{ course_average }}</b>
+							{% endif %}</div>
+						</div>
+						{% if boundary %}
+							<br>
+							<p><strong>{{ boundary }}</strong></p>
+						{% endif %}
+					</div>
+					{% if is_change_allowed %}
+						<p class="alert alert-danger">
+							{% trans '*Note: You can not change a student grade after submitting it.' %}
+						</p>
+					{% endif %}
+				</blockquote>
+			</div>
+		</div>
+		<div class="cntnt-sec">
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<h2>{% trans 'Available Grades' %}</h2>
+					</div>
+					<div class="row">
+						<div class="col-md-offset-9 col-md-3 text-right">
+							<button class="thm-btn btn-block" type="submit">
+								<span class="glyphicon glyphicon-save-file"></span> {% trans 'Submit Grades' %}</button>
+						</div>
+					</div>
+					<br>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'Student ID' %}</th>
+								<th>{% trans 'Full Name' %}</th>
+								<th style="width: 10%">{% trans 'Grade' %}</th>
+								{% if grade_fragment.entry_in_percentages %}
+									<th style="width: 10%">{% trans 'Actual Grade' %}</th>
+								{% endif %}
+								<th style="width: 20%">{% trans 'Remark' %}</th>
+								<th>{% trans 'Updated On' %}</th>
+								<th>{% trans 'Updated By' %}</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								<tr>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.non_field_errors }}{{ forloop.counter }}</div>
+										</div>
+									</td>
+									<td>{{ form.instance.enrollment.student.university_id }}</td>
+									<td>{{ form.instance.enrollment.student.english_name }}</td>
+									{% if grade_fragment.entry_in_percentages %}
+										<td>
+											<div class="row">
+												<div class="col-md-12">
+													{{ form.grade_percentage }}{{ form.grade_percentage.errors }}</div>
+											</div>
+										</td>
+										<td>{{ form.instance.grade_quantity }}
+											{% else %}
+										<td>
+											<div class="row">
+												<div class="col-md-12">
+													{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</div>
+											</div>
+										</td>
+									{% endif %}
+									<td>{{ form.remarks }}</td>
+									<td>{{ form.instance.updated_on }}</td>
+									{# use |naturaltime later #}
+									<td>{{ form.instance.updated_by }}</td>
+									{{ form.id }}
+									{{ form.enrollment }}
+									{{ form.grade_fragment }}
+									{{ form.updated_on }}
+								</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+				<br>
+				<div class="row">
+					<div class="col-md-offset-9 col-md-3 text-right">
+						<button class="thm-btn btn-block" type="submit">
+							<span class="glyphicon glyphicon-save-file"></span> {% trans 'Submit Grades' %}</button>
+					</div>
+				</div><br>
+			{% else %}
+				{% trans 'There are no students' %}
+			{% endif %}
+		</div>
+	</div>
 {% endblock %}
 {% block scripts %}
-    <script type="text/javascript">
+	<script type="text/javascript">
         $(document).ready(function () {
             $('.grade_quantity').on('keyup paste', calculate_average);
         });
@@ -137,5 +154,5 @@
                 "" + average.toFixed(4) + "  (" + average_in_percent.toFixed(4) + "%)"
             );
         }
-    </script>
+	</script>
 {% endblock %}

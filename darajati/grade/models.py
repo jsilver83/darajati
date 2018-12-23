@@ -236,6 +236,17 @@ class GradeFragment(models.Model):
         except GradeFragment.DoesNotExist:
             pass
 
+    def is_change_allowed_for_instructor(self, section, instructor):
+        """
+        :return: True if the teacher is a coordinator or allow_change is enabled in the fragment
+        """
+        try:
+            if not self.allow_change:
+                return section.is_coordinator_section(instructor)
+            return self.allow_change
+        except GradeFragment.DoesNotExist:
+            pass
+
     def is_viewable_for_instructor(self, section, instructor):
         """
         :return: True if the teacher is able to see the fragment grades in reports
@@ -398,7 +409,7 @@ class StudentGrade(models.Model):
         if total_average:
             average = total_average / total_weight
             average = average * 100
-            return display_average_of_value(average)
+            return decimal(average)
         return 0
 
     @staticmethod
@@ -605,7 +616,7 @@ class StudentGrade(models.Model):
         if grades['sum']:
             section_average = Decimal(grades['sum'] / grades['count'])
             section_average_percent = section_average * 100 / grade_fragment.weight
-            display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
+            display_average = '{}, ({}%)'.format(decimal(section_average), decimal(section_average_percent))
             return display_average if not grades['sum'] is None else ''
         return ''
 
@@ -630,7 +641,7 @@ class StudentGrade(models.Model):
             if grades['sum']:
                 section_average = Decimal(grades['sum'] / grades['count'])
                 section_average_percent = section_average * 100 / grade_fragment.weight
-                display_average = '{0:.2f}, ({1:.4f}%)'.format(section_average, section_average_percent)
+                display_average = '{}, ({}%)'.format(decimal(section_average), decimal(section_average_percent))
                 return display_average if not grades['sum'] is None else ''
         return ''
 

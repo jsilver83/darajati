@@ -344,6 +344,10 @@ class Section(models.Model):
             course_offering__semester__end_date__gte=now()
         ).exists()
 
+    @property
+    def teachers(self):
+        return list(self.scheduled_periods.values_list('instructor_assigned__english_name').distinct())
+
 
 class Coordinator(models.Model):
     course_offering = models.ForeignKey(
