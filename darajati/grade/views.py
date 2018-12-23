@@ -50,6 +50,7 @@ class GradesView(GradeBaseView, ModelFormSetView):
     extra = 0
 
     is_change_allowed = False
+    is_section_coordinator = False
 
     def dispatch(self, request, *args, **kwargs):
         grade_fragment = get_object_or_404(GradeFragment, pk=kwargs.get('grade_fragment_id'))
@@ -58,6 +59,8 @@ class GradesView(GradeBaseView, ModelFormSetView):
         self.is_change_allowed = grade_fragment.is_change_allowed_for_instructor(
             section, self.request.user.instructor
         )
+
+        self.is_section_coordinator = section.is_coordinator_section(self.request.user.instructor)
 
         # SUBJECTIVE_BOUND require an average of objective exams if there is not show a validation error
         if grade_fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
@@ -82,7 +85,9 @@ class GradesView(GradeBaseView, ModelFormSetView):
         return True and rules
 
     def get_queryset(self):
-        return StudentGrade.get_section_grades(self.section_id, self.grade_fragment_id)
+        return StudentGrade.get_section_grades(
+            self.section_id, self.grade_fragment_id
+        ).select_related('grade_fragment', 'enrollment', 'enrollment__student', 'updated_by')
 
     def get_context_data(self, **kwargs):
         context = super(GradesView, self).get_context_data(**kwargs)
@@ -121,9 +126,9 @@ class GradesView(GradeBaseView, ModelFormSetView):
 
     def get_formset_kwargs(self):
         kwargs = super(GradesView, self).get_formset_kwargs()
-        kwargs['fragment'] = GradeFragment.get_grade_fragment(self.grade_fragment_id)
+        kwargs['fragment'] = self.grade_fragment
         kwargs['section'] = self.section
-        kwargs['is_coordinator'] = self.section.is_coordinator_section(self.request.user.instructor)
+        kwargs['is_coordinator'] = self.is_section_coordinator
         return kwargs
 
 
