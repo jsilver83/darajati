@@ -38,8 +38,9 @@ class GradesForm(forms.ModelForm):
 
             self.fields['grade_quantity'].required = False
 
-            self.initial['grade_percentage'] = decimal(
-                (self.instance.grade_quantity or Decimal('0.00')) * 100 / self.instance.grade_fragment.weight)
+            if self.instance.grade_quantity is not None:
+                self.initial['grade_percentage'] = \
+                    decimal(self.instance.grade_quantity * 100 / self.instance.grade_fragment.weight)
 
         elif not self.instance.grade_fragment.entry_in_percentages:
             max_value = self.instance.grade_fragment.weight
@@ -66,8 +67,7 @@ class GradesForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.updated_by = self.user
-        self.instance.updated_on = today()
-        if self.instance.grade_fragment.entry_in_percentages and self.cleaned_data['grade_percentage']:
+        if self.instance.grade_fragment.entry_in_percentages and self.cleaned_data['grade_percentage'] is not None:
             self.instance.grade_quantity = (self.instance.grade_fragment.weight / 100) * self.cleaned_data[
                 'grade_percentage']
         return super(GradesForm, self).save()
