@@ -32,7 +32,7 @@
 							<p><strong>{{ boundary }}</strong></p>
 						{% endif %}
 					</div>
-					{% if is_change_allowed %}
+					{% if not is_change_allowed %}
 						<p class="alert alert-danger">
 							{% trans '*Note: You can not change a student grade after submitting it.' %}
 						</p>
@@ -150,7 +150,7 @@
                 average = average_in_percent / 100 * {{ grade_fragment.weight }};
             {% endif %}
             $('.section_average').html(
-                "" + average.toFixed(4) + "  (" + average_in_percent.toFixed(4) + "%)"
+                "" + average.toFixed(4) + ",  (" + average_in_percent.toFixed(4) + "%)"
             );
         }
 	</script>

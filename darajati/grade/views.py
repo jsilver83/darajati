@@ -120,7 +120,6 @@ class GradesView(GradeBaseView, ModelFormSetView):
     def get_extra_form_kwargs(self):
         kwargs = super().get_extra_form_kwargs()
         kwargs['user'] = self.request.user
-        print(self.is_change_allowed)
         kwargs['is_change_allowed'] = self.is_change_allowed
         return kwargs
 

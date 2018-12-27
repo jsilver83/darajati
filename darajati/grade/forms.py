@@ -14,12 +14,11 @@ from .models import StudentGrade, GradeFragment
 class GradesForm(forms.ModelForm):
     class Meta:
         model = StudentGrade
-        fields = ['enrollment', 'grade_fragment', 'grade_quantity', 'remarks', 'updated_on']
+        fields = ['enrollment', 'grade_fragment', 'grade_quantity', 'remarks', ]
         widgets = {
             'remarks': forms.TextInput(attrs={'class': 'thm-field'}),
             'enrollment': forms.HiddenInput(),
             'grade_fragment': forms.HiddenInput(),
-            'updated_on': forms.HiddenInput(),
         }
 
     def __init__(self, user, is_change_allowed, *args, **kwargs):
@@ -55,8 +54,6 @@ class GradesForm(forms.ModelForm):
         for field in self.fields:
             if field in ['grade_percentage', 'grade_quantity', 'remarks'] and not self.is_change_allowed:
                 self.fields[field].widget.attrs.update({'readonly': 'True'})
-
-        self.fields['updated_on'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -109,16 +106,17 @@ class BaseGradesFormSet(BaseModelFormSet):
                 self.average = self.average / count
                 self.average = decimal(self.average)
 
-            self.average_baseline_upper_boundary = self.average + (self.fragment.boundary_range_upper or 0)
-            self.average_baseline_lower_boundary = self.average - (self.fragment.boundary_range_lower or 0)
-
             if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
                 self.average_baseline = StudentGrade.get_section_objective_average(self.section, self.fragment)
 
             elif self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
                 self.average_baseline = self.fragment.boundary_fixed_average or Decimal('0.0')
 
-            if self.average_baseline_upper_boundary < self.average < self.average_baseline_lower_boundary:
+            self.average_baseline_upper_boundary = self.average_baseline + (self.fragment.boundary_range_upper or 0)
+            self.average_baseline_lower_boundary = self.average_baseline - (self.fragment.boundary_range_lower or 0)
+
+            if (self.average_baseline_upper_boundary < self.average
+                    or self.average < self.average_baseline_lower_boundary):
                 raise forms.ValidationError(
                     _('Section average {}% should be between {}% and {}%'.format(
                         self.average, self.average_baseline_lower_boundary, self.average_baseline_upper_boundary)))
