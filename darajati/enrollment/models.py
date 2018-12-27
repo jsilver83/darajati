@@ -222,6 +222,12 @@ class CourseOffering(models.Model):
         default=RoundTypes.NONE,
         help_text=_('Total grade rounding method for letter grade calculation')
     )
+    total_decimal_places = models.SmallIntegerField(
+        _('Total Rounding Decimal Places'),
+        null=True,
+        blank=True,
+        help_text=_('Decimal places in the Total for rounding or truncating methods')
+    )
 
     def __str__(self):
         return to_string(self.semester, self.course)
@@ -263,6 +269,12 @@ class Section(models.Model):
         blank=False,
         default=RoundTypes.NONE,
         help_text=_('Total grade rounding method for letter grade calculation')
+    )
+    total_decimal_places = models.SmallIntegerField(
+        _('Total Rounding Decimal Places'),
+        null=True,
+        blank=True,
+        help_text=_('Decimal places in the Total for rounding or truncating methods')
     )
     crn = models.CharField(_('CRN'), max_length=100, null=True, blank=False)
     active = models.BooleanField(_('Active'), default=False)

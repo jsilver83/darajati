@@ -5,6 +5,7 @@ class RoundTypes:
     CEILING = 'ceil'
     FLOOR = 'floor'
     ROUND = 'round'
+    TRUNC = 'trunc'
     NONE = 'none'
 
     @classmethod
@@ -13,5 +14,6 @@ class RoundTypes:
             (cls.CEILING, _('Ceiling')),
             (cls.FLOOR, _('Floor')),
             (cls.ROUND, _('Round')),
+            (cls.TRUNC, _('Truncate')),
             (cls.NONE, _('None')),
         )
