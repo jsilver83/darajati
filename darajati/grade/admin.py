@@ -7,9 +7,9 @@ from simple_history.admin import SimpleHistoryAdmin
 
 
 class GradeFragmentAdmin(admin.ModelAdmin):
-    list_display = ('course_offering', 'section', 'category', 'description', 'weight', 'entry_start_date',
-                    'entry_end_date', 'updated_on')
-    list_filter = ('course_offering', 'entry_start_date', 'entry_end_date', 'entry_in_percentages', 'allow_change')
+    list_display = ('course_offering', 'category', 'description', 'weight', 'boundary_type', 'allow_change',
+                    'entry_in_percentages', 'entry_start_date', 'entry_end_date', )
+    list_filter = ('course_offering', 'boundary_type', 'entry_end_date', 'entry_in_percentages', 'allow_change')
 
 
 class LetterGradeAdmin(admin.ModelAdmin):
