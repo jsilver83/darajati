@@ -99,8 +99,7 @@
 										</td>
 									{% endif %}
 									<td>{{ form.remarks }}</td>
-									<td>{{ form.instance.updated_on }}</td>
-									{# use |naturaltime later #}
+									<td>{{ form.instance.updated_on|naturaltime }}</td>
 									<td>{{ form.instance.updated_by }}</td>
 									{{ form.id }}
 									{{ form.enrollment }}

@@ -153,9 +153,10 @@ class GradeFragment(models.Model):
         null=True,
         blank=True
     )
-    updated_on = models.DateField(
+    updated_on = models.DateTimeField(
         _('Updated On'),
-        auto_now=True
+        auto_now=True,
+        null=True,
     )
 
     class Meta:
@@ -291,7 +292,7 @@ class LetterGrade(models.Model):
                                         max_digits=settings.MAX_DIGITS,
                                         decimal_places=settings.MAX_DECIMAL_POINT)
     updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_grade', null=True, blank=True)
-    updated_on = models.DateField(_('Updated On'), auto_now=True)
+    updated_on = models.DateTimeField(_('Updated On'), auto_now=True, null=True, )
 
     # TODO: Ordering of letter grade
 
@@ -323,7 +324,7 @@ class StudentGrade(models.Model):
     )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
     updated_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    updated_on = models.DateField(_('Updated On'), null=True, blank=False)
+    updated_on = models.DateTimeField(_('Updated On'), auto_now=True, null=True, )
 
     history = HistoricalRecords()
 
