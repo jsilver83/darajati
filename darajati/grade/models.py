@@ -715,7 +715,7 @@ class SectionsObjectiveAveragesView(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'grade_sectionsobjectiveaveragesview'
+        db_table = 'grade_sectionsobjaveragesview'
 
     def __str__(self):
         return str(decimal(self.grades_objective_average_percentage)) + '%'
