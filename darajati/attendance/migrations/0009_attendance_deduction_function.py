@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
                 
                 END; 
                 $BODY$
-                LANGUAGE plpgsql VOLATILE
+                LANGUAGE plpgsql STABLE
             """
         ),
     ]
