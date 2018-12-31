@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('grade', '0018_grade_sectionsobjaveragesview'),
+        ('grade', '0018_shorten_view_name_and_remove_column_id'),
     ]
 
     operations = [

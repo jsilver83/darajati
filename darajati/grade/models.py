@@ -649,12 +649,12 @@ class StudentGrade(models.Model):
 
 # NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
 class SectionsAveragesView(models.Model):
-    id = models.BigIntegerField(primary_key=True)
     semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
     semester_code = models.CharField(max_length=20)
     course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
     course_code = models.CharField(max_length=20)
-    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
+    section = models.OneToOneField('enrollment.Section', on_delete=models.DO_NOTHING, related_name='average',
+                                   primary_key=True)
     grade_fragment = models.ForeignKey('grade.GradeFragment', on_delete=models.DO_NOTHING)
     boundary_type = models.CharField(max_length=24)
     category = models.CharField(max_length=100)
@@ -703,12 +703,12 @@ class CoursesAveragesView(models.Model):
 
 # NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/
 class SectionsObjectiveAveragesView(models.Model):
-    id = models.BigIntegerField(primary_key=True)
     semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
     semester_code = models.CharField(max_length=20)
     course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
     course_code = models.CharField(max_length=20)
-    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING)
+    section = models.OneToOneField('enrollment.Section', on_delete=models.DO_NOTHING, related_name='objective_average',
+                                   primary_key=True)
     weights_sum = models.DecimalField(max_digits=10, decimal_places=4)
     grades_objective_average = models.DecimalField(max_digits=10, decimal_places=4)
     grades_objective_average_percentage = models.DecimalField(max_digits=10, decimal_places=4)
