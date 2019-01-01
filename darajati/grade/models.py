@@ -10,9 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
-from enrollment.utils import to_string, now, today
-from .utils import display_average_of_value
 from darajati.utils import decimal
+from enrollment.utils import to_string, now, today
 
 User = settings.AUTH_USER_MODEL
 
@@ -719,3 +718,40 @@ class SectionsObjectiveAveragesView(models.Model):
 
     def __str__(self):
         return str(decimal(self.grades_objective_average_percentage)) + '%'
+
+
+class StudentFinalDataView(models.Model):
+    semester = models.ForeignKey('enrollment.Semester', on_delete=models.DO_NOTHING)
+    semester_code = models.CharField(max_length=20)
+    department = models.ForeignKey('enrollment.Department', on_delete=models.DO_NOTHING)
+    department_code = models.CharField(max_length=20)
+    course = models.ForeignKey('enrollment.Course', on_delete=models.DO_NOTHING)
+    course_code = models.CharField(max_length=20)
+    course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.DO_NOTHING)
+
+    coordinated = models.BooleanField()
+    section_code = models.CharField(max_length=20)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.DO_NOTHING, related_name='students_final_data')
+    enrollment = models.OneToOneField('enrollment.Enrollment', on_delete=models.DO_NOTHING,
+                                      related_name='final_data',
+                                      primary_key=True)
+    letter_grade = models.CharField(max_length=20)
+    active = models.BooleanField()
+    university_id = models.CharField(max_length=20)
+    english_name = models.CharField(max_length=255)
+    arabic_name = models.CharField(max_length=255)
+    total_weights = models.DecimalField(max_digits=settings.MAX_DIGITS, decimal_places=settings.MAX_DECIMAL_POINT)
+    total = models.DecimalField(max_digits=settings.MAX_DIGITS, decimal_places=settings.MAX_DECIMAL_POINT)
+    attendance_deduction = models.DecimalField(max_digits=settings.MAX_DIGITS,
+                                               decimal_places=settings.MAX_DECIMAL_POINT)
+    total_after_deduction = models.DecimalField(max_digits=settings.MAX_DIGITS,
+                                                decimal_places=settings.MAX_DECIMAL_POINT)
+    total_rounded = models.DecimalField(max_digits=settings.MAX_DIGITS, decimal_places=settings.MAX_DECIMAL_POINT)
+    calculated_letter_grade = models.CharField(max_length=20)
+
+    class Meta:
+        managed = False
+        db_table = 'grade_studentfinaldataview'
+
+    def __str__(self):
+        return self.calculated_letter_grade
