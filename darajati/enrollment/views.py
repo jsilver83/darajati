@@ -1,6 +1,6 @@
 from django.contrib import messages
-from django.db.models import F
-from django.shortcuts import redirect, render
+from django.db.models import F, Sum
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import View, ListView, UpdateView, CreateView, FormView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import ContextMixin
@@ -126,11 +126,18 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin)
     coordinator = None
     course_offering_id = None
     course_offering = None
+    __attributes_initiated = False
 
-    def dispatch(self, request, *args, **kwargs):
+    def init_class_attributes(self, request, *args, **kwargs):
+        if self.__attributes_initiated:
+            return
+
         if request.user.is_authenticated:
             if Coordinator.objects.filter(instructor=request.user.instructor).exists():
                 self.coordinator = request.user
+
+    def dispatch(self, request, *args, **kwargs):
+        self.init_class_attributes(request, *args, **kwargs)
         return super(CoordinatorBaseView, self).dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -152,15 +159,15 @@ class CoordinatorBaseView(LoginRequiredMixin, UserPassesTestMixin, ContextMixin)
 
 
 class CoordinatorEditBaseView(CoordinatorBaseView):
+
+    def init_class_attributes(self, request, *args, **kwargs):
+        super().init_class_attributes(request, *args, **kwargs)
+        self.course_offering_id = self.kwargs['course_offering_id']
+        self.course_offering = get_object_or_404(CourseOffering, pk=self.course_offering_id)
+
     def test_func(self):
         rules = super(CoordinatorEditBaseView, self).test_func()
         if rules:
-            self.course_offering_id = self.kwargs['course_offering_id']
-            self.course_offering = CourseOffering.objects.get(id=self.course_offering_id)
-
-            if not self.course_offering:
-                messages.error(self.request, _('No course offering found'))
-                return False
             if not Coordinator.is_coordinator_of_course_offering_in_this_semester(
                     self.request.user.instructor,
                     self.course_offering):
