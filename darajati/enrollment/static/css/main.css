@@ -750,6 +750,10 @@ a:focus, a:hover {
   text-align: center;
 }
 
+.text-center td{
+  vertical-align: middle!important;
+}
+
 .text-right {
   text-align: right;
 }
