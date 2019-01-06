@@ -1,6 +1,7 @@
-from . import views
-from django.views.generic import TemplateView
 from django.urls import re_path
+from django.views.generic import TemplateView
+
+from . import views
 
 app_name = 'enrollment'
 
@@ -12,27 +13,29 @@ urlpatterns = [
         name='section_students'),
 ]
 
-
 # Coordinator
 urlpatterns += [
     re_path(r'^coordinator/$', views.CoordinatorView.as_view(), name='coordinator'),
     re_path(r'^coordinator/course/(?P<course_offering_id>[0-9]+)/$', views.CoordinatorSectionView.as_view(),
-        name='course_coordinator'),
-    re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/$', views.CoordinatorGradeFragmentView.as_view(),
-        name='grade_fragment_coordinator'),
+            name='course_coordinator'),
+    re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/$',
+            views.CoordinatorGradeFragmentView.as_view(),
+            name='grade_fragment_coordinator'),
+    re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/import-fragments/$',
+            views.ImportGradeFragmentsView.as_view(), name='import_fragments'),
     re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/edit/(?P<pk>[0-9]+)/$',
-        views.CoordinatorEditGradeFragmentView.as_view(),
-        name='update_grade_fragment_coordinator'),
+            views.CoordinatorEditGradeFragmentView.as_view(),
+            name='update_grade_fragment_coordinator'),
     re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/delete/(?P<pk>[0-9]+)/$',
-        views.CoordinatorDeleteGradeFragmentView.as_view(),
-        name='delete_grade_fragment_coordinator'),
+            views.CoordinatorDeleteGradeFragmentView.as_view(),
+            name='delete_grade_fragment_coordinator'),
     re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/create/$',
-        views.CoordinatorCreateGradeFragmentView.as_view(),
-        name='create_grade_fragment_coordinator'),
-    re_path(r'^coordinator/section/(?P<section_id>[0-9]+)/$', views.CoordinatorView.as_view(), name='section_coordinator'),
+            views.CoordinatorCreateGradeFragmentView.as_view(),
+            name='create_grade_fragment_coordinator'),
+    re_path(r'^coordinator/section/(?P<section_id>[0-9]+)/$', views.CoordinatorView.as_view(),
+            name='section_coordinator'),
     re_path(r'^coordinator/grades/(?P<course_offering_id>[0-9]+)/(?P<grade_fragment_id>[0-9]+)/import-grade/$',
-        views.ImportGradesView.as_view(), name='import_grade'),
-
+            views.ImportGradesView.as_view(), name='import_grade'),
 ]
 
 # Admin

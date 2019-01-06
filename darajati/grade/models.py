@@ -37,7 +37,7 @@ class GradeFragment(models.Model):
     course_offering = models.ForeignKey(
         'enrollment.CourseOffering',
         on_delete=models.CASCADE,
-        related_name="GradeFragment",
+        related_name="grade_fragments",
         null=True,
         blank=False
     )

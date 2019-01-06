@@ -214,7 +214,45 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
         context = super(CoordinatorGradeFragmentView, self).get_context_data(**kwargs)
         context['course_offering'] = self.course_offering
         context['can_create_fragment'] = self.course_offering.semester.can_create_grade_fragment()
+        context['fragments_total_weight'] = self.get_queryset().aggregate(Sum('weight')).get('weight__sum')
         return context
+
+
+class ImportGradeFragmentsView(CoordinatorEditBaseView, View):
+
+    def test_func(self):
+        rules = super(ImportGradeFragmentsView, self).test_func()
+        if rules:
+            if not self.course_offering.semester.can_create_grade_fragment():
+                messages.error(self.request, _('The deadline to add grade fragments is over'))
+                return False
+
+            if self.course_offering.grade_fragments.count() > 0:
+                messages.error(self.request, _('You can NOT import fragments from previous semester when you already '
+                                               'have created fragments in this semester'))
+                return False
+            return True
+        return False
+
+    def get(self, request, *args, **kwargs):
+        self.init_class_attributes(request, *args, **kwargs)
+        latest_course_offering = CourseOffering.objects.filter(
+            course=self.course_offering.course,
+            semester__start_date__lte=self.course_offering.semester.start_date
+        ).order_by('-semester__end_date').exclude(pk=self.course_offering_id).first()
+        if latest_course_offering and len(latest_course_offering.grade_fragments.all()):
+            for fragment in latest_course_offering.grade_fragments.all():
+                fragment.pk = None
+                fragment.course_offering = self.course_offering
+                fragment.save()
+            messages.success(self.request, _('%s fragments were imported from %s successfully') % (
+                self.course_offering.grade_fragments.count(),
+                str(latest_course_offering)
+            ))
+        else:
+            messages.error(self.request,
+                           _('There is no previous course offering or there are no fragments there to be imported'))
+        return redirect(reverse_lazy('enrollment:grade_fragment_coordinator', args=(self.course_offering_id, )))
 
 
 class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
@@ -227,7 +265,7 @@ class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):
         rules = super(CoordinatorCreateGradeFragmentView, self).test_func()
         if rules:
             return self.course_offering.semester.can_create_grade_fragment()
-        messages.error(self.request, _('You can not create grade fragment at this time'))
+        messages.error(self.request, _('The deadline to add grade fragments is over'))
         return False
 
     def form_valid(self, form):

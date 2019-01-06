@@ -18,16 +18,29 @@
 					</blockquote>
 				</div>
 			</div>
-			<hr>
-			{% if can_create_fragment %}
-				<div class="lft-head"></div>
-				<div class="rgt-head">
-					<a href="{% url 'enrollment:create_grade_fragment_coordinator' course_offering_id=course_offering.id %}"
-					   class="thm-btn small-btn outline-btn-dgrey float-right">{% trans 'Create Grade Fragment' %}</a>
+			<div class="title-sec row">
+				<div class="col-md-12 text-right">
+					<a class="thm-btn small-btn" href="">
+						<span class="glyphicon glyphicon-bold" aria-hidden="true"></span><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans 'Letter Grades' %}
+					</a>
+					{% if can_create_fragment %}
+						{% if fragments|length == 0 %}
+							<a href="{% url 'enrollment:import_fragments' course_offering_id=course_offering.id %}"
+							   title="{% trans 'Import fragments from last semester' %}"
+							   class="thm-btn small-btn outline-btn-dgrey float-right" onclick="return confirm('{% trans "This will import fragments from last semester. Are you sure?" %}');">
+								<span class="glyphicon glyphicon-share" aria-hidden="true"></span> {% trans 'Import Fragments' %}
+							</a>
+						{% endif %}
+						<a href="{% url 'enrollment:create_grade_fragment_coordinator' course_offering_id=course_offering.id %}"
+						   class="thm-btn small-btn outline-btn-dgrey float-right">
+							<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> {% trans 'Create Grade Fragment' %}
+						</a>
+					{% endif %}
 				</div>
-				<br>
-				<br>
-			{% endif %}
+				<br><br>
+			</div>
+			<hr>
+
 			{% if fragments %}
 				<table class="table table-condensed text-center">
 					<thead>
@@ -44,7 +57,7 @@
 					<tbody>
 					{% for fragment in fragments %}
 						<tr>
-							<td>{{ fragment.order }}</td>
+							<td>{{ forloop.counter }}</td>
 							<td>{{ fragment.category }}</td>
 							<td>{{ fragment.description }}</td>
 							<td>{{ fragment.get_boundary_type_display }}</td>
@@ -58,10 +71,10 @@
 										{% trans 'Edit' %}
 									{% endif %}
 								</a></td>
-							<td>
+							<td style="width: 15%">
 								{% if fragment.allow_subjective_marking %}
-									<div class="btn-group">
-										<button type="button" class="thm-btn small-btn outline-btn-dgrey dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<div class="btn-group btn-group-justified">
+										<button type="button" class="thm-btn small-btn btn-block outline-btn-dgrey dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 											{% trans 'Actions' %} <span class="caret"></span>
 										</button>
 										<ul class="dropdown-menu">
@@ -82,15 +95,20 @@
 										</ul>
 									</div>
 								{% else %}
-									<a class="thm-btn small-btn outline-btn-dgrey dropdown-toggle" href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}">{% trans 'Import grades' %}</a>
+									<a class="thm-btn small-btn btn-block outline-btn-dgrey dropdown-toggle" href="{% url 'enrollment:import_grade' course_offering_id=fragment.course_offering.id grade_fragment_id=fragment.id %}">{% trans 'Import grades' %}</a>
 								{% endif %}
 							</td>
 						</tr>
 					{% endfor %}
+						<tr class="success">
+							<td colspan="4" style="text-align: right; font-weight: bold; font-size: 120%">{% trans 'Total Weight' %}: </td>
+							<td>{{ fragments_total_weight }}</td>
+							<td colspan="2"></td>
+						</tr>
 					</tbody>
 				</table>
 			{% else %}
-				{% trans 'There are no results' %}
+				{% trans 'There are no fragments yet' %}
 			{% endif %}
 
 		</div>
