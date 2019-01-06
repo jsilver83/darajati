@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import ContextMixin
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+from extra_views import ModelFormSetView
 
 from .models import Section, Enrollment, Coordinator, CourseOffering, Instructor
 from .tasks import get_students_enrollment_grades
@@ -13,7 +14,7 @@ from .forms import GradesImportForm
 from .utils import now
 from exam.models import Marker
 
-from grade.forms import GradeFragmentForm
+from grade.forms import GradeFragmentForm, GradeFragmentsFormSet, BulkGradeFragmentForm
 
 from grade.models import GradeFragment, StudentGrade
 
@@ -253,6 +254,36 @@ class ImportGradeFragmentsView(CoordinatorEditBaseView, View):
             messages.error(self.request,
                            _('There is no previous course offering or there are no fragments there to be imported'))
         return redirect(reverse_lazy('enrollment:grade_fragment_coordinator', args=(self.course_offering_id, )))
+
+
+class BulkUpdateGradeFragmentsView(CoordinatorEditBaseView, ModelFormSetView):
+    template_name = 'enrollment/coordinator/fragments_bulk_update.html'
+    model = GradeFragment
+    form_class = BulkGradeFragmentForm
+    formset_class = GradeFragmentsFormSet
+    extra = 0
+    can_delete = False
+
+    def get_success_url(self):
+        return reverse_lazy('enrollment:grade_fragment_coordinator', args=(self.course_offering_id, ))
+
+    def get_queryset(self):
+        return self.course_offering.grade_fragments.all()
+
+    def get_extra_form_kwargs(self):
+        kwargs = super(BulkUpdateGradeFragmentsView, self).get_extra_form_kwargs()
+        kwargs['semester'] = self.course_offering.semester
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(BulkUpdateGradeFragmentsView, self).get_context_data(**kwargs)
+        context['course_offering'] = self.course_offering
+        return context
+
+    def formset_valid(self, formset):
+        self.object_list = formset.save()
+        messages.success(self.request, _('Grade Fragments were updated successfully.'))
+        return redirect(self.get_success_url())
 
 
 class CoordinatorCreateGradeFragmentView(CoordinatorEditBaseView, CreateView):

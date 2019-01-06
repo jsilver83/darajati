@@ -23,6 +23,8 @@ urlpatterns += [
             name='grade_fragment_coordinator'),
     re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/import-fragments/$',
             views.ImportGradeFragmentsView.as_view(), name='import_fragments'),
+    re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/bulk-update/$',
+            views.BulkUpdateGradeFragmentsView.as_view(), name='bulk_update'),
     re_path(r'^coordinator/grade-fragment/(?P<course_offering_id>[0-9]+)/edit/(?P<pk>[0-9]+)/$',
             views.CoordinatorEditGradeFragmentView.as_view(),
             name='update_grade_fragment_coordinator'),

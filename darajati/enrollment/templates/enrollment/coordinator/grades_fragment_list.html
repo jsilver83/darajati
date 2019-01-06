@@ -23,6 +23,10 @@
 					<a class="thm-btn small-btn" href="">
 						<span class="glyphicon glyphicon-bold" aria-hidden="true"></span><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans 'Letter Grades' %}
 					</a>
+					<a href="{% url 'enrollment:bulk_update' course_offering_id=course_offering.id %}"
+					   class="thm-btn small-btn outline-btn-dgrey float-right">
+						<span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> {% trans 'Bulk Update' %}
+					</a>
 					{% if can_create_fragment %}
 						{% if fragments|length == 0 %}
 							<a href="{% url 'enrollment:import_fragments' course_offering_id=course_offering.id %}"

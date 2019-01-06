@@ -162,3 +162,14 @@ class GradeFragmentForm(forms.ModelForm):
                     _('entry dates should be between {} and {}'.format(semester_start_date, semester_end_date)))
             ])
         return self.cleaned_data
+
+
+class BulkGradeFragmentForm(GradeFragmentForm):
+
+    class Meta(GradeFragmentForm.Meta):
+        exclude = GradeFragmentForm.Meta.exclude + ['boundary_type', 'category', 'description', 'weight', 'order']
+
+
+class GradeFragmentsFormSet(BaseModelFormSet):
+    def __init__(self, *args, **kwargs):
+        super(GradeFragmentsFormSet, self).__init__(*args, **kwargs)
