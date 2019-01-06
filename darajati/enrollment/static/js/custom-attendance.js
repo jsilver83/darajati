@@ -52,8 +52,8 @@ $(function () {
             $(this).parent("div").parent("div").parent("td").removeClass("error");
         }
     });
-
-    $(".alert-warning").delay(4000).slideUp(500, function () {
-        $(this).alert('close');
-    });
+    // removed based on Dr. Ahmad's suggestion
+    // $(".alert-warning").delay(4000).slideUp(500, function () {
+    //     $(this).alert('close');
+    // });
 });
