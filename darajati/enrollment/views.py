@@ -245,6 +245,8 @@ class ImportGradeFragmentsView(CoordinatorEditBaseView, View):
             for fragment in latest_course_offering.grade_fragments.all():
                 fragment.pk = None
                 fragment.course_offering = self.course_offering
+                fragment.entry_start_date = self.course_offering.semester.start_date
+                fragment.entry_end_date = self.course_offering.semester.start_date
                 fragment.save()
             messages.success(self.request, _('%s fragments were imported from %s successfully') % (
                 self.course_offering.grade_fragments.count(),
