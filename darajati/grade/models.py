@@ -285,7 +285,8 @@ class LetterGrade(models.Model):
     course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
                                         related_name="letter_grades", null=True,
                                         blank=False)
-    section = models.ForeignKey('enrollment.Section', on_delete=models.CASCADE, related_name="letter_grades", null=True, blank=True)
+    section = models.ForeignKey('enrollment.Section', on_delete=models.CASCADE, related_name="letter_grades",
+                                null=True, blank=True)
     letter_grade = models.CharField(_('Letter Grade'), max_length=5, null=True, blank=False)
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
                                         max_digits=settings.MAX_DIGITS,
@@ -293,7 +294,8 @@ class LetterGrade(models.Model):
     updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_grade', null=True, blank=True)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True, null=True, )
 
-    # TODO: Ordering of letter grade
+    class Meta:
+        ordering = ('course_offering', 'section', '-cut_off_point', 'letter_grade', )
 
     def __str__(self):
         return to_string(self.course_offering, self.section, self.letter_grade)
