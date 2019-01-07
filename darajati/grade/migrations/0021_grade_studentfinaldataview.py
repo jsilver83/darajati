@@ -15,13 +15,16 @@ class Migration(migrations.Migration):
             DROP VIEW IF EXISTS grade_studentfinaldataview;
             
             CREATE OR REPLACE VIEW grade_studentfinaldataview AS
-            SELECT q.*, COALESCE((select letter_grade 
+            SELECT q.*, 
+                CASE WHEN q.letter_grade IS NULL THEN 
+                        COALESCE((select letter_grade 
                            from grade_lettergrade 
                            where
                              course_offering_id = q.course_offering_id and
-                             cut_off_point >= q.total_rounded
+                             q.total_rounded >= cut_off_point
                            order by cut_off_point desc 
-                           LIMIT 1), 'UD') calculated_letter_grade
+                           LIMIT 1), 'UD')
+                      ELSE q.letter_grade END calculated_letter_grade
             FROM(
             SELECT 
               enrollment_semester.code semester_code, 
