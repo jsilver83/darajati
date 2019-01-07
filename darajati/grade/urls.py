@@ -23,4 +23,7 @@ urlpatterns = [
     # re_path(r'^section/(?P<section_id>[0-9]+)/grades-report/$',
     #         views.GradeReportView.as_view(),
     #         name='section_grade_report'),
+
+    re_path(r'^letter-grades/(?P<course_offering_id>[0-9]+)/$',
+            views.LetterGradesView.as_view(), name='letter_grades'),
 ]

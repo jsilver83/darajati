@@ -20,7 +20,7 @@
 			</div>
 			<div class="title-sec row">
 				<div class="col-md-12 text-right">
-					<a class="thm-btn small-btn" href="">
+					<a class="thm-btn small-btn" href="{% url 'grade:letter_grades' course_offering_id=course_offering.id %}">
 						<span class="glyphicon glyphicon-bold" aria-hidden="true"></span><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans 'Letter Grades' %}
 					</a>
 					<a href="{% url 'enrollment:bulk_update' course_offering_id=course_offering.id %}"

@@ -2,13 +2,14 @@ from decimal import Decimal
 
 from django import forms
 from django.conf import settings
+from django.core import validators
 from django.core.exceptions import ValidationError
 from django.forms import BaseModelFormSet
 from django.utils.translation import ugettext_lazy as _
 
 from darajati.utils import decimal
 from enrollment.utils import today
-from .models import StudentGrade, GradeFragment
+from .models import StudentGrade, GradeFragment, LetterGrade
 
 
 class GradesForm(forms.ModelForm):
@@ -173,3 +174,34 @@ class BulkGradeFragmentForm(GradeFragmentForm):
 class GradeFragmentsFormSet(BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         super(GradeFragmentsFormSet, self).__init__(*args, **kwargs)
+
+
+class LetterGradeForm(forms.ModelForm):
+    def __init__(self, course_offering, upper_boundary, lower_boundary, user, *args, **kwargs):
+        super(LetterGradeForm, self).__init__(*args, **kwargs)
+        self.course_offering = course_offering
+        self.user = user
+        self.fields['cut_off_point'].validators.append(validators.MaxValueValidator(upper_boundary))
+        self.fields['cut_off_point'].validators.append(validators.MinValueValidator(lower_boundary))
+
+    class Meta:
+        model = LetterGrade
+        fields = '__all__'
+        exclude = ['updated_by', 'updated_on', 'course_offering', 'section', ]
+        widgets = {
+            'course_offering': forms.HiddenInput(),
+            'section': forms.HiddenInput(),
+        }
+
+    def save(self, commit=True):
+        saved = super(LetterGradeForm, self).save(commit=False)
+        saved.course_offering = self.course_offering
+        saved.updated_by = self.user
+        if commit:
+            saved.save()
+        return saved
+
+
+class LetterGradesFormSet(BaseModelFormSet):
+    def __init__(self, *args, **kwargs):
+        super(LetterGradesFormSet, self).__init__(*args, **kwargs)

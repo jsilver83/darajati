@@ -1,5 +1,10 @@
+import csv
+import io
+from decimal import Decimal
+
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.db.models import Sum, Count
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
@@ -7,9 +12,9 @@ from django.views.generic import ListView, CreateView, TemplateView
 from extra_views import ModelFormSetView
 
 from enrollment.models import Section
-from enrollment.views import InstructorBaseView
-from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet
-from .models import GradeFragment, StudentGrade
+from enrollment.views import InstructorBaseView, CoordinatorEditBaseView
+from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet
+from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView
 
 
 class GradeBaseView(InstructorBaseView):
@@ -217,3 +222,109 @@ class GradeReportView(GradeBaseView, TemplateView):
 
 class GradeCourseReport(GradeBaseView, TemplateView):
     pass
+
+
+class LetterGradesView(CoordinatorEditBaseView, ModelFormSetView):
+    template_name = 'grade/letter_grades.html'
+    model = LetterGrade
+    form_class = LetterGradeForm
+    formset_class = LetterGradesFormSet
+    extra = 3
+    can_delete = True
+
+    def get_success_url(self):
+        return reverse_lazy('enrollment:grade_fragment_coordinator', args=(self.course_offering_id, ))
+
+    def get_queryset(self):
+        return self.course_offering.letter_grades.all()
+
+    def get_extra_form_kwargs(self):
+        kwargs = super(LetterGradesView, self).get_extra_form_kwargs()
+        kwargs['course_offering'] = self.course_offering
+        kwargs['upper_boundary'] = self.course_offering.grade_fragments.all().aggregate(Sum('weight')).get('weight__sum')
+        kwargs['lower_boundary'] = Decimal('0.00')
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(LetterGradesView, self).get_context_data(**kwargs)
+        context['course_offering'] = self.course_offering
+        context['letter_grades_counts'] = StudentFinalDataView.objects.filter(
+            course_offering=self.course_offering
+        ).values('calculated_letter_grade').annotate(entries=Count('calculated_letter_grade'))
+        return context
+
+    def formset_valid(self, formset):
+        self.object_list = formset.save()
+
+        if 'save' in self.request.POST:
+            messages.success(self.request, _('Letter Grades were saved successfully.'))
+            return redirect(self.request.get_full_path())
+        elif 'csv' in self.request.POST:
+            csv_file = io.StringIO()
+
+            writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
+
+            # Write CSV header
+            writer.writerow(['semester_code',
+                             'department_code',
+                             'course_code',
+                             'coordinated',
+                             'section_code',
+                             'letter_grade',
+                             'active',
+                             'university_id',
+                             'english_name',
+                             'arabic_name',
+                             'total_weights',
+                             'total',
+                             'attendance_deduction',
+                             'total_after_deduction',
+                             'total_rounded',
+                             'calculated_letter_grade', ])
+
+            # Maximum 2000 records will be fetched anyways to make this code non-abusive
+            final_data = StudentFinalDataView.objects.filter(course_offering=self.course_offering)[:2000]
+
+            if final_data:
+                for student in final_data:
+                    writer.writerow([
+                        student.semester_code,
+                        student.department_code,
+                        student.course_code,
+                        student.coordinated,
+                        student.section_code,
+                        student.letter_grade,
+                        student.active,
+                        student.university_id,
+                        student.english_name,
+                        student.arabic_name,
+                        student.total_weights,
+                        student.total,
+                        student.attendance_deduction,
+                        student.total_after_deduction,
+                        student.total_rounded,
+                        student.calculated_letter_grade,
+                    ])
+
+                response = HttpResponse()
+                response.write(csv_file.getvalue())
+                response['Content-Disposition'] = 'attachment; filename={0}'.format('student_final_data.csv')
+                return response
+            else:
+                messages.error(self.request, _('No records to export to CSV'))
+
+        elif 'apply' in self.request.POST:
+            count_of_students_changed_letter_grades = 0
+            final_data = StudentFinalDataView.objects.filter(course_offering=self.course_offering)
+            for student in final_data:
+                if student.letter_grade is None:
+                    student.enrollment.letter_grade = student.calculated_letter_grade
+                    student.enrollment.save()
+                    count_of_students_changed_letter_grades += 1
+
+            messages.success(self.request,
+                             _('Letter Grades were saved successfully. %s students had their letter grades been '
+                               'changed' % (count_of_students_changed_letter_grades, )))
+
+            return redirect(self.get_success_url())

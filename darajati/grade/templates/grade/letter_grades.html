@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load i18n staticfiles humanize %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		<div class="cntnt-sec">
+			<div class="title-sec text-center">
+				<h3>{% trans 'Bulk Update Grade Fragments' %}</h3>
+			</div>
+			<div class="card card-outline-secondary mb-3">
+				<div class="card-block">
+					<blockquote class="card-blockquote">
+						<p>{% trans 'Semester: ' %}<span>{{ course_offering.semester.description }}</span></p>
+						<p>{% trans 'Course: ' %}<span>{{ course_offering.course }}</span></p>
+						<p>{% trans 'Coordinated: ' %}<span>{{ course_offering.coordinated }}</span>
+						</p>
+					</blockquote>
+				</div>
+			</div>
+			{% if formset.forms %}
+				<form method="post">
+					<div class="title-sec row">
+						<div class="col-md-offset-3 col-md-9 text-right">
+							<button class="thm-btn" type="submit" name="save">
+								<span class="glyphicon glyphicon-save-file"></span> {% trans 'Save' %}</button>
+							<button class="thm-btn" type="submit" name="csv"
+							        onclick="return confirm('{% trans "Are you sure?" %}');">
+								<span class="glyphicon glyphicon-th"></span> {% trans 'Export To CSV' %}</button>
+							<button class="thm-btn" type="submit" name="apply"
+							        onclick="return confirm('{% trans "Are you sure?" %}');">
+								<span class="glyphicon glyphicon-saved"></span> {% trans 'Save and Apply' %}</button>
+						</div>
+					</div>
+					<br>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'Letter Grade' %}</th>
+								<th>{% trans 'Cut-Off Point' %}</th>
+								<th>{% trans 'No Of Students' %}</th>
+								<th>{% trans 'Updated By' %}</th>
+								<th>{% trans 'Updated On' %}</th>
+								<th>{% trans 'Delete?' %}</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% csrf_token %}
+							{{ formset.management_form }}
+							{% for form in formset %}
+								<tr>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.id }}{{ forloop.counter }}{{ form.non_field_errors }}
+											</div>
+										</div>
+									</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.letter_grade }}{{ form.letter_grade.errors }}</div>
+										</div>
+									</td>
+									<td>
+										<div class="row">
+											<div class="col-md-12">
+												{{ form.cut_off_point }}{{ form.cut_off_point.errors }}</div>
+										</div>
+									</td>
+									<td>{% for letter_grade in letter_grades_counts %}
+										{% if letter_grade.calculated_letter_grade == form.instance.letter_grade %}
+											{{ letter_grade.entries }}{% endif %}{% endfor %}</td>
+									<td>{{ form.instance.updated_on|naturaltime }}</td>
+									<td>{{ form.instance.updated_by }}</td>
+									<td>{{ form.DELETE }}</td>
+								</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+			{% else %}
+				{% trans 'There are letter grades' %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
