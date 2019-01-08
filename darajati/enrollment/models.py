@@ -10,7 +10,7 @@ from simple_history.models import HistoricalRecords
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from .data_types import RoundTypes
-from .utils import to_string, now, today
+from .utils import to_string, now, today, attendance_boundary
 
 User = settings.AUTH_USER_MODEL
 
@@ -573,20 +573,22 @@ class Enrollment(models.Model):
         """
         :return: total on this enrollment based on the formula 
         """
-        result = 0
-        formula = self.section.course_offering.formula
-        if formula:
-            periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
-                'title'
-            )
-            if periods:
-                for period in periods:
-                    title = period.title
-                    if title in formula:
-                        formula = formula.replace(title + "_abs", to_string(self.get_enrollment_period_total_absence(title)))
-                        formula = formula.replace(title + "_lat", to_string(self.get_enrollment_period_total_late(title)))
-                result = eval(formula)
-        return result
+        # result = 0
+        # formula = self.section.course_offering.formula
+        # if formula:
+        #     periods = ScheduledPeriod.objects.filter(section=self.section).distinct(
+        #         'title'
+        #     )
+        #     if periods:
+        #         for period in periods:
+        #             title = period.title
+        #             if title in formula:
+        #                 formula = formula.replace(title + "_abs", to_string(self.get_enrollment_period_total_absence(title)))
+        #                 formula = formula.replace(title + "_lat", to_string(self.get_enrollment_period_total_late(title)))
+        #         result = eval(formula)
+        # return result
+        #### I AM TOO PROUD OF THE ABOVE CODE TO REMOVE IT ENTIRELY ####
+        return self.attendance_deduction
 
     def get_enrollment_period_total_absence(self, period_title):
         """
