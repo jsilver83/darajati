@@ -185,8 +185,8 @@ class CoordinatorView(CoordinatorBaseView, ListView):
     context_object_name = 'courses'
 
     def get_queryset(self):
-        queryset = super(CoordinatorView, self).get_queryset()
-        return queryset.filter(instructor=self.coordinator.instructor)
+        return Coordinator.objects.filter(instructor=self.coordinator.instructor,
+                                          course_offering__in=CourseOffering.get_active_course_offerings())
 
 
 class CoordinatorSectionView(CoordinatorEditBaseView, ListView):

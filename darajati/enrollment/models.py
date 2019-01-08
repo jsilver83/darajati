@@ -1,14 +1,16 @@
 from math import *
+
+from django.conf import settings
+from django.contrib.auth.models import User as User_model
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
-from django.contrib.auth.models import User as User_model
-from .data_types import RoundTypes
-from .utils import to_string, now, today, attendance_boundary
-from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from simple_history.models import HistoricalRecords
+
+from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
+from .data_types import RoundTypes
+from .utils import to_string, now, today
 
 User = settings.AUTH_USER_MODEL
 
@@ -244,14 +246,19 @@ class CourseOffering(models.Model):
             return None
 
     @staticmethod
+    def get_active_course_offerings():
+        """
+        :return: active semesters' course offerings
+        """
+        return CourseOffering.objects.filter(semester__start_date__lte=now(), semester__end_date__gte=now())
+
+    @staticmethod
     def get_current_course_offerings():
         """
         :return: current semester course_offering_id and 'semester code - course code'
         """
         return [(course_offering.pk, str(course_offering))
-                for course_offering in CourseOffering.objects.filter(
-                semester__start_date__lte=now(),
-                semester__end_date__gte=now())]
+                for course_offering in CourseOffering.get_active_course_offerings()]
 
 
 class Section(models.Model):
