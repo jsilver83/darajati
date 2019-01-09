@@ -24,3 +24,4 @@ uploaded_docs/*
 .DS_Store
 *.sqlite
 *.sqlite3
+*.sql

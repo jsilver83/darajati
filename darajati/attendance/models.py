@@ -378,3 +378,18 @@ class Excuse(models.Model):
                     attendances.append(attendance)
 
             return attendances
+
+
+class AttendanceDeductionView(models.Model):
+    enrollment = models.OneToOneField('enrollment.Enrollment', on_delete=models.DO_NOTHING,
+                                      related_name='attendance_deduction',
+                                      primary_key=True)
+    attendance_deduction = models.DecimalField(max_digits=settings.MAX_DIGITS,
+                                               decimal_places=settings.MAX_DECIMAL_POINT)
+
+    class Meta:
+        managed = False
+        db_table = 'enrollment_attendancededuction'
+
+    def __str__(self):
+        return str(self.attendance_deduction)

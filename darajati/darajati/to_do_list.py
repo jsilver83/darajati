@@ -53,5 +53,12 @@ URGENT:
 11 Dec 2018
 - remove readonly from grades when viewer is the coordinator
 - investigate if instructors changed grades after submitting
+
+19 Dec 2018
+- make sure all updated_on fields to be datetime and auto_now=True
+
+22 Dec 2018
+- fix all dispatch = super() ... return dispatch
+
 """
 

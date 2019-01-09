@@ -62,13 +62,31 @@ class CoordinatorAdmin(admin.ModelAdmin):
         return obj.course_offering.course.code
 
 
+class InstructorAdmin(admin.ModelAdmin):
+    list_filter = ('active', 'user__is_superuser', 'user__is_staff', )
+    list_display = ('english_name', 'arabic_name', 'kfupm_email', 'mobile', 'active', )
+    search_fields = ['english_name', 'arabic_name', 'user__username', 'mobile', ]
+
+    def kfupm_email(self, obj):
+        return '%s@kfupm.edu.sa' % obj.user.username
+
+
+class StudentAdmin(admin.ModelAdmin):
+    list_filter = ('active', )
+    list_display = ('english_name', 'arabic_name', 'kfupm_email', 'mobile', 'active', )
+    search_fields = ['english_name', 'arabic_name', 'user__username', 'mobile', ]
+
+    def kfupm_email(self, obj):
+        return '%s@kfupm.edu.sa' % obj.user.username
+
+
 admin.site.register(Semester, SemesterAdmin)
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Enrollment, EnrollmentAdmin)
 admin.site.register(CourseOffering, CourseOfferingAdmin)
 
-admin.site.register(Student)
-admin.site.register(Instructor)
+admin.site.register(Student, StudentAdmin)
+admin.site.register(Instructor, InstructorAdmin)
 admin.site.register(Department)
 admin.site.register(Course)
 admin.site.register(Coordinator, CoordinatorAdmin)
