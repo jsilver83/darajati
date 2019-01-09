@@ -50,6 +50,9 @@ class Person(models.Model):
 class Student(Person):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
 
+    class Meta:
+        ordering = ('university_id', )
+
     def __str__(self):
         return to_string(self.english_name, self.university_id)
 
@@ -78,6 +81,9 @@ class Student(Person):
 
 class Instructor(Person):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True)
+
+    class Meta:
+        ordering = ('-user__is_superuser', '-user__is_staff', 'english_name', 'university_id')
 
     def __str__(self):
         return to_string(self.english_name)
@@ -146,6 +152,9 @@ class Semester(models.Model):
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
+    class Meta:
+        ordering = ('-start_date', 'code', )
+
     def __str__(self):
         return to_string(self.code)
 
@@ -171,6 +180,9 @@ class Department(models.Model):
     arabic_name = models.CharField(_('arabic name'), max_length=50, null=True, blank=False)
     code = models.CharField(max_length=10, null=True, blank=False)
 
+    class Meta:
+        ordering = ('code', 'name', )
+
     def __str__(self):
         return to_string(self.name, self.code)
 
@@ -181,6 +193,9 @@ class Course(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', null=True, blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
+
+    class Meta:
+        ordering = ('department', 'code', 'name', )
 
     def __str__(self):
         return to_string(self.code)
@@ -230,6 +245,9 @@ class CourseOffering(models.Model):
         blank=True,
         help_text=_('Decimal places in the Total for rounding or truncating methods')
     )
+
+    class Meta:
+        ordering = ('semester', 'course', )
 
     def __str__(self):
         return to_string(self.semester, self.course)
@@ -285,6 +303,9 @@ class Section(models.Model):
     )
     crn = models.CharField(_('CRN'), max_length=100, null=True, blank=False)
     active = models.BooleanField(_('Active'), default=False)
+
+    class Meta:
+        ordering = ('course_offering', 'code', )
 
     def __str__(self):
         return to_string(self.course_offering, self.code)
@@ -383,6 +404,9 @@ class Coordinator(models.Model):
         null=True,
         blank=False
     )
+
+    class Meta:
+        ordering = ('course_offering', 'instructor', )
 
     def __str__(self):
         return to_string(self.course_offering, self.instructor)
