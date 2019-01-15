@@ -147,8 +147,8 @@ class GradeFragment(models.Model):
     )
     updated_by = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='GradeFragment',
+        on_delete=models.SET_NULL,
+        related_name='updated_grade_fragments',
         null=True,
         blank=True
     )
@@ -291,7 +291,7 @@ class LetterGrade(models.Model):
     cut_off_point = models.DecimalField(_('Cut off Point'), null=True, blank=False, default=0.0,
                                         max_digits=settings.MAX_DIGITS,
                                         decimal_places=settings.MAX_DECIMAL_POINT)
-    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_grade', null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='updated_letter_grades', null=True, blank=True)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True, null=True, )
 
     class Meta:
@@ -324,7 +324,7 @@ class StudentGrade(models.Model):
         max_digits=settings.MAX_DIGITS
     )
     remarks = models.CharField(_('Instructor Remarks'), max_length=100, null=True, blank=True)
-    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     updated_on = models.DateTimeField(_('Updated On'), auto_now=True, null=True, )
 
     history = HistoricalRecords()

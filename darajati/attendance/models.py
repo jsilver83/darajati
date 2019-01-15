@@ -44,7 +44,7 @@ class ScheduledPeriod(models.Model):
                                 null=True,
                                 blank=False
                                 )
-    instructor_assigned = models.ForeignKey('enrollment.Instructor', on_delete=models.CASCADE,
+    instructor_assigned = models.ForeignKey('enrollment.Instructor', on_delete=models.SET_NULL, null=True, blank=False,
                                             related_name='assigned_periods')
     day = models.CharField(max_length=9, null=True, blank=False, choices=Days.choices())
     title = models.CharField(max_length=20, null=True, blank=False)
