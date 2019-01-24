@@ -3,15 +3,15 @@ from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from darajati.validators import validate_file_extension
+from enrollment.utils import now
 from enrollment.utils import to_string, day_string, get_offset_day, get_dates_in_between, get_previous_week, \
     get_next_week
 from .media_handlers import upload_excuse_attachments
-from enrollment.utils import now
-from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -53,12 +53,20 @@ class ScheduledPeriod(models.Model):
     location = models.CharField(max_length=50, null=True, blank=False)
 
     def __str__(self):
-        return to_string(self.section.course_offering,
-                         self.section.code,
-                         self.instructor_assigned.english_name,
-                         self.day,
-                         self.start_time,
-                         self.end_time)
+        try:
+            return to_string(self.section.course_offering,
+                             self.section.code,
+                             self.instructor_assigned.english_name,
+                             self.day,
+                             self.start_time,
+                             self.end_time)
+        except:
+            return to_string(self.section.course_offering,
+                             self.section.code,
+                             '',
+                             self.day,
+                             self.start_time,
+                             self.end_time)
 
     @staticmethod
     def get_period(period_id=None):
