@@ -168,7 +168,8 @@ class GradeFragmentForm(forms.ModelForm):
 class BulkGradeFragmentForm(GradeFragmentForm):
 
     class Meta(GradeFragmentForm.Meta):
-        exclude = GradeFragmentForm.Meta.exclude + ['boundary_type', 'category', 'description', 'weight', 'order']
+        exclude = GradeFragmentForm.Meta.exclude + ['boundary_type', 'category', 'description', 'weight', 'order',
+                                                    'student_total_grading', 'entry_in_percentages']
 
 
 class GradeFragmentsFormSet(BaseModelFormSet):
