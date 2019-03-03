@@ -25,7 +25,7 @@ class EnrollmentAdmin(ModelAdminMixin, SimpleHistoryAdmin):
     history_list_display = ['letter_grade', 'section', 'active', 'comment', 'updated_by']
     list_filter = ('section__course_offering', 'active', 'letter_grade', 'section__course_offering__course',)
     list_display = ('id', 'student', 'semester_code', 'course_code', 'section_code', 'register_date',
-                    'letter_grade', 'active')
+                    'letter_grade', 'active', 'updated_on')
     search_fields = ['student__university_id']
 
     def semester_code(self, obj):
@@ -73,11 +73,14 @@ class InstructorAdmin(admin.ModelAdmin):
 
 class StudentAdmin(admin.ModelAdmin):
     list_filter = ('active', )
-    list_display = ('english_name', 'arabic_name', 'kfupm_email', 'mobile', 'active', )
-    search_fields = ['english_name', 'arabic_name', 'user__username', 'mobile', ]
+    list_display = ('english_name', 'arabic_name', 'university_id', 'kfupm_email', 'mobile', 'active', )
+    search_fields = ['english_name', 'arabic_name', 'university_id', 'user__username', 'mobile', ]
 
     def kfupm_email(self, obj):
-        return '%s@kfupm.edu.sa' % obj.user.username
+        try:
+            return '%s@kfupm.edu.sa' % obj.user.username
+        except:
+            pass
 
 
 admin.site.register(Semester, SemesterAdmin)
