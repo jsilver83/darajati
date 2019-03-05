@@ -72,11 +72,10 @@ class AttendanceView(AttendanceBaseView, FormSetView):
         all_messages_content = [msg.message for msg in list(messages.get_messages(request))]
         if _('Attendances were saved successfully') not in all_messages_content:
             messages.add_message(request, messages.WARNING,
-                                 _('Make sure that you see the success message after submitting attendance. '
-                                   'OR ELSE, attendance was NOT saved properly and you have to report it as a BUG'))
+                                 _('Make sure that you see the success message after submitting. '
+                                   'OR ELSE, attendance was NOT saved properly'))
         return super().get(request, *args, **kwargs)
 
-    # FIXME: I know i look nice-ish but i wanna be more nicer when you have time fix me please
     def get_context_data(self, **kwargs):
         context = super(AttendanceView, self).get_context_data(**kwargs)
         self.day, period_date = ScheduledPeriod.get_nearest_day_and_date(
