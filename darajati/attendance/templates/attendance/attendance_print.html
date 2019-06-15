@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			{% if enrollments %}
+				<div class="title-sec row">
+					<div class="col-md-9">
+						<h3>{% trans 'Attendance Print For Section ' %}{{ section.code }}</h3>
+					</div>
+				</div>
+				<br>
+
+				<div class="thm-table odd period-cntnt">
+					<table class="table table-condensed">
+						<thead>
+						<tr>
+							<th rowspan="2">{% trans 'No.' %}</th>
+							<th rowspan="2">{% trans 'ID' %}</th>
+							<th rowspan="2">{% trans 'Name' %}</th>
+							<th rowspan="2" title="{% trans 'Unexcused Absences' %}">A</th>
+							<th rowspan="2" title="{% trans 'Lates' %}">L</th>
+							<th rowspan="2" title="{% trans 'Excuses' %}">E</th>
+							<th rowspan="2" title="{% trans 'Deductions' %}">D</th>
+							{% for day_periods in section_days_periods %}
+								<th style="text-align: center; border-left: 2px solid #ddd" colspan="{{ day_periods|length }}">{{ day_periods.0.day }}</th>
+							{% endfor %}
+						</tr>
+						<tr>
+							{% for day_periods in section_days_periods %}
+								{% for period in day_periods %}
+									<th>{{ period.start_time }}</th>
+								{% endfor %}
+							{% endfor %}
+						</tr>
+						</thead>
+						<tbody>
+						{% for enrollment in enrollments %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ enrollment.student.university_id }}</td>
+								<td>
+									{{ enrollment.student.name|truncatechars:20 }}
+								</td>
+								<td>
+									{{ enrollment.absences }}
+								</td>
+								<td>
+									{{ enrollment.lates }}
+								</td>
+								<td>
+									{{ enrollment.excuses }}
+								</td>
+								<td>
+									{{ enrollment.deduction }}
+								</td>
+								{% for day_periods in section_days_periods %}
+									<td style="text-align: center; border-left: 2px solid #ddd" colspan="{{ day_periods|length }}">
+{#										{% for period in day_periods %}#}
+{#											<span style="display:block; width:30px; height:20px; margin-right:6px; float:left" class="label label-default"></span>#}
+{#										{% endfor %}#}
+									</td>
+								{% endfor %}
+							</tr>
+						{% endfor %}
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-9">
+						<p>
+							<b>{% trans 'Table Legends' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Attendance Deduction' %}
+						</p>
+					</div>
+				</div>
+			{% else %}
+				{% trans 'There are no students' %}
+			{% endif %}
+
+		</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript" src="{% static 'js/custom-attendance.js' %}"></script>
+{% endblock %}

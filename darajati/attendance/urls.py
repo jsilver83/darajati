@@ -1,21 +1,23 @@
-from django.urls import re_path, path
+from django.urls import path
 
 from . import views
 
 app_name = 'attendance'
 
 urlpatterns = [
-    re_path(r'^section/(?P<section_id>[0-9]+)/$', views.AttendanceView.as_view(),
-            {'year': None, 'month': None, 'day': None}, name='section_attendance'),
+    path('section/<int:section_id>/', views.AttendanceView.as_view(),
+         {'year': None, 'month': None, 'day': None}, name='section_attendance'),
+    path('^section/<int:section_id>/<int:year>-<int:month>-<int:day>/',
+         views.AttendanceView.as_view(),
+         name='section_day_attendance'),
 
-    re_path(r'^section/(?P<section_id>[0-9]+)/(?P<year>[0-9]{4})-(?P<month>[0-9]{1,2})-(?P<day>[0-9]{1,2})/$',
-            views.AttendanceView.as_view(),
-            name='section_day_attendance'),
-    re_path(r'summary/(?P<section_id>[0-9]+)/(?P<enrollment_id>[0-9]+)',
-            views.StudentAttendanceSummaryView.as_view(),
-            name='attendance_summary'),
+    path('summary/<int:section_id>/<int:enrollment_id>/',
+         views.StudentAttendanceSummaryView.as_view(),
+         name='attendance_summary'),
 
-    path(r'excuses/', views.ExcusesListingView.as_view(), name='excuses_listing'),
-    path(r'excuse-entry/', views.ExcuseEntryView.as_view(), name='excuse_entry'),
-    path(r'excuse-entry-confirm/<int:pk>/', views.ExcuseEntryConfirm.as_view(), name='excuse_entry_confirm'),
+    path('print/section/<int:section_id>/', views.AttendancePrintView.as_view(), name='section_attendance_print'),
+
+    path('excuses/', views.ExcusesListingView.as_view(), name='excuses_listing'),
+    path('excuse-entry/', views.ExcuseEntryView.as_view(), name='excuse_entry'),
+    path('excuse-entry-confirm/<int:pk>/', views.ExcuseEntryConfirm.as_view(), name='excuse_entry_confirm'),
 ]
