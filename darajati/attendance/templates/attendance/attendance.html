@@ -134,7 +134,7 @@
 										</div>
 									</td>
 								{% else %}
-									{% if form.id.value != None %}
+									{% if form.initial.id != None %}
 										<td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
 											<div class="row">
 												<div class="col-md-9">
