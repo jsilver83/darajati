@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from darajati.utils import size_format
+from django.utils.translation import ugettext_lazy as _
 
 
 """
@@ -23,6 +24,7 @@ def validate_file_extension(value):
 
     if value.size > settings.MAX_FILE_UPLOAD_SIZE:
         raise ValidationError(
-            _('File size {} is larger than {}!'.format(size_format(value.size), size_format(MAX_FILE_UPLOAD_SIZE))),
+            _('File size {} is larger than {}!'.format(size_format(value.size),
+                                                       size_format(settings.MAX_FILE_UPLOAD_SIZE))),
             code='size_not_allowed',
         )
