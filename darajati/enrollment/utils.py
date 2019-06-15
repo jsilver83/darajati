@@ -32,7 +32,7 @@ def to_string(*args):
     sentence = ' '
     for arg in args:
         sentence += str(arg) + ' '
-    return sentence
+    return sentence.strip()
 
 
 def attendance_boundary(value, boundary):

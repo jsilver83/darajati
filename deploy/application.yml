@@ -21,8 +21,6 @@
     admins:
       - name: abdullah joud
         email: joud@kfupm.edu.sa
-      - name: mohammed alnajdi
-        email: malnajdi@kfupm.edu.sa
     uwsgi_processes: 64
 
   vars_prompt:
@@ -74,6 +72,15 @@
       connection: local
       become: no
       register: banner_api_password
+
+    - name: Retrieve email password from Vault
+      uri:
+        url: "{{ vault_url }}/v1/secret/{{ env }}/email/apps/darajati/email_password"
+        headers:
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+      connection: local
+      become: no
+      register: email_password
 
     - name: Generate local settings
       set_fact:

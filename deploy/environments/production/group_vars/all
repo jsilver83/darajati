@@ -25,4 +25,5 @@ apache_debug: no
 
 uwsgi_http_port: 8001
 
+email_host: mail.kfupm.edu.sa
 email_user: darajati@kfupm.edu.sa

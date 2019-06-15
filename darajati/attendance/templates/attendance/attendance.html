@@ -78,17 +78,19 @@
 								{{ form.attendance_instance }}
 								{% ifchanged form.enrollment.value %}
 									<tr>
-									<td>{{ form.count_index }} {{ form.enrollment }}</td>
-									<td>{{ form.student_university_id }}</td>
+									<td>{{ form.initial.count_index }} {{ form.enrollment }}</td>
+									<td>{{ form.initial.student_university_id }}</td>
 									<td>
-										<span style="display: none">{{ form.student_name }}</span><a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.enrollment_pk.value %}">{{ form.student_name.value|truncatechars:23 }}&nbsp;&nbsp;<small>
-										<span class="glyphicon glyphicon-new-window"></span></small>
-									</a></td>
+										<a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.initial.enrollment_pk %}">
+											{{ form.initial.student_name|truncatechars:23 }}&nbsp;&nbsp;<small>
+											<span class="glyphicon glyphicon-new-window"></span></small>
+										</a>
+									</td>
 									<td>
 										{# a code to loop through the list of deductions for all students passed in the #}
 										{# context and find the relevant student absences #}
 										{% for summary in students_attendances_summaries %}
-											{% ifequal summary.pk form.enrollment_pk.value %}
+											{% ifequal summary.pk form.initial.enrollment_pk %}
 												{{ summary.absences }}
 											{% endifequal %}
 										{% endfor %}
@@ -96,7 +98,7 @@
 									<td>
 										{# check comment from the previosu td #}
 										{% for summary in students_attendances_summaries %}
-											{% ifequal summary.pk form.enrollment_pk.value %}
+											{% ifequal summary.pk form.initial.enrollment_pk %}
 												{{ summary.lates }}
 											{% endifequal %}
 										{% endfor %}
@@ -104,7 +106,7 @@
 									<td>
 										{# check comment from the previosu td #}
 										{% for summary in students_attendances_summaries %}
-											{% ifequal summary.pk form.enrollment_pk.value %}
+											{% ifequal summary.pk form.initial.enrollment_pk %}
 												{{ summary.excuses }}
 											{% endifequal %}
 										{% endfor %}
@@ -112,7 +114,7 @@
 									<td>
 										{# check comment from the previosu td #}
 										{% for summary in students_attendances_summaries %}
-											{% ifequal summary.pk form.enrollment_pk.value %}
+											{% ifequal summary.pk form.initial.enrollment_pk %}
 												{{ summary.deduction }}
 											{% endifequal %}
 										{% endfor %}
@@ -125,15 +127,14 @@
 											<div class="col-md-3 info">
 												<span class="glyphicon glyphicon-info-sign info-icon"></span>
 												<div class="info-cntnt">
-													<span>Updated By : {{ form.updated_by }}</span>
-													<span>Updated On : {{ form.updated_on }}</span>
+													<span>Updated By : {{ form.instance.updated_by }}</span>
+													<span>Updated On : {{ form.instance.updated_on }}</span>
 												</div>
 											</div>
 										</div>
 									</td>
 								{% else %}
-									{% if form.id.value != None %}
-										<span style="display: none;">{{ form.count_index }}{{ form.student_name }}{{ form.student_university_id }}{{ form.total_absence }}</span>
+									{% if form.initial.id != None %}
 										<td class="{% ifequal form.status.value 'abs' %}error{% endifequal %}{% ifequal form.status.value 'lat' %}warning{% endifequal %}{% ifequal form.status.value 'exc' %}success{% endifequal %}">
 											<div class="row">
 												<div class="col-md-9">
@@ -141,8 +142,8 @@
 												<div class="col-md-3 info">
 													<span class="glyphicon glyphicon-info-sign info-icon"></span>
 													<div class="info-cntnt">
-														<span>Updated By : {{ form.updated_by }}</span>
-														<span>Updated On : {{ form.updated_on }}</span>
+														<span>Updated By : {{ form.instance.updated_by }}</span>
+														<span>Updated On : {{ form.instance.updated_on }}</span>
 													</div>
 												</div>
 											</div>

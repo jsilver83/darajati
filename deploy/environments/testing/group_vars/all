@@ -22,7 +22,9 @@ database_port: 5432
 django_debug: no
 apache_debug: yes
 
+email_host: mail.test.kfupm.edu.sa
 email_user: darajati@kfupm.edu.sa
+
 # pick a unique port that is not used by any other application on the target
 # application server
 uwsgi_http_port: 8001

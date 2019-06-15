@@ -12,7 +12,6 @@ class ScheduledPeriodAdmin(admin.ModelAdmin):
         'section__course_offering__course',
         'day',
         'title',
-        'instructor_assigned',
     )
     list_display = ('id', 'section', 'instructor_assigned', 'day', 'title', 'start_time',
                     'end_time', 'location')
