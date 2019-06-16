@@ -33,8 +33,10 @@
 								{{ section.course_offering.course.code }}</td>
 							<td>{{ section.course_offering.course.name }}</td>
 							<td>{{ section.code }}</td>
-							<td><a href="{% url 'attendance:section_attendance' section_id=section.id %}"
-							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+							<td>
+								<a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a>&nbsp;&nbsp;<a href="{% url 'attendance:section_attendance_print' section_id=section.id %}"
+								                                                                                                                                                                class="thm-btn small-btn outline-btn-dgrey"><span class="glyphicon glyphicon-print" aria-hidden="true"></span> {% trans 'Sheet' %}</a>
+							</td>
 							<td><a href="{% url 'grade:section_grade' section_id=section.id %}"
 							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
 							<td><a href="{% url 'enrollment:section_students' section_id=section.id %}"
