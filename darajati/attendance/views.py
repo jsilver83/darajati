@@ -156,9 +156,8 @@ class AttendancePrintView(InstructorBaseView, TemplateView):
             if periods:
                 context['section_days_periods'].append(periods)
 
+        context['instructor_name'] = self.request.user.instructor.name
         context['today'] = today()
-
-        print(context)
 
         return context
 
