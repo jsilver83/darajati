@@ -40,7 +40,7 @@
 								<td>{{ forloop.counter }}</td>
 								<td>{{ enrollment.student.university_id }}</td>
 								<td>
-									{{ enrollment.student.name|truncatechars:20 }}
+									{{ enrollment.student.name|truncatewords:2 }}
 								</td>
 								<td>
 									{{ enrollment.absences }}

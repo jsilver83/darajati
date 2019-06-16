@@ -82,7 +82,7 @@
 									<td>{{ form.initial.student_university_id }}</td>
 									<td>
 										<a title="For a more detailed attendance report, click here!" target="_blank" href="{% url 'attendance:attendance_summary' section_id form.initial.enrollment_pk %}">
-											{{ form.initial.student_name|truncatechars:23 }}&nbsp;&nbsp;<small>
+											{{ form.initial.student_name|truncatewords:2 }}&nbsp;&nbsp;<small>
 											<span class="glyphicon glyphicon-new-window"></span></small>
 										</a>
 									</td>
