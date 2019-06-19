@@ -17,16 +17,20 @@ class SemesterAdmin(admin.ModelAdmin):
 
 
 class SectionAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('course_offering', )
+    search_fields = ('crn', 'code', 'course_offering__course__code', )
     list_display = ('id', 'course_offering', 'crn', 'code')
-    list_filter = ('course_offering', 'active', )
+    list_filter = ('course_offering__semester', 'course_offering__course', 'active', )
 
 
 class EnrollmentAdmin(ModelAdminMixin, SimpleHistoryAdmin):
+    autocomplete_fields = ('section', 'student', )
     history_list_display = ['letter_grade', 'section', 'active', 'comment', 'updated_by']
-    list_filter = ('section__course_offering', 'active', 'letter_grade', 'section__course_offering__course',)
+    list_filter = ('section__course_offering__semester', 'section__course_offering__course', 'active', 'letter_grade', )
     list_display = ('id', 'student', 'semester_code', 'course_code', 'section_code', 'register_date',
                     'letter_grade', 'active', 'updated_on')
     search_fields = ['student__university_id']
+    readonly_fields = ('updated_by', )
 
     def semester_code(self, obj):
         return obj.section.course_offering.semester.code
@@ -42,11 +46,13 @@ class CourseOfferingAdmin(admin.ModelAdmin):
     list_display = ('id', 'semester', 'course', 'attendance_entry_window', 'allow_change', 'formula')
     list_filter = ('semester', 'course', 'coordinated', )
     list_editable = ('attendance_entry_window', 'formula')
+    search_fields = ('semester__code', 'course__code', )
 
 
 class CoordinatorAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('course_offering', 'instructor', )
     fields = ('course_offering', 'instructor')
-    list_filter = ('course_offering', 'course_offering__course', )
+    list_filter = ('course_offering__semester', 'course_offering__course', )
     list_display = ('instructor_id', 'instructor', 'semester', 'course')
 
     def instructor_id(self, obj):
@@ -63,15 +69,20 @@ class CoordinatorAdmin(admin.ModelAdmin):
 
 
 class InstructorAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('user', )
     list_filter = ('active', 'user__is_superuser', 'user__is_staff', )
     list_display = ('english_name', 'arabic_name', 'kfupm_email', 'mobile', 'active', )
     search_fields = ['english_name', 'arabic_name', 'user__username', 'mobile', ]
 
     def kfupm_email(self, obj):
-        return '%s@kfupm.edu.sa' % obj.user.username
+        try:
+            return '%s@kfupm.edu.sa' % obj.user.username
+        except AttributeError:
+            pass
 
 
 class StudentAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('user', )
     list_filter = ('active', )
     list_display = ('english_name', 'arabic_name', 'university_id', 'kfupm_email', 'mobile', 'active', )
     search_fields = ['english_name', 'arabic_name', 'university_id', 'user__username', 'mobile', ]
