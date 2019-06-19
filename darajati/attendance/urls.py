@@ -7,7 +7,7 @@ app_name = 'attendance'
 urlpatterns = [
     path('section/<int:section_id>/', views.AttendanceView.as_view(),
          {'year': None, 'month': None, 'day': None}, name='section_attendance'),
-    path('^section/<int:section_id>/<int:year>-<int:month>-<int:day>/',
+    path('section/<int:section_id>/<int:year>-<int:month>-<int:day>/',
          views.AttendanceView.as_view(),
          name='section_day_attendance'),
 
