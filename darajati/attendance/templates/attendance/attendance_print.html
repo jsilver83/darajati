@@ -9,7 +9,7 @@
 						<h3>
 							{% trans 'Attendance Print For Section ' %}{{ section.code }}
 							<br>
-							<small> - {% trans "Printed by" %}: <b>{{ instructor_name }}</b>&emsp;&emsp;&emsp;&emsp;- {% trans "Datae" %}: <b>{{ today }}</b></small>
+							<small> - {% trans "Printed by" %}: <b>{{ instructor_name }}</b>&emsp;&emsp;&emsp;&emsp;- {% trans "Date" %}: <b>{{ today }}</b></small>
 						</h3>
 					</div>
 				</div>
@@ -44,7 +44,7 @@
 								<td>{{ forloop.counter }}</td>
 								<td>{{ enrollment.student.university_id }}</td>
 								<td>
-									{{ enrollment.student.name|truncatewords:2 }}
+									<span class="fname">{{ enrollment.student.name|truncatewords:2 }}</span>
 								</td>
 								<td>
 									{{ enrollment.absences }}
@@ -59,10 +59,15 @@
 									{{ enrollment.deduction }}
 								</td>
 								{% for day_periods in section_days_periods %}
-									<td style="text-align: center; border-left: 2px solid #ddd" colspan="{{ day_periods|length }}">
-{#										{% for period in day_periods %}#}
+									<td style="padding: 0.3%; vertical-align: central; text-align: center; border-left: 1px solid #ddd" colspan="{{ day_periods|length }}">
 {#											<span style="display:block; width:30px; height:20px; margin-right:6px; float:left" class="label label-default"></span>#}
-{#										{% endfor %}#}
+										<table class="table table-bordered" style="margin-bottom: 0;">
+											<tr>
+										{% for period in day_periods %}
+											    <td></td>
+										{% endfor %}
+											</tr>
+										</table>
 									</td>
 								{% endfor %}
 							</tr>
@@ -75,7 +80,7 @@
 				<div class="row">
 					<div class="col-md-9">
 						<p>
-							<b>{% trans 'Table Legends' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Attendance Deduction' %}
+							<b>{% trans 'Legend' %}:</b>&nbsp;&nbsp;&nbsp;&nbsp;A = {% trans 'Unexcused Absences' %};&nbsp;&nbsp;&nbsp;&nbsp;L = {% trans 'Lates' %};&nbsp;&nbsp;&nbsp;&nbsp;E = {% trans 'Excuses' %};&nbsp;&nbsp;&nbsp;&nbsp;D = {% trans 'Attendance Deduction' %}
 						</p>
 					</div>
 				</div>
@@ -87,6 +92,32 @@
 	</div>
 {% endblock %}
 
+{% block style %}
+	<style media="print">
+	@page {
+        size:  auto;   /* auto is the initial value */
+        margin: 0mm;  /* this affects the margin in the printer settings */
+    }
+    html {
+        background-color: #FFFFFF;
+        margin: 0px;  /* this affects the margin on the html before sending to printer */
+    }
+	body, table tr th, table tr td {
+		font-size: 99%!important;
+	}
+	.fname {
+		font-size: 70%!important;
+	}
+	</style>
+{% endblock style %}
+
 {% block scripts %}
 	<script type="text/javascript" src="{% static 'js/custom-attendance.js' %}"></script>
+	<script type="text/javascript">
+		$(function () {
+		   $('.header').remove();
+		   $('.footer').remove();
+		   window.print();
+        });
+	</script>
 {% endblock %}
