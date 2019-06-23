@@ -12,6 +12,9 @@
     django_project_admin_username: joud
     django_project_admin_email: joud@kfupm.edu.sa
     django_project_package_name: darajati
+    buildbot_autobuild: false
+    ssl_cert_path: "/etc/ssl/certs"
+
     apache_authn: cas
     apache_auth:
       - path: /
@@ -23,64 +26,58 @@
         email: joud@kfupm.edu.sa
     uwsgi_processes: 64
 
-  vars_prompt:
-    - name: ad_username
-      prompt: Your Active Directory username
-      private: no
-
-    - name: ad_password
-      prompt: Your Active Directory password
-      private: yes
-
-
-  # tasks to be performed before role tasks, if any
+# tasks to be performed before role tasks, if any
   pre_tasks:
+
+    - pause:
+        prompt: Your Active Directory username
+      when: not buildbot_autobuild
+      register: ad_username
+      connection: local
+
+    - pause:
+        prompt: Your Active Directory password
+        echo: no
+      when: not buildbot_autobuild
+      register: ad_password
+      connection: local
 
     - name: Vault authentication
       uri:
-        url: "{{ vault_url }}/v1/auth/ldap/login/{{ ad_username }}"
+        url: "{{ vault_url }}/v1/auth/ldap/login/{{ ad_username.user_input }}"
         method: POST
-        body: {"password": "{{ ad_password }}"}
+        body: {"password": "{{ ad_password.user_input }}"}
         body_format: json
       connection: local
       become: no
       register: auth
+      when: not buildbot_autobuild
+
+    - name: set token
+      set_fact:
+        vault_access_token: "{{ auth.json.auth.client_token }}"
+      when: not buildbot_autobuild
 
     - name: Retrieve secret key from Vault
-      uri:
-        url: "{{ vault_url }}/v1/secret/{{ env }}/operations/apps/darajati/secret_key"
-        headers:
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+      set_fact:
+        secret_key: "{{ lookup('hashi_vault', 'secret=secret/{{ env }}/operations/apps/darajati/secret_key:value token={{ vault_access_token }} url={{ vault_url }} cacert={{ ssl_cert_path }}') }}"
       connection: local
-      become: no
-      register: secret_key
 
-    - name: Retrieve database password from Vault
-      uri:
-        url: "{{ vault_url }}/v1/secret/{{ env }}/database/apps/darajati/database_password"
-        headers:
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+    - name: Retrieve database password from vault
+      set_fact:
+        database_password: "{{ lookup('hashi_vault', 'secret=secret/{{ env }}/database/apps/darajati/database_password:value token={{ vault_access_token }} url={{ vault_url }} cacert={{ ssl_cert_path }}') }}"
       connection: local
-      become: no
-      register: database_password
 
-    - name: Retrieve banner-api password from Vault
-      uri:
-        url: "{{ vault_url }}/v1/secret/{{ env }}/operations/apps/darajati/banner_api_password"
-        headers:
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+    - name: Retrieve banner api password from vault
+      set_fact:
+        banner_api_password: "{{ lookup('hashi_vault', 'secret=secret/{{ env }}/operations/apps/darajati/banner_api_password:value token={{ vault_access_token }} url={{ vault_url }} cacert={{ ssl_cert_path }}') }}"
       connection: local
-      become: no
-      register: banner_api_password
 
-    - name: Retrieve email password from Vault
-      uri:
-        url: "{{ vault_url }}/v1/secret/{{ env }}/email/apps/darajati/email_password"
-        headers:
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+    - name: Retrieve email password from vault
+      set_fact:
+        email_password: "{{ lookup('hashi_vault', 'secret=secret/{{ env }}/email/apps/darajati/email_password:value token={{ vault_access_token }} url={{ vault_url }} cacert={{ ssl_cert_path }}') }}"
       connection: local
-      become: no
-      register: email_password
+
 
     - name: Generate local settings
       set_fact:

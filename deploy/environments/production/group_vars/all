@@ -1,5 +1,7 @@
 env: production
 django_project_branch: stable
+django_project_hg_root: stable
+
 apache_server_names:
   - darajati.kfupm.edu.sa
   - "{{ inventory_hostname }}"

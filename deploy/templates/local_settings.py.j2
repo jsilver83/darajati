@@ -1,11 +1,11 @@
-SECRET_KEY = '{{ secret_key.json.data.value }}'
+SECRET_KEY = '{{ secret_key }}'
 
 DATABASES = {
     'default': {
         'ENGINE': '{{ database_engine }}',
         'NAME': '{{ database_name }}',
         'USER': '{{ database_user }}',
-        'PASSWORD': '{{ database_password.json.data.value }}',
+        'PASSWORD': '{{ database_password }}',
         'HOST': '{{ database_host }}',
         'PORT': '{{ database_port }}',
     }
@@ -35,12 +35,12 @@ LOGOUT_REDIRECT_URL = '{{ cas_logout_url }}'
 FACULTY_WEB_SERVICE = 'https://banner-api.kfupm.edu.sa/darajati/periods/'
 ROSTER_WEB_SERVICE = 'https://banner-api.kfupm.edu.sa/darajati/roster/'
 BANNER_API_USER = 'darajati'
-BANNER_API_PASSWORD = '{{ banner_api_password.json.data.value }}'
+BANNER_API_PASSWORD = '{{ banner_api_password }}'
 
 EMAIL_HOST = '{{ email_host }}'
 EMAIL_PORT = '587'
 EMAIL_USE_LOCALTIME = True
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = '{{ email_user }}'
-EMAIL_HOST_PASSWORD = '{{ email_password.json.data.value }}'
+EMAIL_HOST_PASSWORD = '{{ email_password }}'
 SERVER_EMAIL = '{{ email_user }}'
