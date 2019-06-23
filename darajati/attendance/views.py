@@ -1,4 +1,6 @@
+from django.http import HttpResponse
 from django.contrib import messages
+from django.template.loader import render_to_string
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -160,6 +162,49 @@ class AttendancePrintView(InstructorBaseView, TemplateView):
         context['today'] = today()
 
         return context
+
+
+def attendance_print_sheet(request, section_id):
+    context = {}
+
+    enrollments = Enrollment.get_students_of_section(section_id).filter(active=True)
+    context['enrollments'] = [{
+        'pk': enrollment.pk,
+        'student': enrollment.student,
+        'absences': enrollment.get_enrollment_total_absence,
+        'lates': enrollment.get_enrollment_total_late,
+        'excuses': enrollment.get_enrollment_total_excuses,
+        'deduction': enrollment.get_enrollment_total_deduction
+    } for enrollment in enrollments]
+
+    days = [x[0] for x in ScheduledPeriod.Days.choices()]
+
+    context['section_days_periods'] = []
+
+    for day in days:
+        periods = ScheduledPeriod.get_section_periods_of_day(
+            section_id,
+            day,
+            request.user.instructor.is_coordinator_or_instructor()).order_by('start_time')
+
+        if periods:
+            context['section_days_periods'].append(periods)
+
+    context['instructor_name'] = request.user.instructor.name
+    context['today'] = today()
+
+    response = HttpResponse(content_type="application/pdf")
+    response['Content-Disposition'] = "inline; filename=sheet.pdf"
+
+    html = render_to_string("attendance/attendance_print_pdf.html", request=request, context=context)
+
+    from weasyprint.fonts import FontConfiguration
+    from weasyprint import HTML
+
+    font_config = FontConfiguration()
+
+    HTML(string=html).write_pdf(response, font_config=font_config)
+    return response
 
 
 class StudentAttendanceSummaryView(InstructorBaseView, ListView):

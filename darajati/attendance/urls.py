@@ -15,7 +15,8 @@ urlpatterns = [
          views.StudentAttendanceSummaryView.as_view(),
          name='attendance_summary'),
 
-    path('print/section/<int:section_id>/', views.AttendancePrintView.as_view(), name='section_attendance_print'),
+    # path('print/section/<int:section_id>/', views.AttendancePrintView.as_view(), name='section_attendance_print'),
+    path('print/section/<int:section_id>/', views.attendance_print_sheet, name='section_attendance_print'),
 
     path('excuses/', views.ExcusesListingView.as_view(), name='excuses_listing'),
     path('excuse-entry/', views.ExcuseEntryView.as_view(), name='excuse_entry'),

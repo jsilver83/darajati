@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+{% block content %}
+	<div class="content-panel">
+{#		<div class="cntnt-sec">#}
+			{% if enrollments %}
+				<div class="title-sec row">
+					<div class="col-md-9">
+						<h5>
+							{% trans 'Attendance Print For Section ' %}{{ section.code }}
+							<br>
+							<small> - {% trans "Printed by" %}: <b>{{ instructor_name }}</b>&emsp;&emsp;- {% trans "Date" %}: <b>{{ today }}</b>&emsp;&emsp;- <b>{% trans 'Legend' %}:</b>&nbsp;&nbsp;A= {% trans 'Unexcused Absence' %};&nbsp;&nbsp;L= {% trans 'Late' %};&nbsp;&nbsp;E= {% trans 'Excused Absence' %};&nbsp;&nbsp;D= {% trans 'Attendance Deduction' %}</small>
+						</h5>
+					</div>
+				</div>
+				<br>
+
+				<div class="thm-table period-cntnt">
+					<table class="table table-condensed table-bordered">
+						<thead>
+						<tr>
+{#							<th rowspan="2">{% trans 'No.' %}</th>#}
+							<th rowspan="2">{% trans 'ID' %}/{% trans 'Name' %}</th>
+							<th rowspan="2">A&nbsp;|&nbsp;L&nbsp;|&nbsp;E&nbsp;|&nbsp;D</th>
+							{% for day_periods in section_days_periods %}
+								<th style="text-align: center; border-left: 2px solid #ddd" colspan="{{ day_periods|length }}">{{ day_periods.0.day }}</th>
+							{% endfor %}
+						</tr>
+						<tr>
+							{% for day_periods in section_days_periods %}
+								{% for period in day_periods %}
+									<th>{{ period.start_time }}</th>
+								{% endfor %}
+							{% endfor %}
+						</tr>
+						</thead>
+						<tbody>
+						{% for enrollment in enrollments %}
+							<tr>
+								<td><span class="s80">{{ forloop.counter }})&nbsp;&nbsp;</span><span class="s90">{{ enrollment.student.university_id }}</span><br>
+									<span class="s90">{{ enrollment.student.name|truncatewords:2 }}</span>
+								</td>
+								<td>
+									<span class="s80">{{ enrollment.absences }}&nbsp;|&nbsp;{{ enrollment.lates }}&nbsp;|&nbsp;{{ enrollment.excuses }}&nbsp;|&nbsp;{{ enrollment.deduction }}</span>
+								</td>
+								{% for day_periods in section_days_periods %}
+									<td style="padding: 0.3%; vertical-align: central; text-align: center; border-left: 1px solid #ddd" colspan="{{ day_periods|length }}">
+{#											<span style="display:block; width:30px; height:20px; margin-right:6px; float:left" class="label label-default"></span>#}
+										<table class="table table-bordered" style="margin-bottom: 0;">
+											<tr>
+										{% for period in day_periods %}
+											    <td></td>
+										{% endfor %}
+											</tr>
+										</table>
+									</td>
+								{% endfor %}
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			{% else %}
+				{% trans 'There are no students' %}
+			{% endif %}
+
+{#		</div>#}
+	</div>
+{% endblock %}
+
+{% block style %}
+	<link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700,700i,900" rel="stylesheet" />
+
+	<style>
+		@page {
+			size: A4 landscape;
+			margin: .2cm .2cm .2cm .2cm;
+		}
+		body {
+			font-size: 90% !important;
+		}
+		table tr th {
+			font-size: 69% !important;
+		}
+		table tr td {
+			font-size: 80% !important;
+		}
+		table tr th, table tr td {
+			page-break-inside: avoid !important;
+			white-space: nowrap !important;
+		}
+		.header, .footer {
+			display: none!important;
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		td table tr td{
+			height: .4cm;
+		}
+		td {
+			border: 1px solid grey;
+			padding: .07cm;
+		}
+
+	</style>
+
+{#		#}
+{#	<style media="print">#}
+{#	@page {#}
+{#        size:  auto;   /* auto is the initial value */#}
+{#        margin: 0mm;  /* this affects the margin in the printer settings */#}
+{#    }#}
+{#    html {#}
+{#        background-color: #FFFFFF;#}
+{#        margin-bottom: 0px;  /* this affects the margin on the html before sending to printer */#}
+{#    }#}
+{#	body, table tr th, table tr td {#}
+{#		font-size: 97%!important;#}
+{#	}#}
+{#	table{#}
+{#        border-collapse:collapse;#}
+{#	}#}
+{##}
+{#	table tr th, table tr td {#}
+{#		page-break-inside: avoid!important;#}
+{#		white-space: nowrap!important;#}
+{#	}#}
+{#	.s80 {#}
+{#		font-size: 110%!important;#}
+{#	}#}
+{#	.s90 {#}
+{#		font-size: 120%!important;#}
+{#	}#}
+{#	.table-condensed > tbody > tr > td, .table-condensed > tbody > tr > th, .table-condensed > tfoot > tr > td, .table-condensed > tfoot > tr > th, .table-condensed > thead > tr > td, .table-condensed > thead > tr > th {#}
+{#		padding: 1.5px!important;#}
+{#	}#}
+{##}
+{#	/*thead {#}
+{#		display: none!important;#}
+{#	}#}
+{##}
+{#	thead:first-child {#}
+{#		display: table-header-group!important;#}
+{#	}*/#}
+{##}
+{#	thead {#}
+{#		display: table-row-group!important;#}
+{#	}#}
+{##}
+{##}
+{#	table {#}
+{#            -fs-table-paginate: paginate;#}
+{#        }#}
+{##}
+{#	</style>#}
+{% endblock style %}
