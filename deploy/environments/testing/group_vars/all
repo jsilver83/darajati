@@ -1,5 +1,7 @@
 env: testing
 django_project_branch: default
+django_project_hg_root: dev
+
 apache_server_names:
   - darajati.test.kfupm.edu.sa
 
