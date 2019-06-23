@@ -38,8 +38,11 @@ urlpatterns += i18n_patterns(
 
     # Exams
     re_path(r'exam/', include('exam.urls', namespace='exam')),
-
 )
+
+urlpatterns += [
+    path('explorer/', include('explorer.urls')),
+]
 
 if settings.DEBUG:
     import debug_toolbar

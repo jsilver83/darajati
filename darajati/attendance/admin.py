@@ -27,7 +27,7 @@ class AttendanceInstanceAdmin(admin.ModelAdmin):
                    'period__section__course_offering__course' )
     date_hierarchy = 'date'
     list_display = ('period', 'date', 'comment')
-    search_fields = ('period', 'date', 'comment')
+    search_fields = ('period__section__code', )
 
 
 class AttendanceAdmin(SimpleHistoryAdmin):

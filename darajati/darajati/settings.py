@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'simple_history',
     'django_celery_results',
     'impersonate',
+    'explorer',
 ]
 
 MIDDLEWARE = [
@@ -211,6 +212,9 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000  # The Limit exception i am getting is arou
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }
+
+EXPLORER_CONNECTIONS = {'default': 'default'}
+EXPLORER_DEFAULT_CONNECTION = 'default'
 
 try:
     from .local_settings import *
