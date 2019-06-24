@@ -78,10 +78,25 @@
         email_password: "{{ lookup('hashi_vault', 'secret=secret/{{ env }}/email/apps/darajati/email_password:value token={{ vault_access_token }} url={{ vault_url }} cacert={{ ssl_cert_path }}') }}"
       connection: local
 
-
     - name: Generate local settings
       set_fact:
         django_project_local_settings: "{{ lookup('template', 'local_settings.py.j2') }}"
+
+    - name: Install required software packages for WeasyPrint
+        apt: pkg="{{ item }}" state=installed
+        with_items:
+          - build-essential
+          - python3-dev
+          - python3-pip
+          - python3-setuptools
+          - python3-wheel
+          - python3-cffi
+          - libcairo2
+          - libpango-1.0-0
+          - libpangocairo-1.0-0
+          - libgdk-pixbuf2.0-0
+          - libffi-dev
+          - shared-mime-infol
 
   roles:
     - django-project
