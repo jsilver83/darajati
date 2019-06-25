@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_celery_results',
     'impersonate',
     'explorer',
+    'session_security',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
+    'session_security.middleware.SessionSecurityMiddleware',
     'impersonate.middleware.ImpersonateMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -215,6 +217,10 @@ MESSAGE_TAGS = {
 
 EXPLORER_CONNECTIONS = {'default': 'default'}
 EXPLORER_DEFAULT_CONNECTION = 'default'
+
+SESSION_SECURITY_WARN_AFTER = 60
+SESSION_SECURITY_EXPIRE_AFTER = 65
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 try:
     from .local_settings import *

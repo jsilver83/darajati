@@ -42,6 +42,7 @@ urlpatterns += i18n_patterns(
 
 urlpatterns += [
     path('explorer/', include('explorer.urls')),
+    path('session_security/', include('session_security.urls')),
 ]
 
 if settings.DEBUG:
