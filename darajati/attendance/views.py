@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib import messages
 from django.template.loader import render_to_string
@@ -6,6 +7,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.dateparse import parse_date
 from django.utils.translation import ugettext_lazy as _
+from django.views import View
 from django.views.generic import ListView, CreateView, TemplateView
 from extra_views import FormSetView
 
@@ -129,8 +131,8 @@ class AttendanceView(AttendanceBaseView, FormSetView):
         return reverse_lazy('attendance:section_attendance', kwargs=kwargs)
 
 
-class AttendancePrintView(InstructorBaseView, TemplateView):
-    template_name = 'attendance/attendance_print.html'
+class AttendancePrintView(InstructorBaseView, View):
+    template_name = 'attendance/attendance_print_pdf.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -163,7 +165,22 @@ class AttendancePrintView(InstructorBaseView, TemplateView):
 
         return context
 
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(content_type="application/pdf")
+        response['Content-Disposition'] = "inline; filename=sheet.pdf"
 
+        html = render_to_string("attendance/attendance_print_pdf.html", request=request, context=self.get_context_data())
+
+        from weasyprint.fonts import FontConfiguration
+        from weasyprint import HTML
+
+        font_config = FontConfiguration()
+
+        HTML(string=html).write_pdf(response, font_config=font_config)
+        return response
+
+
+@login_required
 def attendance_print_sheet(request, section_id):
     context = {}
 
