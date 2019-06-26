@@ -242,6 +242,8 @@ class AttendanceInstance(models.Model):
 
     class Meta:
         ordering = ['-date']
+        # TODO: fix the aggressive page loading that caused duplicate AttendanceInstance objects
+        unique_together = ('period', 'date')
 
     def __str__(self):
         return to_string(self.period, self.date)
