@@ -1,83 +1,14 @@
-{% extends "base.html" %}
 {% load i18n staticfiles %}
 {% load humanize %}
-{% block content %}
-	<div class="content-panel">
-{#		<div class="cntnt-sec">#}
-			{% if enrollments %}
-				<div class="title-sec row">
-					<div class="col-md-9">
-						<h5>
-							{% trans 'Attendance Print For Section ' %}{{ section.code }}
-							<br>
-							<small> - {% trans "Printed by" %}: <b>{{ instructor_name }}</b>&emsp;&emsp;- {% trans "Date" %}: <b>{{ today }}</b>&emsp;&emsp;- <b>{% trans 'Legend' %}:</b>&nbsp;&nbsp;A= {% trans 'Unexcused Absence' %};&nbsp;&nbsp;L= {% trans 'Late' %};&nbsp;&nbsp;E= {% trans 'Excused Absence' %};&nbsp;&nbsp;D= {% trans 'Attendance Deduction' %}</small>
-						</h5>
-					</div>
-				</div>
-				<div class="thm-table period-cntnt">
-					<table class="table table-condensed table-bordered">
-						<thead>
-						<tr>
-							<th style="width: 23%"></th>
-							<th style="width: 12%"></th>
-							{% for day_periods in section_days_periods %}
-								<th style="text-align: center; width: 13%">{{ day_periods.0.day }}</th>
-							{% endfor %}
-						</tr>
-						<tr>
-							<th>{% trans 'ID' %}/{% trans 'Name' %}</th>
-							<th>A&nbsp;|&nbsp;L&nbsp;|&nbsp;E&nbsp;|&nbsp;D</th>
-							{% for day_periods in section_days_periods %}
-							<th style="text-align: center">
-								<table style="margin-bottom: 0;">
-									<tr>
-										{% for period in day_periods %}
-											{% if day_periods|length > 2 %}
-											<th>{{ forloop.counter|ordinal }}</th>
-											{% else %}
-											<th>{{ period.start_time }}</th>
-											{% endif %}
-										{% endfor %}
-									</tr>
-								</table>
-							</th>
-							{% endfor %}
-						</tr>
-						</thead>
-						<tbody>
-						{% for enrollment in enrollments %}
-							<tr>
-								<td style="width: 15%"><span class="s80">{{ forloop.counter }})&nbsp;&nbsp;</span><span class="s90">{{ enrollment.student.university_id }}</span><br>
-									<span class="s90">{{ enrollment.student.name|truncatewords:2 }}</span>
-								</td>
-								<td>
-									<span class="s80">{{ enrollment.absences }}&nbsp;|&nbsp;{{ enrollment.lates }}&nbsp;|&nbsp;{{ enrollment.excuses }}&nbsp;|&nbsp;{{ enrollment.deduction }}</span>
-								</td>
-								{% for day_periods in section_days_periods %}
-									<td style="padding: 0.3%; vertical-align: central; text-align: center; border-left: 1px solid #ddd">
-{#											<span style="display:block; width:30px; height:20px; margin-right:6px; float:left" class="label label-default"></span>#}
-										<table class="table table-bordered" style="margin-bottom: 0;">
-											<tr>
-										{% for period in day_periods %}
-											    <td></td>
-										{% endfor %}
-											</tr>
-										</table>
-									</td>
-								{% endfor %}
-							</tr>
-						{% endfor %}
-						</tbody>
-					</table>
-				</div>
-			{% else %}
-				{% trans 'There are no students' %}
-			{% endif %}
-{#		</div>#}
-	</div>
-{% endblock %}
 
-{% block style %}
+<!DOCTYPE html>
+{% if LANGUAGE_CODE == 'ar' %}
+    <html lang="en" dir="rtl">
+{% else %}
+    <html lang="en" dir="ltr">
+{% endif %}
+<head>
+	<meta charset="utf-8">
 	<style>
 		@page {
 			size: A4 landscape;
@@ -95,19 +26,16 @@
 		table tr th, table tr td {
 			page-break-inside: avoid !important;
 			white-space: nowrap !important;
-			overflow: hidden!important;
-		}
-		.header, .footer {
-			display: none!important;
+			overflow: hidden !important;
 		}
 		table {
 			width: 100%;
 			border-collapse: collapse;
 		}
 		.table {
-			{#table-layout: fixed!important;#}
+			table-layout: fixed!important;
 		}
-		td table tr td, td table tr th{
+		td table tr td, td table tr th {
 			height: .4cm;
 			padding: .1cm;
 		}
@@ -119,4 +47,83 @@
 			width: 99%;
 		}
 	</style>
-{% endblock style %}
+</head>
+<body>
+<div class="content-panel">
+	{% if enrollments %}
+		<div class="title-sec row">
+			<div class="col-md-9">
+				<h5>
+					{% trans 'Attendance Print For Section ' %}{{ section.code }}
+					<br>
+					<small> - {% trans "Printed by" %}: <b>{{ instructor_name }}</b>&emsp;&emsp;- {% trans "Date" %}:
+						<b>{{ today }}</b>&emsp;&emsp;-
+						<b>{% trans 'Legend' %}:</b>&nbsp;&nbsp;A= {% trans 'Unexcused Absence' %};&nbsp;&nbsp;L= {% trans 'Late' %};&nbsp;&nbsp;E= {% trans 'Excused Absence' %};&nbsp;&nbsp;D= {% trans 'Attendance Deduction' %}
+					</small>
+				</h5>
+			</div>
+		</div>
+		<div class="thm-table period-cntnt">
+			<table class="table table-condensed table-bordered">
+				<thead>
+				<tr>
+					<th style="width: 23%"></th>
+					<th style="width: 12%"></th>
+					{% for day_periods in section_days_periods %}
+						<th style="text-align: center; width: 13%">{{ day_periods.0.day }}</th>
+					{% endfor %}
+				</tr>
+				<tr>
+					<th>{% trans 'ID' %}/{% trans 'Name' %}</th>
+					<th>A&nbsp;|&nbsp;L&nbsp;|&nbsp;E&nbsp;|&nbsp;D</th>
+					{% for day_periods in section_days_periods %}
+						<th style="text-align: center">
+							<table style="margin-bottom: 0;">
+								<tr>
+									{% for period in day_periods %}
+										{% if day_periods|length > 2 %}
+											<th>{{ forloop.counter|ordinal }}</th>
+										{% else %}
+											<th>{{ period.start_time }}</th>
+										{% endif %}
+									{% endfor %}
+								</tr>
+							</table>
+						</th>
+					{% endfor %}
+				</tr>
+				</thead>
+				<tbody>
+				{% for enrollment in enrollments %}
+					<tr>
+						<td style="width: 15%">
+							<span class="s80">{{ forloop.counter }})&nbsp;&nbsp;</span><span class="s90">{{ enrollment.student.university_id }}</span><br>
+							<span class="s90">{{ enrollment.student.name|truncatewords:2 }}</span>
+						</td>
+						<td>
+							<span class="s80">{{ enrollment.absences }}&nbsp;|&nbsp;{{ enrollment.lates }}&nbsp;|&nbsp;{{ enrollment.excuses }}&nbsp;|&nbsp;{{ enrollment.deduction }}</span>
+						</td>
+						{% for day_periods in section_days_periods %}
+							<td style="padding: 0.3%; vertical-align: central; text-align: center; border-left: 1px solid #ddd">
+								{#											<span style="display:block; width:30px; height:20px; margin-right:6px; float:left" class="label label-default"></span>#}
+								<table class="table table-bordered" style="margin-bottom: 0;">
+									<tr>
+										{% for period in day_periods %}
+											<td></td>
+										{% endfor %}
+									</tr>
+								</table>
+							</td>
+						{% endfor %}
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	{% else %}
+		{% trans 'There are no students' %}
+	{% endif %}
+</div>
+</body>
+</html>
+
