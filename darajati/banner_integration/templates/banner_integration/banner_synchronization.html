@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+	<div class="content-panel">
+		<div class="cntnt-sec">
+			<form method="post" class="form-horizontal">
+				{% csrf_token %}
+
+				<div style="display: {% if previewed %}none{% endif %}">
+				{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+				</div>
+				<br>
+				<div class=" pull-right">
+					{% if previewed %}
+						<input class="thm-btn btn-danger save-btn" type="submit" name="commit"
+						       value="{% trans 'Commit Changes' %}">
+					{% else %}
+						<input class="thm-btn save-btn" type="submit" name="preview"
+						       value="{% trans 'Run Comparison With Banner' %}">
+					{% endif %}
+					&nbsp;&nbsp;&nbsp;&nbsp;<a class="thm-btn btn-warning save-btn" href="#">{% trans 'Cancel' %}</a>
+				</div>
+			</form>
+			<br><br><br><br>
+
+			<div class="title-sec">
+
+				{% if enrollments_changes_report %}
+					<h3 class="text-center">{% trans 'Enrollments Changes Report' %}</h3>
+					<div class="alert alert-info text-center">
+						{% trans 'The total number of changes that will be applied for enrollments are' %}&nbsp;{{ enrollments_changes_report|length }}
+					</div>
+					<table class="table table-bordered">
+						<thead>
+						<tr>
+							<th class="text-center">{% trans 'No.' %}</th>
+							<th>{% trans 'Code' %}</th>
+							<th>{% trans 'Message' %}</th>
+						</tr>
+						</thead>
+						<tbody>
+						{% for item in enrollments_changes_report %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ item.code }}</td>
+								<td>{{ item.message }}</td>
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+					<hr>
+					<br>
+				{% endif %}
+
+				{% if sections_changes_report %}
+					<h3 class="text-center">{% trans 'Sections Changes Report' %}</h3>
+					<div class="alert alert-info text-center">
+						{% trans 'The total number of changes that will be applied for sections are' %}&nbsp;{{ sections_changes_report|length }}
+					</div>
+					<table class="table table-bordered">
+						<thead>
+						<tr>
+							<th class="text-center">{% trans 'No.' %}</th>
+							<th>{% trans 'Code' %}</th>
+							<th>{% trans 'Message' %}</th>
+						</tr>
+						</thead>
+						<tbody>
+						{% for item in sections_changes_report %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ item.code }}</td>
+								<td>{{ item.message }}</td>
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+					<hr>
+					<br>
+				{% endif %}
+
+				{% if periods_changes_report %}
+					<h3 class="text-center">{% trans 'Schedualed Periods Changes Report' %}</h3>
+					<div class="alert alert-info text-center">
+						{% trans 'The total number of changes that will be applied for scheduled periods are' %}&nbsp;{{ periods_changes_report|length }}
+					</div>
+					<table class="table table-bordered">
+						<thead>
+						<tr>
+							<th class="text-center">{% trans 'No.' %}</th>
+							<th>{% trans 'Code' %}</th>
+							<th>{% trans 'Message' %}</th>
+						</tr>
+						</thead>
+						<tbody>
+						{% for item in periods_changes_report %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ item.code }}</td>
+								<td>{{ item.message }}</td>
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+					<hr>
+					<br>
+				{% endif %}
+
+				{% if serious_issues %}
+					<h3 class="text-center">{% trans 'Serious Issues Report' %}</h3>
+					<div class="alert alert-info text-center">
+						{% trans 'The following issue(s) are REALLY serious and you need to contact the system admins to resolve them ASAP' %}
+					</div>
+					<table class="table table-bordered">
+						<thead>
+						<tr>
+							<th class="text-center">{% trans 'No.' %}</th>
+							<th>{% trans 'Urgency' %}</th>
+							<th>{% trans 'Code' %}</th>
+							<th>{% trans 'Message' %}</th>
+							<th>{% trans 'Concerned Object' %}</th>
+						</tr>
+						</thead>
+						<tbody>
+						{% for item in serious_issues %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ item.urgency }}</td>
+								<td>{{ item.code }}</td>
+								<td>{{ item.message }}</td>
+								<td>{{ item.object }}</td>
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+				{% endif %}
+
+			</div>
+		</div>
+	</div>
+{% endblock %}

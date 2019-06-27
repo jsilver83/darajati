@@ -61,5 +61,13 @@ URGENT:
 - fix all dispatch = super() ... return dispatch
 - fake change
 
+25 April 2019
+- in grade bulk upload page, before applying the grades, mark all active students grade as 0
+- attendance sheet printout
+- restrict EP sections to be between 30 and 48(or 49?) only
+
+15 June 2019
+- apply grades should be per course offering and it should be applicable any time during the semester
+
 """
 

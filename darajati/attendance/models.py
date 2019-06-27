@@ -61,12 +61,7 @@ class ScheduledPeriod(models.Model):
                              self.start_time,
                              self.end_time)
         except:
-            return to_string(self.section.course_offering,
-                             self.section.code,
-                             '',
-                             self.day,
-                             self.start_time,
-                             self.end_time)
+            return 'INVALID PERIOD'
 
     @staticmethod
     def get_period(period_id=None):
@@ -200,6 +195,7 @@ class ScheduledPeriod(models.Model):
 
         return period_dates, result_previous_week, result_next_week
 
+    # TODO remove
     @staticmethod
     def is_period_exists(section, instructor, day, start_time, end_time):
         """
