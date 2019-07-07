@@ -7,7 +7,7 @@
 				{% csrf_token %}
 
 				<div style="display: {% if previewed %}none{% endif %}">
-				{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+					{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
 				</div>
 				<br>
 				<div class=" pull-right">
@@ -18,7 +18,8 @@
 						<input class="thm-btn save-btn" type="submit" name="preview"
 						       value="{% trans 'Run Comparison With Banner' %}">
 					{% endif %}
-					&nbsp;&nbsp;&nbsp;&nbsp;<a class="thm-btn btn-warning save-btn" href="#">{% trans 'Cancel' %}</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;<input class="thm-btn btn-warning save-btn" type="submit" name="cancel"
+					                               value="{% trans 'Cancel' %}">
 				</div>
 			</form>
 			<br><br><br><br>

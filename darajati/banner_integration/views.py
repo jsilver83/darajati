@@ -52,6 +52,11 @@ class BannerSynchronizationView(CoordinatorBaseView, FormView):
                                              'below, you can NOT roll them back'))
             return self.render_to_response(context)
 
+        elif 'cancel' in self.request.POST:
+            messages.warning(self.request, _('You chose to cancel committing the changes of the synchronization which '
+                                             'means they were NOT applied'))
+            return redirect('banner_integration:synchronization')
+
         else:  # if 'commit' in self.request.POST:
             try:
                 synchronization(course_offering_pk=form.cleaned_data['course_offering'],

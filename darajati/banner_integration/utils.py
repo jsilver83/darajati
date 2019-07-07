@@ -454,7 +454,11 @@ def get_student_record(student_university_id, enrollments_in_banner):
     return next((s for s in enrollments_in_banner if s["stu_id"] == student_university_id), None)
 
 
-def get_or_create_student(student_university_id, enrollments_in_banner, students_to_be_updated):
+def get_or_create_student(student_university_id, enrollments_in_banner, students_to_be_updated, existing_students_list):
+    for student in existing_students_list:
+        if student_university_id == student.university_id:
+            return student
+
     student_record = get_student_record(student_university_id, enrollments_in_banner)
 
     student, created = Student.objects.get_or_create(university_id=student_university_id)
@@ -468,9 +472,17 @@ def get_or_create_student(student_university_id, enrollments_in_banner, students
     return student
 
 
-def get_section_by_crn(crn, course_offering):
+def get_section_by_crn(crn, course_offering, fetched_sections, sections_to_be_created):
+    for section in fetched_sections:  # Try to fetch it from previous fetched sections
+        if section.crn == crn and section.course_offering == course_offering:
+            return section
+    for section in sections_to_be_created:  # Try to fetch it from sections to be created
+        if section.crn == crn and section.course_offering == course_offering:
+            return section
     try:
-        return Section.objects.get(crn=crn, course_offering=course_offering)
+        section = Section.objects.get(crn=crn, course_offering=course_offering)
+        fetched_sections.append(section)
+        return section
     except:
         pass
 
@@ -562,6 +574,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
     sections_changes_report = []
     sections_to_be_created = []
     sections_to_be_updated = []
+    fetched_sections = []
 
     periods_changes_report = []
     teachers_to_be_updated = []
@@ -643,26 +656,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
         # endregion sync sections
 
         # region sync sections' scheduled periods
-
-        v = {
-            # 'dept': 'ELI',
-            # 'sem': '201820-FH',
-            # 'name': 'FERNELIUS, MARK  ',
-            # 'sec_code': 'ENGL09-09',
-            # 'fac_id': '007140453',
-            'user': 'mfernelius',
-            'bldg': '58',
-            # 'crs_name': 'Prep. English IV',
-            'room': '2063',
-            # 'status': 'Open for Registraion',
-            'end_time': '0850',
-            'activity': 'LEC',
-            'class_days': 'UMTWR',
-            'crn': '24360',
-            'start_time': '0800',
-            # 'email': 'mfernelius@kfupm.edu.sa'
-        }
-
+        
         # TODO: add an endpoint in banner-api to get all periods using only course_offering
         all_scheduled_periods_banner = []
         for crn in unique_sections_crns_in_banner:
@@ -692,7 +686,8 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
 
                     first_match = None
                     if not matching_periods:
-                        the_section = get_section_by_crn(banner_period['crn'], course_offering)
+                        the_section = get_section_by_crn(banner_period['crn'], course_offering, fetched_sections,
+                                                         sections_to_be_created)
                         new_period = ScheduledPeriod()
                         new_period.section = the_section
                         new_period.instructor_assigned = get_or_create_teacher(banner_period['user'],
@@ -709,12 +704,13 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                         if the_section:
                             periods_to_be_created.append(new_period)
 
+                            verb = 'got' if commit else 'will be'
                             periods_changes_report.append(
                                 {
                                     'code': 'NEW PERIOD',
-                                    'message': '%s (%s - %s) [%s], taught by (%s), for section %s will be created' %
+                                    'message': '%s (%s - %s) [%s], taught by (%s), for section %s %s created' %
                                                (day, start_time, end_time, banner_period['activity'],
-                                                banner_period['user'], the_section.code,),
+                                                banner_period['user'], the_section.code, verb),
                                 }
                             )
                         else:
@@ -778,13 +774,14 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                     }
                 )
 
-        periods_changes_report.append(
-            {
-                'code': 'DUPLICATE PERIODS',
-                'message': '%s periods will be deleted because they are duplicated' %
-                           count_of_duplicated_periods_that_will_be_deleted,
-            }
-        )
+        if count_of_duplicated_periods_that_will_be_deleted:
+            periods_changes_report.append(
+                {
+                    'code': 'DUPLICATE PERIODS',
+                    'message': '%s periods will be deleted because they are duplicated' %
+                               count_of_duplicated_periods_that_will_be_deleted,
+                }
+            )
 
         # print(periods_changes_report)
         # print(teachers_to_be_updated)
@@ -800,6 +797,10 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                               'crn': d['crn'],
                               'grade': (str(d['grade']).lower() if d['grade'] else None)}
                              for d in class_roster]
+
+    existing_students_list = list(Student.objects.filter(
+        university_id__in=Enrollment.objects.filter(section__course_offering=course_offering).values('student__university_id')
+    ))
 
     # TODO: include select related
     existing_enrollments = Enrollment.objects.annotate(
@@ -842,10 +843,11 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             existing_dropped_enrollments_wo_grade))
 
         if not found_currently_active and not found_currently_inactive:
-            new_section = get_section_by_crn(enrollment['crn'], course_offering)
+            new_section = get_section_by_crn(enrollment['crn'], course_offering, fetched_sections,
+                                             sections_to_be_created)
             new_enrollment = Enrollment()
             new_enrollment.student = get_or_create_student(enrollment['university_id'],
-                                                           class_roster, students_to_be_updated)
+                                                           class_roster, students_to_be_updated, existing_students_list)
             new_enrollment.register_date = get_student_record(enrollment['university_id'],
                                                               class_roster).get('register_date')
             new_enrollment.letter_grade = enrollment['grade']
@@ -854,10 +856,11 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             new_enrollment.section = new_section
             if new_section:
                 enrollments_to_be_created.append(new_enrollment)
+                verb = 'got' if commit else 'will be'
                 enrollments_changes_report.append(
                     {
                         'code': 'NEW',
-                        'message': '%s got created' % enrollment['university_id'],
+                        'message': '%s %s created' % (enrollment['university_id'], verb),
                     }
                 )
             else:
@@ -915,7 +918,8 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 student__university_id=enrollment['university_id'],
                 section__course_offering=course_offering,
             )
-            new_section = get_section_by_crn(enrollment['crn'], course_offering)
+            new_section = get_section_by_crn(enrollment['crn'], course_offering, fetched_sections,
+                                             sections_to_be_created)
             moved_enrollment.active = False
             moved_enrollment.comment = 'Moved to another section (%s)' % str(new_section)
             moved_enrollment.updated_by = current_user
