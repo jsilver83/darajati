@@ -9,7 +9,7 @@ from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 
-from attendance.models import ScheduledPeriod
+from attendance.models import ScheduledPeriod, AttendanceInstance
 from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from enrollment.utils import get_local_datetime_format
 from .test_banner_data import class_rhasta
@@ -468,6 +468,7 @@ def get_or_create_student(student_university_id, enrollments_in_banner, students
         student.english_name = student_record.get('name_en')
         student.mobile = student_record.get('mobile')
         student.personal_email = student_record.get('email')
+        student.active = True
         students_to_be_updated.append(student)
     return student
 
@@ -485,6 +486,14 @@ def get_section_by_crn(crn, course_offering, fetched_sections, sections_to_be_cr
         return section
     except:
         pass
+
+
+def update_sections_pks(enrollments_or_periods, sections_to_be_created):
+    for enrollment_or_period in enrollments_or_periods:
+        for section in sections_to_be_created:
+            if enrollment_or_period.section.crn == section.crn and enrollment_or_period.section.course_offering == section.course_offering:
+                enrollment_or_period.section = section
+                break
 
 
 inactive_letter_grades = ['w', 'wp', 'wf', 'ic', 'dn']
@@ -512,18 +521,28 @@ def get_period_location(building, room):
 
 
 def get_teacher_record(teacher_user_id, all_scheduled_periods_banner):
-    return next((s for s in all_scheduled_periods_banner if s["user"] == teacher_user_id), None)
+    for period in all_scheduled_periods_banner:
+        if period["user"] == teacher_user_id:
+            return {
+                'fac_id': period.get('fac_id'),
+                'user': period.get('user'),
+                'email': period.get('email'),
+                'name': period.get('name'),
+            }
 
 
 def get_or_create_teacher(teacher_user_id, all_scheduled_periods_banner, teachers_to_be_updated):
     teacher_record = get_teacher_record(teacher_user_id, all_scheduled_periods_banner)
 
-    teacher, created = Instructor.objects.get_or_create(user__username=teacher_user_id)
+    user, created = User.objects.get_or_create(username=teacher_user_id)
+
+    teacher, created = Instructor.objects.get_or_create(user=user)
 
     if created:
         teacher.english_name = teacher_record.get('name')
         teacher.university_id = teacher_record.get('fac_id')
         teacher.personal_email = teacher_record.get('email')
+        teacher.active = True
         teachers_to_be_updated.append(teacher)
     return teacher
 
@@ -898,6 +917,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 enrollment_to_be_reactivated.register_date = get_student_record(enrollment['university_id'],
                                                                                 class_roster
                                                                                 ).get('register_date')
+                enrollment_to_be_reactivated.updated_by = current_user
                 enrollments_to_be_updated.append(enrollment_to_be_reactivated)
                 enrollments_changes_report.append(
                     {
@@ -1017,12 +1037,37 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
 
     # endregion sync enrollments
 
+    # This needs to be done even if commit is False since records of these students have been created with minimal data.
+    # The only downside to this approach is storage utilization...
+    # The alternative is to delete them if commit is False but performance-wise, it is worse since it will require more
+    # trips to the DB
+    if first_week_mode:
+        with transaction.atomic():
+            Student.objects.bulk_update(students_to_be_updated,
+                                        ['arabic_name', 'english_name', 'mobile', 'personal_email'], batch_size=100)
+            Instructor.objects.bulk_update(teachers_to_be_updated,
+                                           ['english_name', 'university_id', 'personal_email'], batch_size=100)
+
     if commit:
         with transaction.atomic():
-            Section.objects.bulk_create(sections_to_be_created)
-            ScheduledPeriod.objects.bulk_create(periods_to_be_created)
-            Enrollment.objects.bulk_create(enrollments_to_be_created)
+            # CREATE
+            Section.objects.bulk_create(sections_to_be_created, batch_size=100)
 
-            pass
+            update_sections_pks(periods_to_be_created, sections_to_be_created)
+            ScheduledPeriod.objects.bulk_create(periods_to_be_created, batch_size=100)
+
+            update_sections_pks(enrollments_to_be_created, sections_to_be_created)
+            Enrollment.objects.bulk_create(enrollments_to_be_created, batch_size=100)
+
+            # UPDATE
+            AttendanceInstance.objects.bulk_update(attendance_instances_to_be_updated, ['period'], batch_size=100)
+            ScheduledPeriod.objects.bulk_update(periods_to_be_updated,
+                                                ['instructor_assigned', 'location', 'title'], batch_size=100)
+            Enrollment.objects.bulk_update(enrollments_to_be_updated,
+                                           ['active', 'comment', 'letter_grade', 'register_date'], batch_size=100)
+
+            # DELETE
+            for period in periods_to_be_deleted:
+                ScheduledPeriod.objects.filter(pk=period.get('pk', 0)).delete()
 
     return [enrollments_changes_report, sections_changes_report, periods_changes_report, serious_issues]
