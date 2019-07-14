@@ -20,7 +20,7 @@ class Person(models.Model):
     an abstract class that will be inherited by Student and Instructor
     """
 
-    university_id = models.CharField(_('university id'), max_length=20, null=True, blank=True)
+    university_id = models.CharField(_('university id'), max_length=20, null=True, blank=True, unique=True)
     government_id = models.CharField(_('government id'), max_length=20, null=True, blank=True)
     english_name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
@@ -48,7 +48,8 @@ class Person(models.Model):
 
 
 class Student(Person):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True,
+                                unique=True)
 
     class Meta:
         ordering = ('university_id',)
@@ -80,7 +81,8 @@ class Student(Person):
 
 
 class Instructor(Person):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True,
+                                unique=True)
 
     class Meta:
         ordering = ('-user__is_superuser', '-user__is_staff', 'english_name', 'university_id')
