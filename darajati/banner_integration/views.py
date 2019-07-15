@@ -43,14 +43,18 @@ class BannerSynchronizationView(CoordinatorBaseView, FormView):
                                           first_week_mode=form.cleaned_data['first_week_mode'], )
             context['previewed'] = True
 
-            context['enrollments_changes_report'] = sync_report[0]
-            context['sections_changes_report'] = sync_report[1]
-            context['periods_changes_report'] = sync_report[2]
-            context['serious_issues'] = sync_report[3]
-            messages.warning(self.request, _('Kindly review the synchronization report below carefully before '
-                                             'committing the changes. If you commit the changes listed in the report '
-                                             'below, you can NOT roll them back'))
-            return self.render_to_response(context)
+            if not (sync_report[0] or sync_report[1] or sync_report[2] or sync_report[3]):
+                messages.success(self.request, _('Everything seems to be in-sync'))
+                return redirect('banner_integration:synchronization')
+            else:
+                context['enrollments_changes_report'] = sync_report[0]
+                context['sections_changes_report'] = sync_report[1]
+                context['periods_changes_report'] = sync_report[2]
+                context['serious_issues'] = sync_report[3]
+                messages.warning(self.request, _('Kindly review the synchronization report below carefully before '
+                                                 'committing the changes. If you commit the changes listed in the '
+                                                 'report below, you can NOT roll them back'))
+                return self.render_to_response(context)
 
         elif 'cancel' in self.request.POST:
             messages.warning(self.request, _('You chose to cancel committing the changes of the synchronization which '
