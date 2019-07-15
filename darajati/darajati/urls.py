@@ -22,11 +22,10 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = i18n_patterns(
-    re_path(r'^login/$', views.login, {'template_name': 'login.html', 'redirect_authenticated_user': True},
-            name='login'),
-    re_path(r'^admin/', admin.site.urls),
+    path('login/', views.LoginView.as_view(template_name='login.html', redirect_authenticated_user=True), name='login'),
+    path('admin/', admin.site.urls),
     re_path(r'^impersonate/', include('impersonate.urls')),
-    path('logout/', views.logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
+    path('logout/', views.LogoutView.as_view(next_page=settings.LOGOUT_REDIRECT_URL), name='logout'),
 )
 
 urlpatterns += i18n_patterns(
@@ -48,5 +47,5 @@ urlpatterns += [
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
-                      re_path(r'^debug/', include(debug_toolbar.urls)),
+                      path('__debug__/', include(debug_toolbar.urls)),
                   ] + urlpatterns

@@ -1984,6 +1984,10 @@ blockquote.card-blockquote p span, blockquote.card-blockquote p b {
 .err-mss ul {
     margin-left: 5% !important;
 }
+
+.form-group ul{
+  list-style: none!important;
+}
 /* end of addition by joud */
 
 /* added by malnajdi */

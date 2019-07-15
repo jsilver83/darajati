@@ -10,7 +10,7 @@ from simple_history.models import HistoricalRecords
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
 from .data_types import RoundTypes
-from .utils import to_string, now, today, attendance_boundary
+from .utils import to_string, now, today
 
 User = settings.AUTH_USER_MODEL
 
@@ -20,7 +20,7 @@ class Person(models.Model):
     an abstract class that will be inherited by Student and Instructor
     """
 
-    university_id = models.CharField(_('university id'), max_length=20, null=True, blank=True)
+    university_id = models.CharField(_('university id'), max_length=20, null=True, blank=True, unique=True)
     government_id = models.CharField(_('government id'), max_length=20, null=True, blank=True)
     english_name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
@@ -48,10 +48,11 @@ class Person(models.Model):
 
 
 class Student(Person):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student', null=True, blank=True,
+                                unique=True)
 
     class Meta:
-        ordering = ('university_id', )
+        ordering = ('university_id',)
 
     def __str__(self):
         return to_string(self.english_name, self.university_id)
@@ -80,7 +81,8 @@ class Student(Person):
 
 
 class Instructor(Person):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor', null=True, blank=True,
+                                unique=True)
 
     class Meta:
         ordering = ('-user__is_superuser', '-user__is_staff', 'english_name', 'university_id')
@@ -153,7 +155,7 @@ class Semester(models.Model):
     description = models.CharField(max_length=255, null=True, blank=False)
 
     class Meta:
-        ordering = ('-start_date', 'code', )
+        ordering = ('-start_date', 'code',)
 
     def __str__(self):
         return to_string(self.code)
@@ -181,7 +183,7 @@ class Department(models.Model):
     code = models.CharField(max_length=10, null=True, blank=False)
 
     class Meta:
-        ordering = ('code', 'name', )
+        ordering = ('code', 'name',)
 
     def __str__(self):
         return to_string(self.name, self.code)
@@ -190,12 +192,13 @@ class Department(models.Model):
 class Course(models.Model):
     name = models.CharField(_('english name'), max_length=255, null=True, blank=False)
     arabic_name = models.CharField(_('arabic name'), max_length=255, null=True, blank=False)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, related_name='courses', null=True, blank=False)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, related_name='courses', null=True,
+                                   blank=False)
     code = models.CharField(max_length=20, null=True, blank=False)
     description = models.CharField(max_length=255, null=True, blank=False)
 
     class Meta:
-        ordering = ('department', 'code', 'name', )
+        ordering = ('department', 'code', 'name',)
 
     def __str__(self):
         return to_string(self.code)
@@ -247,11 +250,12 @@ class CourseOffering(models.Model):
     )
 
     class Meta:
-        ordering = ('semester', 'course', )
+        ordering = ('semester', 'course',)
 
     def __str__(self):
         return to_string(self.semester, self.course)
 
+    # TODO: remove; useless
     @staticmethod
     def get_course_offering(course_offering_id):
         """
@@ -269,14 +273,6 @@ class CourseOffering(models.Model):
         :return: active semesters' course offerings
         """
         return CourseOffering.objects.filter(semester__start_date__lte=now(), semester__end_date__gte=now())
-
-    @staticmethod
-    def get_current_course_offerings():
-        """
-        :return: current semester course_offering_id and 'semester code - course code'
-        """
-        return [(course_offering.pk, str(course_offering))
-                for course_offering in CourseOffering.get_active_course_offerings()]
 
 
 class Section(models.Model):
@@ -305,7 +301,7 @@ class Section(models.Model):
     active = models.BooleanField(_('Active'), default=False)
 
     class Meta:
-        ordering = ('course_offering', 'code', )
+        ordering = ('course_offering', 'code',)
 
     def __str__(self):
         return to_string(self.course_offering, self.code)
@@ -406,14 +402,14 @@ class Coordinator(models.Model):
     )
 
     class Meta:
-        ordering = ('course_offering', 'instructor', )
+        ordering = ('course_offering', 'instructor',)
 
     def __str__(self):
         return to_string(self.course_offering, self.instructor)
 
     # FIXME: instructor param cannot be None or else the ORM will throw an exception
     @staticmethod
-    def get_coordinator(instructor=None):
+    def get_coordinator(instructor):
         """        
         :param instructor: an instructor instance 
         :return:  list of coordinated course offering of this instructor
@@ -421,16 +417,24 @@ class Coordinator(models.Model):
         return Coordinator.objects.filter(instructor=instructor)
 
     @staticmethod
-    def is_coordinator(instructor=None):
+    def is_coordinator(instructor):
         """
         :param instructor: an instructor instance 
         :return: True if current instructor is coordinating at least one course offering
         else False
         """
-        coordinator = Coordinator.get_coordinator(instructor)
-        if coordinator:
-            return True
-        return False
+        return Coordinator.get_coordinator(instructor).exists()
+
+    @staticmethod
+    def is_active_coordinator(instructor):
+        """
+        :param instructor: an instructor instance
+        :return: True if current instructor is coordinating at least one course offering in an ACTIVE semester
+        else False
+        """
+        return Coordinator.get_coordinator(instructor).filter(
+            course_offering__in=CourseOffering.get_active_course_offerings()
+        ).exists()
 
     @staticmethod
     def is_coordinator_of_course_offering_in_this_semester(instructor, course_offering):
@@ -447,6 +451,22 @@ class Coordinator(models.Model):
             course_offering__semester__start_date__lte=now(),
             course_offering__semester__end_date__gte=now(),
         ).distinct().exists()
+
+    @staticmethod
+    def get_coordinated_courses(instructor=None):
+        return Coordinator.objects.filter(instructor=instructor)
+
+    @staticmethod
+    def get_active_coordinated_course_offerings_choices(instructor=None):
+        """
+        :return: current semester course_offering_id and 'semester code - course code'
+        """
+        offerings = Coordinator.get_coordinated_courses(instructor).filter(
+            course_offering__in=CourseOffering.get_active_course_offerings()
+        ).values('course_offering', 'course_offering__semester__code', 'course_offering__course__code').distinct()
+
+        return [(co['course_offering'], str(co['course_offering__semester__code']
+                                            + ' ' + co['course_offering__course__code'])) for co in offerings]
 
 
 class Enrollment(models.Model):
@@ -468,7 +488,10 @@ class Enrollment(models.Model):
         ordering = ['student__university_id']
 
     def __str__(self):
-        return to_string(self.student, self.section)
+        try:
+            return to_string(self.student, self.section)
+        except:
+            return 'Invalid enrollment: missing student or section info'
 
     @property
     def _history_user(self):
@@ -507,6 +530,7 @@ class Enrollment(models.Model):
         """
         return Enrollment.objects.select_related('student').filter(section=section_id)
 
+    # TODO: remove
     @staticmethod
     def is_enrollment_exists(student, section):
         return Enrollment.objects.filter(student=student, section=section).exists()

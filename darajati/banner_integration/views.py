@@ -1,17 +1,20 @@
-from django.views.generic import FormView
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic import FormView
 
-from .forms import CourseOfferingForm, GradesImportForm
-from .utils import Synchronization
-
-from enrollment.models import CourseOffering
+from enrollment.models import CourseOffering, Coordinator
 from grade.models import GradeFragment, StudentGrade
+from enrollment.views import CoordinatorBaseView
+from .forms import BannerSynchronizationForm, GradesImportForm
+from .utils import synchronization
 
 
-class PopulationRosterView(LoginRequiredMixin, UserPassesTestMixin, FormView):
-    form_class = CourseOfferingForm
-    template_name = 'banner_integration/roster_populate.html'
+class BannerSynchronizationView(CoordinatorBaseView, FormView):
+    form_class = BannerSynchronizationForm
+    template_name = 'banner_integration/banner_synchronization.html'
     success_url = reverse_lazy('banner_integration:home')
 
     section_report = None
@@ -22,33 +25,53 @@ class PopulationRosterView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     periods = None
     sections = None
 
-    def test_func(self):
-        return self.request.user.is_superuser
-
     def get_form_kwargs(self):
         """
         Passing the only current semester's Offering Courses List 
         """
         kwargs = super().get_form_kwargs()
-        kwargs.update(choices=CourseOffering.get_current_course_offerings())
+        kwargs.update(choices=Coordinator.get_active_coordinated_course_offerings_choices(self.request.user.instructor))
         return kwargs
 
     def form_valid(self, form, **kwargs):
-        """
-        This will consist of the creation of the sections and assigning students to these section
-          From there Faculty will be assigned to that section.
-        """
-        sync = Synchronization(form.cleaned_data['course_offering'], self.request.user, form.cleaned_data['commit_changes'])
-        sync.roaster_initiation()
-        sync.faculty_initiation()
-        sync.faculties_periods_report()
-
         context = self.get_context_data(**kwargs)
-        context['sections_report'] = sync.sections_report()
-        context['enrollments_report'] = sync.enrollments_report()
-        context['periods'] = sync.faculties_periods_report()
 
-        return self.render_to_response(context)
+        if 'preview' in self.request.POST:
+            sync_report = synchronization(course_offering_pk=form.cleaned_data['course_offering'],
+                                          current_user=self.request.user,
+                                          commit=False,
+                                          first_week_mode=form.cleaned_data['first_week_mode'], )
+            context['previewed'] = True
+
+            if not (sync_report[0] or sync_report[1] or sync_report[2] or sync_report[3]):
+                messages.success(self.request, _('Everything seems to be in-sync'))
+                return redirect('banner_integration:synchronization')
+            else:
+                context['enrollments_changes_report'] = sync_report[0]
+                context['sections_changes_report'] = sync_report[1]
+                context['periods_changes_report'] = sync_report[2]
+                context['serious_issues'] = sync_report[3]
+                messages.warning(self.request, _('Kindly review the synchronization report below carefully before '
+                                                 'committing the changes. If you commit the changes listed in the '
+                                                 'report below, you can NOT roll them back'))
+                return self.render_to_response(context)
+
+        elif 'cancel' in self.request.POST:
+            messages.warning(self.request, _('You chose to cancel committing the changes of the synchronization which '
+                                             'means they were NOT applied'))
+            return redirect('banner_integration:synchronization')
+
+        else:  # if 'commit' in self.request.POST:
+            try:
+                synchronization(course_offering_pk=form.cleaned_data['course_offering'],
+                                current_user=self.request.user,
+                                commit=True,
+                                first_week_mode=form.cleaned_data['first_week_mode'], )
+                messages.success(self.request, _('The synchronization changes were committed successfully'))
+            except:
+                messages.error(self.request, _('We tried to commit the synchronization changes'))
+
+            return redirect('banner_integration:synchronization')
 
 
 class ImportGradesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
