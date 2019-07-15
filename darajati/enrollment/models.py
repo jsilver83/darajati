@@ -409,7 +409,7 @@ class Coordinator(models.Model):
 
     # FIXME: instructor param cannot be None or else the ORM will throw an exception
     @staticmethod
-    def get_coordinator(instructor=None):
+    def get_coordinator(instructor):
         """        
         :param instructor: an instructor instance 
         :return:  list of coordinated course offering of this instructor
@@ -417,16 +417,24 @@ class Coordinator(models.Model):
         return Coordinator.objects.filter(instructor=instructor)
 
     @staticmethod
-    def is_coordinator(instructor=None):
+    def is_coordinator(instructor):
         """
         :param instructor: an instructor instance 
         :return: True if current instructor is coordinating at least one course offering
         else False
         """
-        coordinator = Coordinator.get_coordinator(instructor)
-        if coordinator:
-            return True
-        return False
+        return Coordinator.get_coordinator(instructor).exists()
+
+    @staticmethod
+    def is_active_coordinator(instructor):
+        """
+        :param instructor: an instructor instance
+        :return: True if current instructor is coordinating at least one course offering in an ACTIVE semester
+        else False
+        """
+        return Coordinator.get_coordinator(instructor).filter(
+            course_offering__in=CourseOffering.get_active_course_offerings()
+        ).exists()
 
     @staticmethod
     def is_coordinator_of_course_offering_in_this_semester(instructor, course_offering):

@@ -7,14 +7,17 @@
 			{% trans 'Welcome' %} <b>{{ user_full_name }}</b>
 			<span class="caret"></span></button>
 		<ul class="dropdown-menu">
-			{% if can_see_admin_controls %}
-				<li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
+			{% if can_see_admin_controls or is_coordinator %}
+				<li><a href="{% url 'banner_integration:synchronization' %}">{% trans 'Banner Sync' %}</a></li>
 			{% endif %}
 			{% if can_give_excuses %}
 				<li><a href="{% url 'attendance:excuses_listing' %}">{% trans 'Excuses' %}</a></li>
 			{% endif %}
 			{% if is_coordinator %}
 				<li><a href="{% url 'enrollment:coordinator' %}">{% trans 'Coordinated Courses' %}</a></li>
+			{% endif %}
+			{% if can_see_admin_controls %}
+				<li><a href="{% url 'enrollment:controls' %}">{% trans 'Admin Controls' %}</a></li>
 			{% endif %}
 			<li><a href="{% url 'enrollment:instructor' %}">{% trans 'Teaching Sections' %}</a></li>
 			<li role="presentation" class="divider"></li>

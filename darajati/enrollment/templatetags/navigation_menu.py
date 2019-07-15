@@ -14,8 +14,8 @@ def user_menu(context):
         can_see_admin_controls = user.is_superuser
 
         if hasattr(user, 'instructor'):
-            is_coordinator = Coordinator.objects.filter(instructor=user.instructor).exists()
-            user_full_name = user.instructor.name
+            is_coordinator = Coordinator.is_active_coordinator(user.instructor)
+            user_full_name = str(user.instructor)
         else:
             is_coordinator = False
             user_full_name = '%s %s' % (user.first_name, user.last_name)
