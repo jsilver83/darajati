@@ -52,9 +52,12 @@ class GradesForm(forms.ModelForm):
                 required=False,
                 widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
 
-        for field in self.fields:
-            if field in ['grade_percentage', 'grade_quantity', 'remarks'] and not self.is_change_allowed:
-                self.fields[field].widget.attrs.update({'readonly': 'True'})
+        if self.instance.grade_quantity and not self.is_change_allowed:
+            self.fields['grade_quantity'].widget.attrs.update({'readonly': 'True'})
+            self.fields['grade_percentage'].widget.attrs.update({'readonly': 'True'})
+
+        if self.instance.remarks and not self.is_change_allowed:
+            self.fields['remarks'].widget.attrs.update({'readonly': 'True'})
 
     def clean(self):
         cleaned_data = super().clean()
@@ -64,11 +67,13 @@ class GradesForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        self.instance.updated_by = self.user
-        if self.instance.grade_fragment.entry_in_percentages and self.cleaned_data['grade_percentage'] is not None:
-            self.instance.grade_quantity = (self.instance.grade_fragment.weight / 100) * self.cleaned_data[
-                'grade_percentage']
-        return super(GradesForm, self).save()
+        if ('grade_percentage' in self.changed_data or 'grade_quantity' in self.changed_data
+                or 'remarks' in self.changed_data):
+            self.instance.updated_by = self.user
+            if self.instance.grade_fragment.entry_in_percentages and self.cleaned_data['grade_percentage'] is not None:
+                self.instance.grade_quantity = (self.instance.grade_fragment.weight / 100) * self.cleaned_data[
+                    'grade_percentage']
+            return super(GradesForm, self).save()
 
 
 class BaseGradesFormSet(BaseModelFormSet):
