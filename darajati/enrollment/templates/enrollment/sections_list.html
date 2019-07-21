@@ -19,6 +19,7 @@
 						<th class="text-center">{% trans 'Course Code' %}</th>
 						<th class="text-center">{% trans 'Course Name' %}</th>
 						<th class="text-center">{% trans 'Section Code' %}</th>
+						<th class="text-center">{% trans 'Being Taught By' %}</th>
 						<th class="text-center">{% trans 'Attendances' %}</th>
 						<th class="text-center">{% trans 'Grades' %}</th>
 						<th class="text-center">{% trans 'Students' %}</th>
@@ -33,6 +34,7 @@
 								{{ section.course_offering.course.code }}</td>
 							<td>{{ section.course_offering.course.name }}</td>
 							<td>{{ section.code }}</td>
+							<td>{{ section.teachers }}</td>
 							<td>
 								<a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a>&nbsp;&nbsp;<a target="_blank" href="{% url 'attendance:section_attendance_print' section_id=section.id %}"
 								                                                                                                                                                                class="thm-btn small-btn outline-btn-dgrey"><span class="glyphicon glyphicon-print" aria-hidden="true"></span> {% trans 'Sheet' %}</a>

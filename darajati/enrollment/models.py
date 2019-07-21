@@ -5,6 +5,7 @@ from django.contrib.auth.models import User as User_model
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import translation
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
@@ -382,7 +383,8 @@ class Section(models.Model):
 
     @property
     def teachers(self):
-        return list(self.scheduled_periods.values_list('instructor_assigned__english_name').distinct())
+        teachers = list(self.scheduled_periods.values_list('instructor_assigned__english_name').distinct())
+        return mark_safe(' <b>&</b> '.join([str(x[0]) for x in teachers]))
 
 
 class Coordinator(models.Model):
