@@ -718,8 +718,6 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                         new_period.title = banner_period['activity']
                         new_period.location = get_period_location(banner_period['bldg'], banner_period['room'])
 
-                        # TODO: fix showing all enrollments as serious issues when initial population because no
-                        #  sections are created yet
                         if the_section:
                             periods_to_be_created.append(new_period)
 
