@@ -645,14 +645,14 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 }
             )
             sections_to_be_created.append(
-                Section(crn=section.get('crn'), code=section.get('code'), course_offering=course_offering)
+                Section(crn=section.get('crn'), code=section.get('code'), course_offering=course_offering, active=True)
             )
 
         for section in sections_to_be_deactivated:
             sections_changes_report.append(
                 {
-                    'code': 'REACTIVATE SECTION',
-                    'message': '%s (CRN: %s) was inactive in Darajati and is going to reactivated' %
+                    'code': 'DEACTIVATE SECTION',
+                    'message': '%s (CRN: %s) was active in Darajati and is going to be deactivated' %
                                (section.get('code'), section.get('crn')),
                 }
             )
@@ -664,12 +664,12 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             sections_changes_report.append(
                 {
                     'code': 'REACTIVATE SECTION',
-                    'message': '%s (CRN: %s) was inactive in Darajati and is going to reactivated' %
+                    'message': '%s (CRN: %s) was inactive in Darajati and is going to be reactivated' %
                                (section.code, section.crn),
                 }
             )
             section_to_be_reactivated = Section.objects.get(crn=section.crn, course_offering=course_offering)
-            section_to_be_reactivated.active = False
+            section_to_be_reactivated.active = True
             sections_to_be_updated.append(section_to_be_reactivated)
 
         # endregion sync sections
@@ -1044,9 +1044,12 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
     if first_week_mode:
         with transaction.atomic():
             Student.objects.bulk_update(students_to_be_updated,
-                                        ['arabic_name', 'english_name', 'mobile', 'personal_email'], batch_size=100)
+                                        ['arabic_name', 'english_name', 'mobile', 'personal_email', 'active'],
+                                        batch_size=100)
             Instructor.objects.bulk_update(teachers_to_be_updated,
                                            ['english_name', 'university_id', 'personal_email'], batch_size=100)
+
+            Section.objects.bulk_update(sections_to_be_updated, ['active'], batch_size=100)
 
     if commit:
         with transaction.atomic():
