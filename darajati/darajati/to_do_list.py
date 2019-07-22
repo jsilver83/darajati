@@ -69,5 +69,10 @@ URGENT:
 15 June 2019
 - apply grades should be per course offering and it should be applicable any time during the semester
 
+22 July 2019
+- add create grades functionality for coordinators and make it linked with the deadline
+- use celery for above step
+- show the change deadline in the fragments page
+
 """
 
