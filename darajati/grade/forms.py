@@ -37,6 +37,7 @@ class GradesForm(forms.ModelForm):
                 widget=forms.NumberInput(attrs={'class': 'thm-field grade_quantity'}))
 
             self.fields['grade_quantity'].required = False
+            self.fields['grade_quantity'].widget = forms.HiddenInput()
 
             if self.instance.grade_quantity is not None:
                 self.initial['grade_percentage'] = \
@@ -54,16 +55,25 @@ class GradesForm(forms.ModelForm):
 
         if self.instance.grade_quantity and not self.is_change_allowed:
             self.fields['grade_quantity'].widget.attrs.update({'readonly': 'True'})
-            self.fields['grade_percentage'].widget.attrs.update({'readonly': 'True'})
-
-        if self.instance.remarks and not self.is_change_allowed:
-            self.fields['remarks'].widget.attrs.update({'readonly': 'True'})
+            if self.instance.grade_fragment.entry_in_percentages:
+                self.fields['grade_percentage'].widget.attrs.update({'readonly': 'True'})
 
     def clean(self):
         cleaned_data = super().clean()
-        if ('grade_percentage' in self.changed_data or 'grade_quantity' in self.changed_data
-                or 'remarks' in self.changed_data) and not self.is_change_allowed:
-            raise forms.ValidationError(_('You are not allowed to tamper with the grades'))
+
+        error_msg = _('You are not allowed to tamper with the grades')
+        if (('grade_percentage' in self.changed_data or 'grade_quantity' in self.changed_data)
+                and not self.is_change_allowed):
+            if self.instance.grade_fragment.entry_in_percentages:
+                initial_grade_quantity = self.instance.grade_quantity if self.instance.grade_quantity else decimal(0)
+                initial_grade_percentage = decimal(initial_grade_quantity * 100 / self.instance.grade_fragment.weight)
+                if (self.instance.grade_quantity and (initial_grade_percentage != cleaned_data.get('grade_percentage')
+                        or self.instance.grade_quantity != cleaned_data.get('grade_quantity'))):
+                    raise forms.ValidationError(error_msg)
+            else:
+                if self.instance.grade_quantity and self.instance.grade_quantity != cleaned_data.get('grade_quantity'):
+                    raise forms.ValidationError(error_msg)
+
         return cleaned_data
 
     def save(self, commit=True):
