@@ -799,14 +799,6 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                                count_of_duplicated_periods_that_will_be_deleted,
                 }
             )
-
-        # print(periods_changes_report)
-        # print(teachers_to_be_updated)
-        # print(periods_to_be_created)
-        # print(periods_to_be_updated)
-        # print(periods_to_be_deleted)
-        # print(attendance_instances_to_be_updated)
-        # print(virtual_periods)
         # endregion
 
     # region sync enrollments
@@ -902,7 +894,6 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 existing_dropped_enrollments_wo_grade))
 
             if reactivated:
-                print(enrollment['university_id'])
                 enrollment_to_be_reactivated = Enrollment.objects.select_related('student', 'section').get(
                     student__university_id=enrollment['university_id'],
                     section__course_offering=course_offering,
@@ -1028,11 +1019,6 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             )
     # endregion
 
-    # print(enrollments_changes_report)
-
-    # print(students_to_be_updated)
-    # print(serious_issues)
-
     # endregion sync enrollments
 
     # This needs to be done even if commit is False since records of these students have been created with minimal data.
@@ -1045,7 +1031,8 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                                         ['arabic_name', 'english_name', 'mobile', 'personal_email', 'active'],
                                         batch_size=100)
             Instructor.objects.bulk_update(teachers_to_be_updated,
-                                           ['english_name', 'university_id', 'personal_email'], batch_size=100)
+                                           ['english_name', 'university_id', 'personal_email', 'active'],
+                                           batch_size=100)
 
             Section.objects.bulk_update(sections_to_be_updated, ['active'], batch_size=100)
 
