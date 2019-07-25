@@ -119,23 +119,22 @@ class BaseGradesFormSet(BaseModelFormSet):
                         count += 1
 
             if count:
-                self.average = self.average / count
-                self.average = decimal(self.average)
+                self.average = decimal(self.average / count)
 
-            if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
-                self.average_baseline = StudentGrade.get_section_objective_average(self.section, self.fragment)
+                if self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED:
+                    self.average_baseline = StudentGrade.get_section_objective_average(self.section, self.fragment)
 
-            elif self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
-                self.average_baseline = self.fragment.boundary_fixed_average or Decimal('0.0')
+                elif self.fragment.boundary_type == GradeFragment.GradesBoundaries.SUBJECTIVE_BOUNDED_FIXED:
+                    self.average_baseline = self.fragment.boundary_fixed_average or Decimal('0.0')
 
-            self.average_baseline_upper_boundary = self.average_baseline + (self.fragment.boundary_range_upper or 0)
-            self.average_baseline_lower_boundary = self.average_baseline - (self.fragment.boundary_range_lower or 0)
+                self.average_baseline_upper_boundary = self.average_baseline + (self.fragment.boundary_range_upper or 0)
+                self.average_baseline_lower_boundary = self.average_baseline - (self.fragment.boundary_range_lower or 0)
 
-            if (self.average_baseline_upper_boundary < self.average
-                    or self.average < self.average_baseline_lower_boundary):
-                raise forms.ValidationError(
-                    _('Section average {}% should be between {}% and {}%'.format(
-                        self.average, self.average_baseline_lower_boundary, self.average_baseline_upper_boundary)))
+                if (self.average_baseline_upper_boundary < self.average
+                        or self.average < self.average_baseline_lower_boundary):
+                    raise forms.ValidationError(
+                        _('Section average {} should be between {} and {}'.format(
+                            self.average, self.average_baseline_lower_boundary, self.average_baseline_upper_boundary)))
 
         return super(BaseGradesFormSet, self).clean()
 

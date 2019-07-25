@@ -21,7 +21,7 @@
 							<div class="col-md-4">{% trans 'Average:' %}
 								<b class="section_average">{{ section_average }}</b></div>
 							<div class="col-md-4">{% if section_objective_average %}
-								{% trans 'Objective Average:' %} <b>{{ section_objective_average }}%</b>
+								{% trans 'Objective Average:' %} <b>{{ section_objective_average }}{% if grade_fragment.entry_in_percentages %}%{% endif %}</b>
 							{% endif %}</div>
 							<div class="col-md-4">{% if course_average %}
 								{% trans 'Course Average:' %} <b>{{ course_average }}</b>

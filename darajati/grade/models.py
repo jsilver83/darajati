@@ -428,7 +428,7 @@ class StudentGrade(models.Model):
         """
         :param section: 
         :param grade_fragment: 
-        :return: section average of all objective grade fragment 
+        :return: section average of all objective grade fragments
         """
         list_of_averages = []
         total_weight = 0
@@ -458,11 +458,15 @@ class StudentGrade(models.Model):
         total_average = Decimal(0)
         for average in list_of_averages:
             total_average += average
-        if total_average:
+        if total_average and total_weight:
             average = total_average / total_weight
             average = average * 100
+
+            # if the fragment entry is not in percentage, we need to return the objective average quantified and NOT
+            # in percentage (as per usual)
+            if not grade_fragment.entry_in_percentages:
+                average = average * grade_fragment.weight / 100
             return decimal(average)
-        return 0
 
     @staticmethod
     def get_course_average(section, grade_fragment):
