@@ -29,7 +29,7 @@ class EnrollmentAdmin(ModelAdminMixin, SimpleHistoryAdmin):
     list_filter = ('section__course_offering__semester', 'section__course_offering__course', 'active', 'letter_grade', )
     list_display = ('id', 'student', 'semester_code', 'course_code', 'section_code', 'register_date',
                     'letter_grade', 'active', 'updated_on')
-    search_fields = ['student__university_id']
+    search_fields = ['student__university_id', 'section__code', ]
     readonly_fields = ('updated_by', )
 
     def semester_code(self, obj):
