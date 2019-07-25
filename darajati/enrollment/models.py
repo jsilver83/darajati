@@ -1,3 +1,4 @@
+from decimal import Decimal
 from math import *
 
 from django.conf import settings
@@ -10,6 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from attendance.models import ScheduledPeriod, AttendanceInstance, Attendance
+from grade.models import LetterGrade
 from .data_types import RoundTypes
 from .utils import to_string, now, today
 
@@ -45,7 +47,7 @@ class Person(models.Model):
 
     @property
     def kfupm_email(self):
-        return '%s@kfupm.edu.sa' % self.user.username
+        return '{}@kfupm.edu.sa'.format(getattr(self.user, 'username', 'NO-EMAIL'))
 
 
 class Student(Person):
@@ -249,6 +251,15 @@ class CourseOffering(models.Model):
         blank=True,
         help_text=_('Decimal places in the Total for rounding or truncating methods')
     )
+    letter_grade_promotion_borderline = models.DecimalField(
+        _('Letter Grade Promotion Borderline Difference'),
+        null=True,
+        blank=True,
+        default=0.0,
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT,
+        help_text=_('This will be used to check student''s eligibility for letter grade promotion.'),
+    )
 
     class Meta:
         ordering = ('semester', 'course',)
@@ -274,6 +285,15 @@ class CourseOffering(models.Model):
         :return: active semesters' course offerings
         """
         return CourseOffering.objects.filter(semester__start_date__lte=now(), semester__end_date__gte=now())
+
+    def get_letter_grade_promotion_criterion(self):
+        """
+        This will return the instance of the letter grade promotion fragment
+        Only one fragment can be flagged as THE criterion for letter grade promotion
+        """
+        criterion = self.grade_fragments.filter(letter_grade_promotion_criterion=True)
+        if criterion.count() == 1:
+            return criterion.first()
 
 
 class Section(models.Model):
@@ -518,6 +538,12 @@ class Enrollment(models.Model):
         """
         return self.letter_grade if self.letter_grade else "UD"
 
+    def calculated_letter_grade(self):
+        try:
+            return self.final_data.calculated_letter_grade
+        except:
+            return "UD"
+
     @staticmethod
     def get_students_of_section(section_id):
         """
@@ -657,6 +683,18 @@ class Enrollment(models.Model):
         return self.attendance.filter(attendance_instance__period__title=period_title,
                                       status=Attendance.Types.LATE).count()
 
+    def get_total_weights(self):
+        try:
+            return self.final_data.total_weights if self.final_data.total_weights else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+
+    def calculated_total(self):
+        try:
+            return self.final_data.total_rounded
+        except:
+            return Decimal('0.00')
+
     def get_enrollment_period_total_excused(self, period_title):
         """
         :param period_title: 
@@ -664,3 +702,86 @@ class Enrollment(models.Model):
         """
         return self.attendance.filter(attendance_instance__period__title=period_title,
                                       status=Attendance.Types.EXCUSED).count()
+
+    def get_grade_in_letter_grade_promotion_criterion(self):
+        criterion = self.section.course_offering.get_letter_grade_promotion_criterion()
+        if criterion:
+            try:
+                return self.grades.get(grade_fragment=criterion).grade_quantity
+            except:
+                return Decimal('0.00')
+
+    def is_a_borderline_case(self):
+        letter_grade_promotion_borderline = self.section.course_offering.letter_grade_promotion_borderline
+        if letter_grade_promotion_borderline is None:
+            return False
+
+        calculated_letter_grade = self.calculated_letter_grade()
+        calculated_letter_grade_instance = LetterGrade.get_letter_grade(self.section.course_offering, calculated_letter_grade)
+        if calculated_letter_grade_instance is None:
+            return False
+
+        the_upper_letter_grade = calculated_letter_grade_instance.get_the_upper_letter_grade()
+        if the_upper_letter_grade is None:
+            return False
+
+        calculated_total = self.calculated_total()
+
+        if calculated_total:
+            return (the_upper_letter_grade.cut_off_point - calculated_total) <= letter_grade_promotion_borderline
+
+    def is_eligible_for_letter_grade_promotion(self):
+        letter_grade_promotion_borderline = self.section.course_offering.letter_grade_promotion_borderline
+
+        if letter_grade_promotion_borderline:
+            if not self.is_a_borderline_case():
+                return False
+
+        calculated_letter_grade = self.calculated_letter_grade()
+        if calculated_letter_grade:
+            grade_in_promotion_criterion = self.get_grade_in_letter_grade_promotion_criterion()
+            criterion = self.section.course_offering.get_letter_grade_promotion_criterion()
+            if grade_in_promotion_criterion and criterion:
+                criterion_percentage_grade = grade_in_promotion_criterion * self.get_total_weights() / criterion.weight
+                criterion_letter_grade = LetterGrade.calculate_letter_grade_for_a_total(self.section.course_offering,
+                                                                                        criterion_percentage_grade)
+                if criterion_letter_grade:
+                    criterion_comparison = LetterGrade.compare_letter_grades(self.section.course_offering,
+                                                                             criterion_letter_grade.letter_grade,
+                                                                             calculated_letter_grade)
+                    if criterion_comparison > 0:
+                        return criterion_letter_grade.letter_grade
+
+    @staticmethod
+    def test_method(course_offering_pk):
+        enrollments = Enrollment.objects.filter(section__course_offering__pk=course_offering_pk)
+
+        for enrollment in enrollments:
+            eligible = enrollment.is_eligible_for_letter_grade_promotion()
+            if eligible:
+                print('{} {} {} --> {} ---- because of: {}'.format(
+                    enrollment.student.university_id,
+                    enrollment.calculated_total(),
+                    enrollment.calculated_letter_grade(),
+                    eligible,
+                    enrollment.get_grade_in_letter_grade_promotion_criterion()
+                ))
+
+    @staticmethod
+    def test_method2(course_offering_pk):
+        enrollments = Enrollment.objects.filter(section__course_offering__pk=course_offering_pk)
+
+        course_offering = CourseOffering.objects.get(pk=course_offering_pk)
+        print(course_offering.letter_grade_promotion_borderline)
+
+        for enrollment in enrollments:
+            borderline = enrollment.is_a_borderline_case()
+            grade_instance = LetterGrade.get_letter_grade(enrollment.section.course_offering, enrollment.calculated_letter_grade())
+            if borderline:
+                print('{} {} --> {} OOORRR {} ??? {}'.format(
+                    enrollment.student.university_id,
+                    enrollment.calculated_total(),
+                    grade_instance,
+                    grade_instance.get_the_upper_letter_grade(),
+                    borderline,
+                ))

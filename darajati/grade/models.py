@@ -145,6 +145,14 @@ class GradeFragment(models.Model):
         default=False,
         help_text=_('Checked when the course entered grades are in %')
     )
+    letter_grade_promotion_criterion = models.BooleanField(
+        _('Letter Grade Promotion Criterion?'),
+        blank=False,
+        default=0,
+        help_text=_('This if checked indicates the criterion for which coordinators can promote final letter grades '
+                    'for students who performed in it better than their letter grade. There should be only one '
+                    'fragment for the whole course offering that can be flagged as the criterion.')
+    )
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -296,9 +304,51 @@ class LetterGrade(models.Model):
 
     class Meta:
         ordering = ('course_offering', 'section', '-cut_off_point', 'letter_grade', )
+        unique_together = (('course_offering', 'letter_grade'), ('section', 'letter_grade'), )
 
     def __str__(self):
-        return to_string(self.course_offering, self.section, self.letter_grade)
+        identifier = self.course_offering if self.course_offering else self.section
+        return '{} {} {}'.format(identifier, self.letter_grade, self.cut_off_point)
+
+    def get_the_upper_letter_grade(self):
+        return self.course_offering.letter_grades.filter(cut_off_point__gt=self.cut_off_point).order_by('cut_off_point').first()
+
+    @staticmethod
+    def calculate_letter_grade_for_a_total(course_offering, supposed_total):
+        return course_offering.letter_grades.filter(
+            cut_off_point__lte=supposed_total
+        ).order_by('-cut_off_point').first()
+
+    @staticmethod
+    def get_letter_grade(course_offering, letter_grade_literal):
+        try:
+            return course_offering.letter_grades.get(letter_grade__iexact=letter_grade_literal)
+        except LetterGrade.DoesNotExist:
+            pass
+
+    @staticmethod
+    def compare_letter_grades(course_offering, letter_grade_1_literal, letter_grade_2_literal):
+        """
+        :param course_offering:
+        :param letter_grade_1_literal:
+        :param letter_grade_2_literal:
+        :return:
+            0: if letter_grade_1_literal == letter_grade_2_literal
+            1: if letter_grade_1_literal > letter_grade_2_literal
+            -1: if letter_grade_1_literal < letter_grade_2_literal
+            None: if either letter_grade_1_literal or letter_grade_2_literal do NOT exist
+        """
+        if letter_grade_1_literal == letter_grade_2_literal:
+            return 0
+
+        letter_grade_1 = LetterGrade.get_letter_grade(course_offering, letter_grade_1_literal)
+        letter_grade_2 = LetterGrade.get_letter_grade(course_offering, letter_grade_2_literal)
+
+        if letter_grade_1 and letter_grade_2:
+            if letter_grade_1.cut_off_point > letter_grade_2.cut_off_point:
+                return 1
+            else:
+                return -1
 
 
 class StudentGrade(models.Model):
