@@ -251,7 +251,7 @@ class CourseOffering(models.Model):
         blank=True,
         help_text=_('Decimal places in the Total for rounding or truncating methods')
     )
-    letter_grade_promotion_borderline = models.DecimalField(
+    grade_promotion_borderline = models.DecimalField(
         _('Letter Grade Promotion Borderline Difference'),
         null=True,
         blank=True,
@@ -291,7 +291,7 @@ class CourseOffering(models.Model):
         This will return the instance of the letter grade promotion fragment
         Only one fragment can be flagged as THE criterion for letter grade promotion
         """
-        criterion = self.grade_fragments.filter(letter_grade_promotion_criterion=True)
+        criterion = self.grade_fragments.filter(grade_promotion_criterion=True)
         if criterion.count() == 1:
             return criterion.first()
 
@@ -712,7 +712,7 @@ class Enrollment(models.Model):
                 return Decimal('0.00')
 
     def is_a_borderline_case(self):
-        letter_grade_promotion_borderline = self.section.course_offering.letter_grade_promotion_borderline
+        letter_grade_promotion_borderline = self.section.course_offering.grade_promotion_borderline
         if letter_grade_promotion_borderline is None:
             return False
 
@@ -731,7 +731,7 @@ class Enrollment(models.Model):
             return (the_upper_letter_grade.cut_off_point - calculated_total) <= letter_grade_promotion_borderline
 
     def is_eligible_for_letter_grade_promotion(self):
-        letter_grade_promotion_borderline = self.section.course_offering.letter_grade_promotion_borderline
+        letter_grade_promotion_borderline = self.section.course_offering.grade_promotion_borderline
 
         if letter_grade_promotion_borderline:
             if not self.is_a_borderline_case():
@@ -750,7 +750,11 @@ class Enrollment(models.Model):
                                                                              criterion_letter_grade.letter_grade,
                                                                              calculated_letter_grade)
                     if criterion_comparison > 0:
-                        return criterion_letter_grade.letter_grade
+                        upper_letter_grade = LetterGrade.get_letter_grade(
+                            self.section.course_offering,
+                            calculated_letter_grade).get_the_upper_letter_grade()
+                        if upper_letter_grade:
+                            return upper_letter_grade.letter_grade
 
     @staticmethod
     def test_method(course_offering_pk):
@@ -772,7 +776,7 @@ class Enrollment(models.Model):
         enrollments = Enrollment.objects.filter(section__course_offering__pk=course_offering_pk)
 
         course_offering = CourseOffering.objects.get(pk=course_offering_pk)
-        print(course_offering.letter_grade_promotion_borderline)
+        # print(course_offering.letter_grade_promotion_borderline)
 
         for enrollment in enrollments:
             borderline = enrollment.is_a_borderline_case()

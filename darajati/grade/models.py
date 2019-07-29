@@ -145,7 +145,7 @@ class GradeFragment(models.Model):
         default=False,
         help_text=_('Checked when the course entered grades are in %')
     )
-    letter_grade_promotion_criterion = models.BooleanField(
+    grade_promotion_criterion = models.BooleanField(
         _('Letter Grade Promotion Criterion?'),
         blank=False,
         default=0,
