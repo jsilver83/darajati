@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import requests
@@ -12,7 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from attendance.models import ScheduledPeriod, AttendanceInstance
 from enrollment.models import Section, Enrollment, Student, CourseOffering, Instructor
 from enrollment.utils import get_local_datetime_format
-from .test_banner_data import class_rhasta
+
+logger = logging.getLogger(__name__)
 
 
 def get_format_section_code(course_code, section_code):
@@ -484,8 +486,12 @@ def get_section_by_crn(crn, course_offering, fetched_sections, sections_to_be_cr
         section = Section.objects.get(crn=crn, course_offering=course_offering)
         fetched_sections.append(section)
         return section
-    except:
-        pass
+    except Section.DoesNotExist as e:
+        logger.exception(
+            "Sync Error Log: Could NOT fetch section (crn: {}) and (course offering: {}).".format(
+                crn, course_offering,
+            )
+        )
 
 
 def update_sections_pks(enrollments_or_periods, sections_to_be_created):
@@ -550,27 +556,34 @@ def get_or_create_teacher(teacher_user_id, all_scheduled_periods_banner, teacher
 def update_period_info(darajati_period, banner_period, all_scheduled_periods_banner,
                        all_scheduled_periods_darajati, periods_to_be_updated, teachers_to_be_updated,
                        periods_changes_report):
-    period_to_be_updated = ScheduledPeriod.objects.get(pk=darajati_period['pk'])
-    period_to_be_updated.instructor_assigned = get_or_create_teacher(banner_period['user'],
-                                                                     all_scheduled_periods_banner,
-                                                                     teachers_to_be_updated)
-    period_to_be_updated.location = get_period_location(banner_period['bldg'],
-                                                        banner_period['room'])
-    period_to_be_updated.title = banner_period['activity']
+    try:
+        period_to_be_updated = ScheduledPeriod.objects.get(pk=darajati_period['pk'])
+        period_to_be_updated.instructor_assigned = get_or_create_teacher(banner_period['user'],
+                                                                         all_scheduled_periods_banner,
+                                                                         teachers_to_be_updated)
+        period_to_be_updated.location = get_period_location(banner_period['bldg'],
+                                                            banner_period['room'])
+        period_to_be_updated.title = banner_period['activity']
 
-    periods_to_be_updated.append(period_to_be_updated)
-    all_scheduled_periods_darajati.remove(darajati_period)
+        periods_to_be_updated.append(period_to_be_updated)
+        all_scheduled_periods_darajati.remove(darajati_period)
 
-    periods_changes_report.append(
-        {
-            'code': 'UPDATE PERIOD',
-            'message': '%s (%s - %s) [%s], taught by (%s), for section %s will be created' %
-                       (period_to_be_updated.day,
-                        period_to_be_updated.start_time,
-                        period_to_be_updated.end_time, banner_period['activity'],
-                        banner_period['user'], period_to_be_updated.section.code,),
-        }
-    )
+        periods_changes_report.append(
+            {
+                'code': 'UPDATE PERIOD',
+                'message': '%s (%s - %s) [%s], taught by (%s), for section %s will be created' %
+                           (period_to_be_updated.day,
+                            period_to_be_updated.start_time,
+                            period_to_be_updated.end_time, banner_period['activity'],
+                            banner_period['user'], period_to_be_updated.section.code,),
+            }
+        )
+    except ScheduledPeriod.DoesNotExist:
+        logger.exception(
+            "Sync Error Log: Could NOT fetch ScheduledPeriod (pk: {}).".format(
+                darajati_period['pk'],
+            )
+        )
 
 
 def resolve_duplicated_periods(master_period, duplicated_periods, attendance_instances_to_be_updated):
@@ -656,9 +669,16 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                                (section.get('code'), section.get('crn')),
                 }
             )
-            section_to_be_deactivated = Section.objects.get(crn=section.get('code'), course_offering=course_offering)
-            section_to_be_deactivated.active = False
-            sections_to_be_updated.append(section_to_be_deactivated)
+            try:
+                section_to_be_deactivated = Section.objects.get(crn=section.get('code'), course_offering=course_offering)
+                section_to_be_deactivated.active = False
+                sections_to_be_updated.append(section_to_be_deactivated)
+            except Section.DoesNotExist:
+                logger.exception(
+                    "Sync Error Log: Could NOT fetch section (crn: {}) and (course offering: {}).".format(
+                        section.get('code'), course_offering,
+                    )
+                )
 
         for section in sections_to_be_reactivated:
             sections_changes_report.append(
@@ -668,10 +688,16 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                                (section.code, section.crn),
                 }
             )
-            section_to_be_reactivated = Section.objects.get(crn=section.crn, course_offering=course_offering)
-            section_to_be_reactivated.active = True
-            sections_to_be_updated.append(section_to_be_reactivated)
-
+            try:
+                section_to_be_reactivated = Section.objects.get(crn=section.crn, course_offering=course_offering)
+                section_to_be_reactivated.active = True
+                sections_to_be_updated.append(section_to_be_reactivated)
+            except Section.DoesNotExist:
+                logger.exception(
+                    "Sync Error Log: Could NOT fetch section (crn: {}) and (course offering: {}).".format(
+                        section.crn, course_offering,
+                    )
+                )
         # endregion sync sections
 
         # region sync sections' scheduled periods
@@ -826,7 +852,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
         grade=Lower('letter_grade'),
         crn=F('section__crn'),
         university_id=F('student__university_id'),
-    ).filter(active=False).exclude(grade__in=inactive_letter_grades).values(
+    ).filter(active=False, section__course_offering=course_offering).exclude(grade__in=inactive_letter_grades).values(
         'university_id', 'crn', 'grade'
     )
 
@@ -894,27 +920,34 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 existing_dropped_enrollments_wo_grade))
 
             if reactivated:
-                enrollment_to_be_reactivated = Enrollment.objects.select_related('student', 'section').get(
-                    student__university_id=enrollment['university_id'],
-                    section__course_offering=course_offering,
-                )
+                try:
+                    enrollment_to_be_reactivated = Enrollment.objects.select_related('student', 'section').get(
+                        student__university_id=enrollment['university_id'],
+                        section__course_offering=course_offering,
+                    )
 
-                enrollment_to_be_reactivated.active = True
-                enrollment_to_be_reactivated.comment = 'Student dropped without grade before but got reactivated ' \
-                                                       'again by registrars'
-                enrollment_to_be_reactivated.letter_grade = enrollment['grade']
-                enrollment_to_be_reactivated.register_date = get_student_record(enrollment['university_id'],
-                                                                                class_roster
-                                                                                ).get('register_date')
-                enrollment_to_be_reactivated.updated_by = current_user
-                enrollments_to_be_updated.append(enrollment_to_be_reactivated)
-                enrollments_changes_report.append(
-                    {
-                        'code': 'REACTIVATED',
-                        'message': '%s dropped without grade before but got reactivated again by registrars' %
-                                   enrollment['university_id'],
-                    }
-                )
+                    enrollment_to_be_reactivated.active = True
+                    enrollment_to_be_reactivated.comment = 'Student dropped without grade before but got reactivated ' \
+                                                           'again by registrars'
+                    enrollment_to_be_reactivated.letter_grade = enrollment['grade']
+                    enrollment_to_be_reactivated.register_date = get_student_record(enrollment['university_id'],
+                                                                                    class_roster
+                                                                                    ).get('register_date')
+                    enrollment_to_be_reactivated.updated_by = current_user
+                    enrollments_to_be_updated.append(enrollment_to_be_reactivated)
+                    enrollments_changes_report.append(
+                        {
+                            'code': 'REACTIVATED',
+                            'message': '%s dropped without grade before but got reactivated again by registrars' %
+                                       enrollment['university_id'],
+                        }
+                    )
+                except Enrollment.DoesNotExist:
+                    logger.exception(
+                        "Sync Error Log: Could NOT fetch Enrollment (ID: {}) and (course offering: {}). {}".format(
+                            enrollment['university_id'], course_offering, existing_dropped_enrollments_wo_grade
+                        )
+                    )
         # endregion
 
         # region CASE 2: student moved to a different section in the same course
@@ -976,25 +1009,32 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 'crn'], enrollments_darajati_minus_banner))
 
         if changed_grade:
-            enrollment_with_grade_to_be_changed = Enrollment.objects.get(
-                student__university_id=enrollment['university_id'],
-                section__course_offering=course_offering,
-            )
-            old_grade = enrollment_with_grade_to_be_changed.letter_grade
-            enrollment_with_grade_to_be_changed.active = get_student_status_by_letter_grade(enrollment['grade'])
-            enrollment_with_grade_to_be_changed.updated_by = current_user
-            enrollment_with_grade_to_be_changed.letter_grade = enrollment['grade']
-            enrollments_to_be_updated.append(enrollment_with_grade_to_be_changed)
-            enrollments_changes_report.append(
-                {
-                    'code': 'LETTER GRADE CHANGED',
-                    'message': '%s letter grade got changed from %s to %s' % (
-                        enrollment['university_id'],
-                        old_grade,
-                        enrollment['grade'],
+            try:
+                enrollment_with_grade_to_be_changed = Enrollment.objects.get(
+                    student__university_id=enrollment['university_id'],
+                    section__course_offering=course_offering,
+                )
+                old_grade = enrollment_with_grade_to_be_changed.letter_grade
+                enrollment_with_grade_to_be_changed.active = get_student_status_by_letter_grade(enrollment['grade'])
+                enrollment_with_grade_to_be_changed.updated_by = current_user
+                enrollment_with_grade_to_be_changed.letter_grade = enrollment['grade']
+                enrollments_to_be_updated.append(enrollment_with_grade_to_be_changed)
+                enrollments_changes_report.append(
+                    {
+                        'code': 'LETTER GRADE CHANGED',
+                        'message': '%s letter grade got changed from %s to %s' % (
+                            enrollment['university_id'],
+                            old_grade,
+                            enrollment['grade'],
+                        )
+                    }
+                )
+            except Enrollment.DoesNotExist:
+                logger.exception(
+                    "Sync Error Log: Could NOT fetch Enrollment (ID: {}) and (course offering: {}).".format(
+                        enrollment['university_id'], course_offering,
                     )
-                }
-            )
+                )
         # endregion
 
     # region CASE 4: student dropped without grade
@@ -1003,20 +1043,27 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             lambda student: student['university_id'] == enrollment['university_id'], enrollments_banner_minus_darajati))
 
         if not match:
-            enrollment_to_be_dropped = Enrollment.objects.get(student__university_id=enrollment['university_id'],
-                                                              section__course_offering=course_offering)
-            enrollment_to_be_dropped.active = False
-            enrollment_to_be_dropped.comment = 'Student dropped the course without grade'
-            enrollment_to_be_dropped.letter_grade = 'DROPPED'
-            enrollment_to_be_dropped.updated_by = current_user
-            enrollments_to_be_updated.append(enrollment_to_be_dropped)
+            try:
+                enrollment_to_be_dropped = Enrollment.objects.get(student__university_id=enrollment['university_id'],
+                                                                  section__course_offering=course_offering)
+                enrollment_to_be_dropped.active = False
+                enrollment_to_be_dropped.comment = 'Student dropped the course without grade'
+                enrollment_to_be_dropped.letter_grade = 'DROPPED'
+                enrollment_to_be_dropped.updated_by = current_user
+                enrollments_to_be_updated.append(enrollment_to_be_dropped)
 
-            enrollments_changes_report.append(
-                {
-                    'code': 'DROPPED WITHOUT GRADE',
-                    'message': '%s dropped the course without grade' % enrollment['university_id']
-                }
-            )
+                enrollments_changes_report.append(
+                    {
+                        'code': 'DROPPED WITHOUT GRADE',
+                        'message': '%s dropped the course without grade' % enrollment['university_id']
+                    }
+                )
+            except Enrollment.DoesNotExist:
+                logger.exception(
+                    "Sync Error Log: Could NOT fetch Enrollment (ID: {}) and (course offering: {}).".format(
+                        enrollment['university_id'], course_offering,
+                    )
+                )
     # endregion
 
     # endregion sync enrollments

@@ -1,5 +1,5 @@
 from . import views
-from django.urls import re_path
+from django.urls import re_path, path
 
 app_name = 'grade'
 
@@ -26,4 +26,7 @@ urlpatterns = [
 
     re_path(r'^letter-grades/(?P<course_offering_id>[0-9]+)/$',
             views.LetterGradesView.as_view(), name='letter_grades'),
+
+    path('letter-grades-promotion/<int:course_offering_id>/', views.LetterGradesPromotionView.as_view(),
+         name='letter_grades_promotion'),
 ]
