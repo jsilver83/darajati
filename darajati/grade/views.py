@@ -346,7 +346,7 @@ class LetterGradesPromotionView(CoordinatorEditBaseView, FormView):
 
     def form_valid(self, form):
         if 'promote' in self.request.POST:
-            # TODO: IMPLEMENT
+            LetterGrade.promote_all_eligible_cases(self.course_offering, self.request.user)
             messages.success(self.request, _('Cases were promoted successfully.'))
             return redirect(self.request.get_full_path())
         return super().form_valid(form)

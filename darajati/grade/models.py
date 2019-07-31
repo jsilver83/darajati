@@ -350,6 +350,22 @@ class LetterGrade(models.Model):
             else:
                 return -1
 
+    @staticmethod
+    def promote_all_eligible_cases(course_offering, user=None):
+        for case in course_offering.get_all_letter_grade_promotion_cases():
+            enrollment = case.get('enrollment', None)
+            promoted_letter_grade = case.get('promoted_letter_grade', None)
+
+            if enrollment and promoted_letter_grade:
+                enrollment.letter_grade = promoted_letter_grade
+                enrollment.comment = 'Letter grade got promoted from {} to {}'.format(
+                    enrollment.calculated_letter_grade(),
+                    promoted_letter_grade,
+                )
+                if user:
+                    enrollment.updated_by = user
+                enrollment.save()
+
 
 class StudentGrade(models.Model):
     enrollment = models.ForeignKey(
