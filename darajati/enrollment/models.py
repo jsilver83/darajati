@@ -767,6 +767,9 @@ class Enrollment(models.Model):
                         if upper_letter_grade:
                             return upper_letter_grade.letter_grade
 
+    def was_promoted(self):
+        return self.comment.startswith('Letter grade got promoted from')
+
     @staticmethod
     def test_method(course_offering_pk):
         enrollments = Enrollment.objects.filter(section__course_offering__pk=course_offering_pk)
