@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n staticfiles humanize %}
+
+{% block content %}
+	<div class="content-panel">
+		<br>
+		<div class="cntnt-sec">
+			<div class="title-sec text-center">
+				<h3>{% trans 'Letter Grades' %}</h3>
+			</div>
+			<div class="card card-outline-secondary mb-3">
+				<div class="card-block">
+					<blockquote class="card-blockquote">
+						<p>{% trans 'Semester' %}: <span>{{ course_offering.semester.description }}</span></p>
+						<p>{% trans 'Course' %}: <span>{{ course_offering.course }}</span></p>
+						<p>{% trans 'Coordinated' %}: <span>{{ course_offering.coordinated }}</span></p>
+						<p>{% trans 'Letter Grade Promotion Criterion' %}: <span>
+							{{ course_offering.get_letter_grade_promotion_criterion }}</span></p>
+						<p>{% trans 'Letter Grade Promotion Borderline' %}: <span>
+							{{ course_offering.grade_promotion_borderline }}</span></p>
+					</blockquote>
+				</div>
+			</div>
+			{% if promotion_cases %}
+				<form method="post">
+				{% csrf_token %}
+					<div class="title-sec row">
+						<div class="col-md-offset-3 col-md-9 text-right">
+							<button class="thm-btn" type="submit" name="promote">
+								<span class="glyphicon glyphicon-upload"></span> {% trans 'Promote All' %}</button>
+						</div>
+					</div>
+					<br>
+					<div class="thm-table odd period-cntnt">
+						<table class="table">
+							<thead>
+							<tr>
+								<th>{% trans 'No.' %}</th>
+								<th>{% trans 'Full Name' %}</th>
+								<th>{% trans 'Calculated Total (Rounded)' %}</th>
+								<th>{% trans 'Calculated Letter Grade' %}</th>
+								<th>{% trans 'Promotion Criterion Score' %}</th>
+								<th>{% trans 'Promoted Letter Grade' %}</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for case in promotion_cases %}
+								<tr>
+									<td>{{ forloop.counter }}</td>
+									<td>{{ case.enrollment }}</td>
+									<td>{{ case.enrollment.calculated_total }}</td>
+									<td>{{ case.enrollment.calculated_letter_grade }}</td>
+									<td>{{ case.enrollment.get_grade_in_letter_grade_promotion_criterion }} {% trans "out of" %} {{ course_offering.get_letter_grade_promotion_criterion.weight }}</td>
+									<td>{{ case.promoted_letter_grade }}</td>
+								</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</form>
+			{% else %}
+				{% trans 'There are no letter grades promotion cases' %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

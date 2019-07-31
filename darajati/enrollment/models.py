@@ -295,6 +295,17 @@ class CourseOffering(models.Model):
         if criterion.count() == 1:
             return criterion.first()
 
+    def get_all_letter_grade_promotion_cases(self):
+        enrollments = Enrollment.objects.filter(section__course_offering=self)
+
+        eligible_cases = []
+        for enrollment in enrollments:
+            eligible = enrollment.is_eligible_for_letter_grade_promotion()
+            if eligible:
+                eligible_cases.append({'enrollment': enrollment, 'promoted_letter_grade': eligible, })
+
+        return eligible_cases
+
 
 class Section(models.Model):
     course_offering = models.ForeignKey(

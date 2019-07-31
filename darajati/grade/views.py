@@ -4,11 +4,12 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.db.models import Sum, Count
+from django.forms import Form
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import ListView, CreateView, TemplateView
+from django.views.generic import ListView, CreateView, TemplateView, FormView
 from extra_views import ModelFormSetView
 
 from enrollment.models import Section
@@ -328,3 +329,24 @@ class LetterGradesView(CoordinatorEditBaseView, ModelFormSetView):
                                'changed' % (count_of_students_changed_letter_grades, )))
 
             return redirect(self.get_success_url())
+
+
+class LetterGradesPromotionView(CoordinatorEditBaseView, FormView):
+    template_name = 'grade/letter_grades_promotion.html'
+    form_class = Form
+
+    def get_success_url(self):
+        return reverse_lazy('enrollment:grade_fragment_coordinator', args=(self.course_offering_id, ))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course_offering'] = self.course_offering
+        context['promotion_cases'] = self.course_offering.get_all_letter_grade_promotion_cases()
+        return context
+
+    def form_valid(self, form):
+        if 'promote' in self.request.POST:
+            # TODO: IMPLEMENT
+            messages.success(self.request, _('Cases were promoted successfully.'))
+            return redirect(self.request.get_full_path())
+        return super().form_valid(form)
