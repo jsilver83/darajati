@@ -956,51 +956,66 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 'crn'], enrollments_darajati_minus_banner))
 
         if moved:
-            moved_enrollment = Enrollment.objects.select_related('student', 'section').get(
-                student__university_id=enrollment['university_id'],
-                section__course_offering=course_offering,
-            )
-            new_section = get_section_by_crn(enrollment['crn'], course_offering, fetched_sections,
-                                             sections_to_be_created)
-            moved_enrollment.active = False
-            moved_enrollment.comment = 'Moved to another section (%s)' % str(new_section)
-            moved_enrollment.updated_by = current_user
-            moved_enrollment.letter_grade = 'MOVED'
-            enrollments_to_be_updated.append(moved_enrollment)
-
-            moving_enrollment = Enrollment()
-            moving_enrollment.student = moved_enrollment.student
-            moving_enrollment.section = new_section
-            moving_enrollment.updated_by = current_user
-            moving_enrollment.letter_grade = enrollment['grade']
-            moving_enrollment.active = get_student_status_by_letter_grade(enrollment['grade'])
-            moving_enrollment.register_date = get_student_record(enrollment['university_id'],
-                                                                 class_roster).get('register_date')
-            moving_enrollment.comment = 'Moved from another section (%s)' % str(moved_enrollment.section)
-
-            if new_section:
-                enrollments_to_be_created.append(moving_enrollment)
-                enrollments_changes_report.append(
-                    {
-                        'code': 'MOVED TO SECTION',
-                        'message': '%s got moved to section %s (CRN: %s)' % (
-                            enrollment['university_id'],
-                            new_section.code,
-                            enrollment['crn'],
-                        )
-                    }
+            try:
+                moved_enrollment = Enrollment.objects.select_related('student', 'section').get(
+                    student__university_id=enrollment['university_id'],
+                    section__course_offering=course_offering,
+                    active=True,
                 )
-            else:
+                new_section = get_section_by_crn(enrollment['crn'], course_offering, fetched_sections,
+                                                 sections_to_be_created)
+                moved_enrollment.active = False
+                moved_enrollment.comment = 'Moved to another section (%s)' % str(new_section)
+                moved_enrollment.updated_by = current_user
+                moved_enrollment.letter_grade = 'MOVED'
+                enrollments_to_be_updated.append(moved_enrollment)
+
+                moving_enrollment = Enrollment()
+                moving_enrollment.student = moved_enrollment.student
+                moving_enrollment.section = new_section
+                moving_enrollment.updated_by = current_user
+                moving_enrollment.letter_grade = enrollment['grade']
+                moving_enrollment.active = get_student_status_by_letter_grade(enrollment['grade'])
+                moving_enrollment.register_date = get_student_record(enrollment['university_id'],
+                                                                     class_roster).get('register_date')
+                moving_enrollment.comment = 'Moved from another section (%s)' % str(moved_enrollment.section)
+
+                if new_section:
+                    enrollments_to_be_created.append(moving_enrollment)
+                    enrollments_changes_report.append(
+                        {
+                            'code': 'MOVED TO SECTION',
+                            'message': '%s got moved to section %s (CRN: %s)' % (
+                                enrollment['university_id'],
+                                new_section.code,
+                                enrollment['crn'],
+                            )
+                        }
+                    )
+                else:
+                    serious_issues.append(
+                        {
+                            'urgency': 'URGENT',
+                            'code': 'MISSING SECTION',
+                            'message': '%s could NOT be created because section crn %s is not created yet' % (
+                                enrollment['university_id'], enrollment['crn']),
+                            'object': moving_enrollment,
+                        }
+                    )
+            except Exception as e:
                 serious_issues.append(
                     {
                         'urgency': 'URGENT',
-                        'code': 'MISSING SECTION',
-                        'message': '%s could NOT be created because section crn %s is not created yet' % (
-                            enrollment['university_id'], enrollment['crn']),
-                        'object': moving_enrollment,
+                        'code': 'DUPLICATE OR MISSING ENROLLMENT',
+                        'message': '%s could NOT be created in section crn %s because it is duplicated or missing in %s' % (
+                            enrollment['university_id'], enrollment['crn'], str(course_offering)),
+                        'object': enrollment['university_id'],
                     }
                 )
-
+                logger.exception(
+                    'Sync Error Log: %s could NOT be created in section crn %s because it is duplicated or missing' % (
+                            enrollment['university_id'], enrollment['crn']),
+                )
         # endregion
 
         # region CASE 3: student changed grade or dropped with grade in ['w', 'wp', 'wf', 'ic', 'dn']
