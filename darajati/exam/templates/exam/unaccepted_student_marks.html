@@ -50,22 +50,28 @@
 											{{ form.instance.student_placement.enrollment.student.university_id }}
 											<div style="display: none">
 											{{ form.marker }}{{ form.marker.errors }}
-											{{ form.student_placement }}{{ form.student_placement }}
+											{{ form.student_placement }}{{ form.student_placement.errors }}
 											</div>
 										</td>
 										<td>{{ form.instance.student_placement.final_mark }}</td>
 										<td>{{ form.mark }}{{ form.mark.errors }}</td>
-										<td>{{ form.instance.weighted_mark }}
-											({{ form.instance.marker.generosity_factor }})</td>
+										<td>
+											{{ form.instance.weighted_mark }}
+											({{ form.instance.marker.generosity_factor }})<br>
+											<small><em>{{ form.instance.marker.instructor }}</em></small>
+										</td>
 								{% else %}
 										<td>{{ form.id }}{{ form.non_field_errors }}
 											<div style="display: none">
 											{{ form.marker }}{{ form.marker.errors }}
-											{{ form.student_placement }}{{ form.student_placement }}
+											{{ form.student_placement }}{{ form.student_placement.errors }}
 											</div>
 											{{ form.mark }}{{ form.mark.errors }}</td>
-										<td>{{ form.instance.weighted_mark }}
-											({{ form.instance.marker.generosity_factor }})</td>
+										<td>
+											{{ form.instance.weighted_mark }}
+											({{ form.instance.marker.generosity_factor }})<br>
+											<small><em>{{ form.instance.marker.instructor }}</em></small>
+										</td>
 								{% endifchanged %}
 							{% endfor %}
 							</tbody>

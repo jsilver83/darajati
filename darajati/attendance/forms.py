@@ -1,10 +1,9 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext_lazy as _
 
-from enrollment.models import Instructor
+from enrollment.models import Coordinator
 from .models import Attendance, Excuse
 
 
@@ -28,8 +27,12 @@ class AttendanceForm(forms.ModelForm):
 
             # This readonly attribute added here is just a visual feedback. The actual prevention to change
             # the status (in such cases) is in the status_clean function below
-            if (self.initial['status'] == Attendance.Types.EXCUSED and 'attendance.can_give_excused_status' not in self.permissions) \
-                    or (self.initial['id'] and not self.section.course_offering.allow_change):
+            if (self.initial['status'] == Attendance.Types.EXCUSED
+                    or (self.initial['status'] in (Attendance.Types.ABSENT, Attendance.Types.LATE)
+                        and not self.section.course_offering.allow_change)
+                    and not Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                        self.request.user.instructor,
+                        self.section.course_offering)):
                 self.fields['status'].widget.attrs.update({'readonly': 'readonly', 'class': 'form-control disabled'})
 
     class Meta:
@@ -49,19 +52,20 @@ class AttendanceForm(forms.ModelForm):
     def clean_status(self):
         if 'status' in self.changed_data:
             if self.instance.status == Attendance.Types.EXCUSED:
-
                 self.add_error('status', _("You can NOT change an excused status to something else."))
                 return self.instance.status
 
-            if self.instance.pk and not self.section.course_offering.allow_change \
-                    and Instructor.is_active_coordinator(self.request.user.instructor):
-                self.add_error('status', _("You can NOT change this status because it is un-changeable except by the "
-                                           "coordinator."))
+            if self.cleaned_data.get('status') == Attendance.Types.EXCUSED:
+                self.add_error('status', _("You can NOT make a student excused through this form. Kindly contact the "
+                                           "admins to enter excuses in through the formal channels."))
                 return self.instance.status
 
-            if 'attendance.can_give_excused_status' not in self.permissions \
-                    and self.cleaned_data.get('status') == Attendance.Types.EXCUSED:
-                self.add_error('status', _("You don't have permission to make this change"))
+            if (self.instance.pk and not self.section.course_offering.allow_change
+                    and not Coordinator.is_coordinator_of_course_offering_in_this_semester(
+                        self.request.user.instructor,
+                        self.section.course_offering)):
+                self.add_error('status', _("You can NOT change this status because it is un-changeable except by the "
+                                           "coordinator."))
                 return self.instance.status
 
         return self.cleaned_data.get('status')
