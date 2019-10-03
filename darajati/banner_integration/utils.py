@@ -520,6 +520,31 @@ def get_day_from_shortcut_char(shortcut_day_car):
         return ScheduledPeriod.Days.WEDNESDAY
     if shortcut_day_car == 'R':
         return ScheduledPeriod.Days.THURSDAY
+    if shortcut_day_car == 'F':
+        return ScheduledPeriod.Days.FRIDAY
+    if shortcut_day_car == 'S':
+        return ScheduledPeriod.Days.SATURDAY
+
+
+def get_shortcut_char_from_day(day):
+    if day == ScheduledPeriod.Days.SUNDAY:
+        return 'U'
+    if day == ScheduledPeriod.Days.MONDAY:
+        return 'M'
+    if day == ScheduledPeriod.Days.TUESDAY:
+        return 'T'
+    if day == ScheduledPeriod.Days.WEDNESDAY:
+        return 'W'
+    if day == ScheduledPeriod.Days.THURSDAY:
+        return 'R'
+    if day == ScheduledPeriod.Days.FRIDAY:
+        return 'F'
+    if day == ScheduledPeriod.Days.SATURDAY:
+        return 'S'
+
+
+def convert_to_time_format(time_in_string_format):
+    return datetime.strptime(time_in_string_format, "%H%M").time()
 
 
 def get_period_location(building, room):
@@ -715,13 +740,12 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
 
         count_of_duplicated_periods_that_will_be_deleted = 0
         for banner_period in all_scheduled_periods_banner:
-
-            if banner_period['class_days'] and \
-                    banner_period['room'] and \
-                    banner_period['activity']:
+            if banner_period.get('class_days') and \
+                    banner_period.get('room') and \
+                    banner_period.get('activity'):
                 for day in map(get_day_from_shortcut_char, banner_period['class_days']):
-                    start_time = datetime.strptime(banner_period['start_time'], "%H%M").time()
-                    end_time = datetime.strptime(banner_period['end_time'], "%H%M").time()
+                    start_time = convert_to_time_format(banner_period['start_time'])
+                    end_time = convert_to_time_format(banner_period['end_time'])
 
                     matching_periods = list(filter(lambda period: period['section__crn'] == banner_period['crn'] and
                                                                   period['day'] == day and
@@ -799,21 +823,64 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                             update_period_info(matching_periods[0], banner_period,
                                                all_scheduled_periods_banner, all_scheduled_periods_darajati,
                                                periods_to_be_updated, teachers_to_be_updated, periods_changes_report)
-                            resolve_duplicated_periods(matching_periods[0], matching_periods,
+                            resolve_duplicated_periods(matching_periods[0], matching_periods[1:],
                                                        attendance_instances_to_be_updated)
                             matching_periods.remove(matching_periods[0])
 
                         for p in matching_periods:
                             count_of_duplicated_periods_that_will_be_deleted += 1
                             periods_to_be_deleted.append(p)
-                            all_scheduled_periods_darajati.remove(p)
+                            # all_scheduled_periods_darajati.remove(p)
+
+                            serious_issues.append(
+                                {
+                                    'urgency': 'URGENT',
+                                    'code': 'SCHEDULED PERIOD TO BE DELETED',
+                                    'message': 'Period (%s) will be deleted since it is duplicated' % (p, ),
+                                    'object': p,
+                                }
+                            )
             else:
                 virtual_periods.append(banner_period)
                 periods_changes_report.append(
                     {
                         'code': 'VIRTUAL PERIOD',
-                        'message': 'Period for section (CRN: %s), taught by (%s), is a virtual period and will NOT be'
-                                   ' created' % (banner_period['crn'], banner_period['user'],),
+                        'message': 'Period for section (CRN: %s), taught by (%s), [class days: %s, activity: %s, '
+                                   'room: %s] is a virtual period and will NOT be created' % (
+                                       banner_period['crn'],
+                                       banner_period['user'],
+                                       banner_period['class_days'],
+                                       banner_period['activity'],
+                                       banner_period['room'],
+                                   ),
+                    }
+                )
+
+        # alert coordinator of periods in darajati that are no longer existing in banner
+        # and [SHOULD] attempt to delete them if they have no entered absences
+        # TODO: add logic to delete extra scheduled periods
+        for darajati_period in all_scheduled_periods_darajati:
+            matching_periods = list(
+                filter(
+                    lambda period: period['crn'] == darajati_period['section__crn'] and
+                                   get_shortcut_char_from_day(darajati_period['day']) in period['class_days'] and
+                                   convert_to_time_format(period['start_time']) == darajati_period['start_time'] and
+                                   convert_to_time_format(period['end_time']) == darajati_period['end_time'] and
+                                   period['user'].lower() == darajati_period[
+                                       'instructor_assigned__user__username'].lower(),
+                    all_scheduled_periods_banner
+                )
+            )
+
+            if not matching_periods:
+                periods_to_be_deleted.append(darajati_period)
+                count_of_duplicated_periods_that_will_be_deleted += 1
+                serious_issues.append(
+                    {
+                        'urgency': 'URGENT',
+                        'code': 'EXTRA SCHEDULED PERIOD',
+                        'message': 'Period needs to be deleted since it is no longer in banner',
+                        'object': darajati_period,
                     }
                 )
 
@@ -821,8 +888,8 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
             periods_changes_report.append(
                 {
                     'code': 'DUPLICATE PERIODS',
-                    'message': '%s periods will be deleted because they are duplicated' %
-                               count_of_duplicated_periods_that_will_be_deleted,
+                    'message': '{} period(s) will be deleted because they are either duplicated or non-existent '
+                               'in banner'.format(count_of_duplicated_periods_that_will_be_deleted),
                 }
             )
         # endregion
@@ -1013,8 +1080,10 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                     }
                 )
                 logger.exception(
-                    'Sync Error Log: %s could NOT be created in section crn %s because it is duplicated or missing' % (
-                            enrollment['university_id'], enrollment['crn']),
+                    'Sync Error Log: %s could NOT be created in section crn %s because it is duplicated or missing. '
+                    'Exception: %s' % (
+                        enrollment['university_id'], enrollment['crn'], str(e),
+                    ),
                 )
         # endregion
 
@@ -1118,6 +1187,15 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
 
             # DELETE
             for period in periods_to_be_deleted:
-                ScheduledPeriod.objects.filter(pk=period.get('pk', 0)).delete()
+                try:
+                    period_to_be_deleted = ScheduledPeriod.objects.get(pk=period.get('pk', 0))
+                    if not AttendanceInstance.objects.filter(period=period_to_be_deleted).exists():
+                        period_to_be_deleted.delete()
+                    else:
+                        logger.warning('Could NOT delete Period (pk = {}) since attendance has already been entered '
+                                       'for it. It needs to resolved manually!')
+                except:
+                    logger.error('Period (pk = {}) could NOT be deleted since it does NOT exist '
+                                 'anymore'.format(period.get('ok', 0)))
 
     return [enrollments_changes_report, sections_changes_report, periods_changes_report, serious_issues]
