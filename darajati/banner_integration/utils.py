@@ -453,7 +453,7 @@ def make_hashable(list_of_dicts):
 
 
 def get_student_record(student_university_id, enrollments_in_banner):
-    return next((s for s in enrollments_in_banner if s["stu_id"] == student_university_id), None)
+    return next((s for s in enrollments_in_banner if s.get("stu_id", 0) == student_university_id), None)
 
 
 def get_or_create_student(student_university_id, enrollments_in_banner, students_to_be_updated, existing_students_list):
@@ -473,6 +473,21 @@ def get_or_create_student(student_university_id, enrollments_in_banner, students
         student.active = True
         students_to_be_updated.append(student)
     return student
+
+
+def update_student_data_from_banner(student_university_id, enrollments_in_banner, students_to_be_updated):
+    student_record = get_student_record(student_university_id, enrollments_in_banner)
+
+    student, created = Student.objects.get_or_create(university_id=student_university_id)
+
+    student.arabic_name = student_record.get('name_ar')
+    student.english_name = student_record.get('name_en')
+    student.mobile = student_record.get('mobile')
+    student.personal_email = student_record.get('email')
+    student.active = True
+
+    if student not in students_to_be_updated:
+        students_to_be_updated.append(student)
 
 
 def get_section_by_crn(crn, course_offering, fetched_sections, sections_to_be_created):
@@ -621,7 +636,7 @@ def resolve_duplicated_periods(master_period, duplicated_periods, attendance_ins
                 attendance_instances_to_be_updated.append(attendance_instance)
 
 
-def synchronization(course_offering_pk, current_user, commit=False, first_week_mode=False):
+def synchronization(course_offering_pk, current_user, commit=False, first_week_mode=False, update_students_data=False):
     course_offering = get_object_or_404(CourseOffering, pk=course_offering_pk)
 
     class_roster = get_class_roster_from_banner(course_offering)
@@ -1150,17 +1165,26 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 )
     # endregion
 
+    # region update students data
+    if update_students_data:
+        for enrollment in existing_enrollments:
+            update_student_data_from_banner(enrollment.get('university_id', 0),
+                                            class_roster,
+                                            students_to_be_updated)
+    # endregion update students data
+
     # endregion sync enrollments
 
     # This needs to be done even if commit is False since records of these students have been created with minimal data.
     # The only downside to this approach is storage utilization...
     # The alternative is to delete them if commit is False but performance-wise, it is worse since it will require more
     # trips to the DB
-    if first_week_mode:
+    if first_week_mode and not commit:
         with transaction.atomic():
             Student.objects.bulk_update(students_to_be_updated,
                                         ['arabic_name', 'english_name', 'mobile', 'personal_email', 'active'],
                                         batch_size=100)
+
             Instructor.objects.bulk_update(teachers_to_be_updated,
                                            ['english_name', 'university_id', 'personal_email', 'active'],
                                            batch_size=100)

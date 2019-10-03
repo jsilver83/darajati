@@ -40,6 +40,7 @@ class BannerSynchronizationView(CoordinatorBaseView, FormView):
             sync_report = synchronization(course_offering_pk=form.cleaned_data['course_offering'],
                                           current_user=self.request.user,
                                           commit=False,
+                                          update_students_data=form.cleaned_data['update_students_data'],
                                           first_week_mode=form.cleaned_data['first_week_mode'], )
             context['previewed'] = True
 
@@ -66,6 +67,7 @@ class BannerSynchronizationView(CoordinatorBaseView, FormView):
                 synchronization(course_offering_pk=form.cleaned_data['course_offering'],
                                 current_user=self.request.user,
                                 commit=True,
+                                update_students_data=form.cleaned_data['update_students_data'],
                                 first_week_mode=form.cleaned_data['first_week_mode'], )
                 messages.success(self.request, _('The synchronization changes were committed successfully'))
             except:

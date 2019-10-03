@@ -17,9 +17,28 @@ class BannerSynchronizationForm(forms.Form):
                     'will make this process unnecessarily much slower')
     )
 
+    update_students_data = forms.BooleanField(
+        label=_('Update Students Data'),
+        required=False,
+        widget=forms.NullBooleanSelect(attrs={'class': 'form-control'}),
+        help_text=_('You can check this if you wish to update student data (name, mobile, email) in this courses'
+                    ' offering. You have to check this with the "First Week Mode"')
+    )
+
     def __init__(self, choices, *args, **kwargs):
         super(BannerSynchronizationForm, self).__init__(*args, **kwargs)
         self.fields['course_offering'].choices = choices
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        first_week_mode = cleaned_data.get('first_week_mode', False)
+        update_students_data = cleaned_data.get('update_students_data', False)
+
+        if update_students_data and not first_week_mode:
+            raise forms.ValidationError(_('You have to check "Update Student Data" with "First Week Mode"'))
+
+        return cleaned_data
 
 
 class GradesImportForm(forms.Form):
