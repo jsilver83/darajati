@@ -507,8 +507,8 @@ class Enrollment(models.Model):
     section = models.ForeignKey(Section, related_name='enrollments', on_delete=models.CASCADE)
     active = models.BooleanField(_('Active'), blank=False, default=True)
     comment = models.CharField(_('Comment'), max_length=200, blank=True)
-    letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=False, default='UD')
-    register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=False)
+    letter_grade = models.CharField(_('letter grade'), max_length=20, null=True, blank=True, default='UD')
+    register_date = models.DateTimeField(_('Enrollment Date'), null=True, blank=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='updated_enrollments',
                                    null=True, blank=False)
     updated_on = models.DateTimeField(_('Updated on'), auto_now=True)
