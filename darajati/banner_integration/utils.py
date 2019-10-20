@@ -1056,7 +1056,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 moving_enrollment.student = moved_enrollment.student
                 moving_enrollment.section = new_section
                 moving_enrollment.updated_by = current_user
-                moving_enrollment.letter_grade = enrollment['grade']
+                moving_enrollment.letter_grade = enrollment['grade'].upper()
                 moving_enrollment.active = get_student_status_by_letter_grade(enrollment['grade'])
                 moving_enrollment.register_date = get_student_record(enrollment['university_id'],
                                                                      class_roster).get('register_date')
@@ -1112,11 +1112,13 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 enrollment_with_grade_to_be_changed = Enrollment.objects.get(
                     student__university_id=enrollment['university_id'],
                     section__course_offering=course_offering,
+                    active=True,
                 )
-                old_grade = enrollment_with_grade_to_be_changed.letter_grade
+                old_grade = enrollment_with_grade_to_be_changed.letter_grade.upper()
+                new_grade = enrollment['grade'].upper()
                 enrollment_with_grade_to_be_changed.active = get_student_status_by_letter_grade(enrollment['grade'])
                 enrollment_with_grade_to_be_changed.updated_by = current_user
-                enrollment_with_grade_to_be_changed.letter_grade = enrollment['grade']
+                enrollment_with_grade_to_be_changed.letter_grade = new_grade
                 enrollments_to_be_updated.append(enrollment_with_grade_to_be_changed)
                 enrollments_changes_report.append(
                     {
@@ -1124,7 +1126,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                         'message': '%s letter grade got changed from %s to %s' % (
                             enrollment['university_id'],
                             old_grade,
-                            enrollment['grade'],
+                            new_grade,
                         )
                     }
                 )
