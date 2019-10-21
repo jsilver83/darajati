@@ -4,6 +4,8 @@ from datetime import datetime
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import MultipleObjectsReturned
+from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.models import Q, F
 from django.db.models.functions import Lower
@@ -1100,6 +1102,12 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                         enrollment['university_id'], enrollment['crn'], str(e),
                     ),
                 )
+                mail_admins('Sync Error Log',
+                            'Sync Error Log: %s could NOT be created in section crn %s because it is duplicated '
+                            'or missing. Exception: %s' % (
+                                enrollment['university_id'], enrollment['crn'], str(e),
+                            ), html_message=True, )
+
         # endregion
 
         # region CASE 3: student changed grade or dropped with grade in ['w', 'wp', 'wf', 'ic', 'dn']
@@ -1130,12 +1138,45 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                         )
                     }
                 )
-            except Enrollment.DoesNotExist:
+            except Enrollment.DoesNotExist as e:
+                serious_issues.append(
+                    {
+                        'urgency': 'URGENT',
+                        'code': 'MISSING ENROLLMENT',
+                        'message': "Sync Error Log: Could NOT fetch Enrollment (ID: {}) and "
+                                   "(course offering: {}).".format(enrollment['university_id'], course_offering, ),
+                        'object': enrollment['university_id'],
+                    }
+                )
                 logger.exception(
                     "Sync Error Log: Could NOT fetch Enrollment (ID: {}) and (course offering: {}).".format(
                         enrollment['university_id'], course_offering,
                     )
                 )
+                mail_admins('Sync Error Log',
+                            "Could NOT fetch Enrollment (ID: {}) and (course offering: {}).<br><br>{}".format(
+                                enrollment['university_id'], course_offering, str(e),
+                            ), html_message=True, )
+            except MultipleObjectsReturned as e:
+                serious_issues.append(
+                    {
+                        'urgency': 'URGENT',
+                        'code': 'DUPLICATE ENROLLMENTS',
+                        'message': "Sync Error Log: (ID: {}) and (course offering: {}) returned more than one "
+                                   "record.".format(enrollment['university_id'], course_offering, ),
+                        'object': enrollment['university_id'],
+                    }
+                )
+                logger.exception(
+                    "Sync Error Log: (ID: {}) and (course offering: {}) returned more than one record.".format(
+                        enrollment['university_id'], course_offering,
+                    )
+                )
+                mail_admins('Sync Error Log',
+                            "Sync Error Log: (ID: {}) and (course offering: {}) returned more than one record."
+                            "<br><br>{}".format(
+                                enrollment['university_id'], course_offering, str(e),
+                            ), html_message=True, )
         # endregion
 
     # region CASE 4: student dropped without grade
