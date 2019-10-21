@@ -1058,7 +1058,7 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                 moving_enrollment.student = moved_enrollment.student
                 moving_enrollment.section = new_section
                 moving_enrollment.updated_by = current_user
-                moving_enrollment.letter_grade = enrollment['grade'].upper()
+                moving_enrollment.letter_grade = enrollment['grade'].upper() if enrollment['grade'] else ''
                 moving_enrollment.active = get_student_status_by_letter_grade(enrollment['grade'])
                 moving_enrollment.register_date = get_student_record(enrollment['university_id'],
                                                                      class_roster).get('register_date')
@@ -1122,8 +1122,9 @@ def synchronization(course_offering_pk, current_user, commit=False, first_week_m
                     section__course_offering=course_offering,
                     active=True,
                 )
-                old_grade = enrollment_with_grade_to_be_changed.letter_grade.upper()
-                new_grade = enrollment['grade'].upper()
+                old_grade = enrollment_with_grade_to_be_changed.letter_grade.upper() \
+                    if enrollment_with_grade_to_be_changed.letter_grade else ''
+                new_grade = enrollment['grade'].upper() if enrollment['grade'] else ''
                 enrollment_with_grade_to_be_changed.active = get_student_status_by_letter_grade(enrollment['grade'])
                 enrollment_with_grade_to_be_changed.updated_by = current_user
                 enrollment_with_grade_to_be_changed.letter_grade = new_grade
