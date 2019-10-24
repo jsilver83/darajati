@@ -23,12 +23,6 @@
 					<a class="thm-btn small-btn" href="{% url 'grade:letter_grades' course_offering_id=course_offering.id %}">
 						<span class="glyphicon glyphicon-bold" aria-hidden="true"></span><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans 'Letter Grades' %}
 					</a>
-					{% if letter_grade_promotion_enabled %}
-					<a href="{% url 'grade:letter_grades_promotion' course_offering_id=course_offering.id %}"
-					   class="thm-btn small-btn outline-btn-dgrey float-right">
-						<span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> {% trans 'Letter Grades Promotion' %}
-					</a>
-					{% endif %}
 					<a href="{% url 'enrollment:bulk_update' course_offering_id=course_offering.id %}"
 					   class="thm-btn small-btn outline-btn-dgrey float-right">
 						<span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> {% trans 'Bulk Update' %}

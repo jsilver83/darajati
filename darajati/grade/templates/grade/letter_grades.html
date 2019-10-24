@@ -21,17 +21,23 @@
 			{% if formset.forms %}
 				<form method="post">
 					<div class="title-sec row">
-						<div class="col-md-offset-3 col-md-9 text-right">
+						<div class="col-md-offset-1 col-md-11 text-right">
 							{% if can_import_fragments %}
-							<a class="thm-btn" href="{% url 'grade:letter_grades_import' course_offering.pk %}">
+							<a class="small-btn thm-btn" href="{% url 'grade:letter_grades_import' course_offering.pk %}">
 								<span class="glyphicon glyphicon-import"></span> {% trans 'Import From Previous Semester' %}</a>
 							{% endif %}
-							<button class="thm-btn" type="submit" name="save">
+							{% if letter_grade_promotion_enabled %}
+							<a href="{% url 'grade:letter_grades_promotion' course_offering_id=course_offering.id %}"
+							   class="small-btn thm-btn">
+								<span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> {% trans 'Letter Grades Promotion' %}
+							</a>
+							{% endif %}
+							<button class="small-btn thm-btn" type="submit" name="save">
 								<span class="glyphicon glyphicon-save-file"></span> {% trans 'Save' %}</button>
-							<button class="thm-btn" type="submit" name="csv"
+							<button class="small-btn thm-btn" type="submit" name="csv"
 							        onclick="return confirm('{% trans "Are you sure?" %}');">
 								<span class="glyphicon glyphicon-th"></span> {% trans 'Export To CSV' %}</button>
-							<button class="thm-btn" type="submit" name="apply"
+							<button class="small-btn thm-btn" type="submit" name="apply"
 							        onclick="return confirm('{% trans "Are you sure?" %}');">
 								<span class="glyphicon glyphicon-saved"></span> {% trans 'Save and Apply' %}</button>
 						</div>

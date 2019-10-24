@@ -216,7 +216,6 @@ class CoordinatorGradeFragmentView(CoordinatorEditBaseView, ListView):
         context['course_offering'] = self.course_offering
         context['can_create_fragment'] = self.course_offering.semester.can_create_grade_fragment()
         context['fragments_total_weight'] = self.get_queryset().aggregate(Sum('weight')).get('weight__sum')
-        context['letter_grade_promotion_enabled'] = bool(self.course_offering.get_letter_grade_promotion_criterion())
         return context
 
 
