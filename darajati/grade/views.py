@@ -15,7 +15,7 @@ from extra_views import ModelFormSetView
 from enrollment.models import Section
 from enrollment.views import InstructorBaseView, CoordinatorEditBaseView
 from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet
-from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView
+from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView, SectionsAveragesView
 
 
 class GradeBaseView(InstructorBaseView):
@@ -201,22 +201,41 @@ class GradeReportView(GradeBaseView, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fragments = GradeFragment.objects.filter(
-                course_offering=self.section.course_offering)
+            course_offering=self.section.course_offering,
+            show_teacher_report=True,
+        )
 
         context.update({
             'grades': StudentGrade.objects.filter(
                 enrollment__section=self.section,
                 enrollment__active=True,
+                grade_fragment__in=fragments,
             ).order_by('enrollment__student__university_id', 'grade_fragment__order'),
             'fragments': fragments
         })
-        averages = []
+
+        averages = SectionsAveragesView.objects.filter(
+            grade_fragment__in=fragments,
+        ).values('grade_fragment', 'grades_average', 'grades_average_percentage')
+
+        averages_list = []
+        averages_percentages_list = []
         for fragment in fragments:
-            averages.append(
-                fragment.get_section_average(self.section)
-            )
+            try:
+                averages_list.append(
+                    next(average.get('grades_average') for average in averages
+                         if average.get("grade_fragment") == fragment.pk)
+                )
+                averages_percentages_list.append(
+                    next(average.get('grades_average_percentage') for average in averages
+                         if average.get("grade_fragment") == fragment.pk)
+                )
+            except StopIteration:
+                averages_list.append(Decimal('0.000'))
+
         context.update({
-            'averages': averages
+            'averages': averages_list,
+            'averages_percentages': averages_percentages_list,
         })
         return context
 

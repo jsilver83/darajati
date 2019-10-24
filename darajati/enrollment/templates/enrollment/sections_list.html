@@ -17,7 +17,6 @@
 					<tr>
 						<th class="text-center">{% trans 'Semester Code' %}</th>
 						<th class="text-center">{% trans 'Course Code' %}</th>
-						<th class="text-center">{% trans 'Course Name' %}</th>
 						<th class="text-center">{% trans 'Section Code' %}</th>
 						<th class="text-center">{% trans 'Being Taught By' %}</th>
 						<th class="text-center">{% trans 'Attendances' %}</th>
@@ -32,15 +31,15 @@
 							<td>{{ section.course_offering.semester.code }}</td>
 							<td {% if section.course_offering.coordinated %} style="color:red" {% endif %}>
 								{{ section.course_offering.course.code }}</td>
-							<td>{{ section.course_offering.course.name }}</td>
 							<td>{{ section.code }}</td>
 							<td>{{ section.teachers }}</td>
 							<td>
-								<a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a>&nbsp;&nbsp;<a target="_blank" href="{% url 'attendance:section_attendance_print' section_id=section.id %}"
+								<a href="{% url 'attendance:section_attendance' section_id=section.id %}" class="thm-btn small-btn outline-btn-dgrey">{% trans 'Enter' %}</a>&nbsp;&nbsp;<a target="_blank" href="{% url 'attendance:section_attendance_print' section_id=section.id %}"
 								                                                                                                                                                                class="thm-btn small-btn outline-btn-dgrey"><span class="glyphicon glyphicon-print" aria-hidden="true"></span> {% trans 'Sheet' %}</a>
 							</td>
 							<td><a href="{% url 'grade:section_grade' section_id=section.id %}"
-							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a></td>
+							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View/Edit' %}</a>&nbsp;<a href="{% url 'grade:section_grade_report' section_id=section.id %}"
+							       class="thm-btn small-btn outline-btn-dgrey"><span class="glyphicon glyphicon-list" aria-hidden="true"></span> {% trans 'Report' %}</a></td>
 							<td><a href="{% url 'enrollment:section_students' section_id=section.id %}"
 							       class="thm-btn small-btn outline-btn-dgrey">{% trans 'View' %}</a></td>
 							<td></td>
