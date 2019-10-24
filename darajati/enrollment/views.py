@@ -238,10 +238,11 @@ class ImportGradeFragmentsView(CoordinatorEditBaseView, View):
 
     def get(self, request, *args, **kwargs):
         self.init_class_attributes(request, *args, **kwargs)
+
         latest_course_offering = CourseOffering.objects.filter(
             course=self.course_offering.course,
-            semester__start_date__lte=self.course_offering.semester.start_date
         ).order_by('-semester__end_date').exclude(pk=self.course_offering_id).first()
+
         if latest_course_offering and len(latest_course_offering.grade_fragments.all()):
             for fragment in latest_course_offering.grade_fragments.all():
                 fragment.pk = None
