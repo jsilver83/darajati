@@ -9,10 +9,11 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+from django.views import View
 from django.views.generic import ListView, CreateView, TemplateView, FormView
 from extra_views import ModelFormSetView
 
-from enrollment.models import Section
+from enrollment.models import Section, CourseOffering
 from enrollment.views import InstructorBaseView, CoordinatorEditBaseView
 from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet
 from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView, SectionsAveragesView
@@ -272,6 +273,7 @@ class LetterGradesView(CoordinatorEditBaseView, ModelFormSetView):
         context['letter_grades_counts'] = StudentFinalDataView.objects.filter(
             course_offering=self.course_offering
         ).values('calculated_letter_grade').annotate(entries=Count('calculated_letter_grade'))
+        context['can_import_fragments'] = not len(self.course_offering.letter_grades.all())
         return context
 
     def formset_valid(self, formset):
@@ -369,3 +371,39 @@ class LetterGradesPromotionView(CoordinatorEditBaseView, FormView):
             messages.success(self.request, _('Cases were promoted successfully.'))
             return redirect(self.request.get_full_path())
         return super().form_valid(form)
+
+
+class ImportLetterGradesView(CoordinatorEditBaseView, View):
+
+    def test_func(self):
+        rules = super().test_func()
+        if rules:
+            if self.course_offering.letter_grades.count() > 0:
+                messages.error(self.request, _('You can NOT import letter grades from previous semester when you '
+                                               'already have entered some in this semester'))
+                return False
+            return True
+
+    def get(self, request, *args, **kwargs):
+        self.init_class_attributes(request, *args, **kwargs)
+
+        latest_course_offering = CourseOffering.objects.filter(
+            course=self.course_offering.course,
+        ).order_by('-semester__end_date').exclude(pk=self.course_offering_id).first()
+
+        letter_grades = latest_course_offering.letter_grades.all()
+        if latest_course_offering and len(letter_grades):
+            for letter_grade in letter_grades:
+                letter_grade.pk = None
+                letter_grade.course_offering = self.course_offering
+                letter_grade.cut_off_point = None
+                letter_grade.updated_by = self.request.user
+                letter_grade.save()
+            messages.success(self.request, _('%s Letter grades were imported from %s successfully') % (
+                self.course_offering.grade_fragments.count(),
+                str(latest_course_offering)
+            ))
+        else:
+            messages.error(self.request,
+                           _('There is no previous course offering or there are no letter grades there to be imported'))
+        return redirect(reverse_lazy('grade:letter_grades', args=(self.course_offering_id, )))

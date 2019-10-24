@@ -29,4 +29,7 @@ urlpatterns = [
 
     path('letter-grades-promotion/<int:course_offering_id>/', views.LetterGradesPromotionView.as_view(),
          name='letter_grades_promotion'),
+
+    path('letter-grades/<int:course_offering_id>/import/', views.ImportLetterGradesView.as_view(),
+         name='letter_grades_import'),
 ]
