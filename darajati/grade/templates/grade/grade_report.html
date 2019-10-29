@@ -5,44 +5,46 @@
 		<br>
 		<div class="cntnt-sec">
 			{% if grades %}
-				<table class="table display" id="mytable" cellspacing="0" width="100%">
-					<thead>
-					<tr>
-						<th>{% trans 'Student Name' %}</th>
-						<th>{% trans 'Student ID' %}</th>
-						{% for fragment in fragments %}
-							<th>{{ fragment.category }} {{ fragment.description }}<br>{{ fragment.weight }}</th>
-						{% endfor %}
-					</tr>
-					</thead>
-					<tfoot>
-					<tr>
-						<th colspan="2" style="text-align: right">{% trans 'Averages' %}:&nbsp;&nbsp;&nbsp;</th>
-						{% for average in averages %}
-							<th>{{ average|floatformat:4 }}</th>
-						{% endfor %}
-					</tr>
-					<tr>
-						<th colspan="2" style="text-align: right">{% trans 'Averages Percenatges' %}:&nbsp;&nbsp;&nbsp;</th>
-						{% for average_percentage in averages_percentages %}
-							<th>{{ average_percentage|floatformat:4 }}%</th>
-						{% endfor %}
-					</tr>
-					</tfoot>
-					<tbody>
-					{% for grade in grades %}
-						{% ifchanged grade.enrollment.student.university_id %}
-							<tr>
-							<td>{{ grade.enrollment.student.english_name }}</td>
-							<td>{{ grade.enrollment.student.university_id }}</td>
-							<td>{{ grade.display_percent_grade }}</td>
-						{% else %}
-							<td>{{ grade.display_percent_grade }}</td>
+				<div style="overflow-x: auto">
+					<table class="table display" id="mytable" cellspacing="0" width="100%">
+						<thead>
+						<tr>
+							<th>{% trans 'Student Name' %}</th>
+							<th>{% trans 'Student ID' %}</th>
+							{% for fragment in fragments %}
+								<th>{{ fragment.category }} {{ fragment.description }}<br>{{ fragment.weight }}</th>
+							{% endfor %}
+						</tr>
+						</thead>
+						<tfoot>
+						<tr>
+							<th colspan="2" style="text-align: right">{% trans 'Averages' %}:&nbsp;&nbsp;&nbsp;</th>
+							{% for average in averages %}
+								<th>{{ average|floatformat:4 }}</th>
+							{% endfor %}
+						</tr>
+						<tr>
+							<th colspan="2" style="text-align: right">{% trans 'Averages Percenatges' %}:&nbsp;&nbsp;&nbsp;</th>
+							{% for average_percentage in averages_percentages %}
+								<th>{{ average_percentage|floatformat:4 }}%</th>
+							{% endfor %}
+						</tr>
+						</tfoot>
+						<tbody>
+						{% for grade in grades %}
+							{% ifchanged grade.enrollment.student.university_id %}
+								<tr>
+								<td>{{ grade.enrollment.student.english_name }}</td>
+								<td>{{ grade.enrollment.student.university_id }}</td>
+								<td>{{ grade.display_percent_grade }}</td>
+							{% else %}
+								<td>{{ grade.display_percent_grade }}</td>
 
-						{% endifchanged %}
-					{% endfor %}
-					</tbody>
-				</table>
+							{% endifchanged %}
+						{% endfor %}
+						</tbody>
+					</table>
+				</div>
 			{% else %}
 				{% trans 'There are no students' %}
 			{% endif %}
@@ -53,8 +55,8 @@
 	<script type="text/javascript">
         $(document).ready(function () {
             var table = $('#mytable').DataTable({
-                "pageLength": 50,
-                "scrollX": true
+                "pageLength": 50
+                {#"scrollX": "100%" added scrolling through html/css #}
             });
         });
 	</script>
