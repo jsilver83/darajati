@@ -290,6 +290,57 @@ class GradeFragment(models.Model):
 
 
 class LetterGrade(models.Model):
+    class Weights:
+        A_PLUS = 'A+'
+        A = 'A'
+        B_PLUS = 'B+'
+        B = 'B'
+        C_PLUS = 'C+'
+        C = 'C'
+        D_PLUS = 'D+'
+        D = 'D'
+        F = 'F'
+
+        weights = [
+            (A_PLUS, 4.0),
+            (A, 3.75),
+            (B_PLUS, 3.5),
+            (B, 3.0),
+            (C_PLUS, 2.5),
+            (C, 2.0),
+            (D_PLUS, 1.5),
+            (D, 1.0),
+            (F, 0.0),
+        ]
+
+        @classmethod
+        def get_weight(cls, letter_grade):
+            """
+            this function is going to be used to calculate the course overall average
+            :param letter_grade: in a string format (case insensitive
+            :return: the corresponding weight
+            """
+            letter_grade = letter_grade.strip().upper()
+            letter_grade = "".join(letter_grade.split())
+
+            return next((weight[1] for weight in cls.weights if weight[0] == letter_grade), None)
+
+        @classmethod
+        def calculate_course_overall_average(cls, letter_grades_counts):
+            """
+            :param letter_grades_counts: a list of dicts that has letter_grade and entries (how many students got it)
+            :return: the calculated overall course average
+            """
+            summation = 0.0
+            count = 0.0
+            for letter_grades_count in letter_grades_counts:
+                weight = cls.get_weight(letter_grades_count.get('calculated_letter_grade', 0))
+
+                if weight is not None:
+                    summation += weight * letter_grades_count.get('entries')
+                    count += letter_grades_count.get('entries')
+            return summation/count
+
     course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
                                         related_name="letter_grades", null=True,
                                         blank=False)

@@ -270,9 +270,14 @@ class LetterGradesView(CoordinatorEditBaseView, ModelFormSetView):
     def get_context_data(self, **kwargs):
         context = super(LetterGradesView, self).get_context_data(**kwargs)
         context['course_offering'] = self.course_offering
-        context['letter_grades_counts'] = StudentFinalDataView.objects.filter(
+
+        letter_grades_counts = StudentFinalDataView.objects.filter(
             course_offering=self.course_offering
         ).values('calculated_letter_grade').annotate(entries=Count('calculated_letter_grade'))
+        context['letter_grades_counts'] = letter_grades_counts
+
+        context['overall_gpa'] = LetterGrade.Weights.calculate_course_overall_average(letter_grades_counts)
+
         context['can_import_fragments'] = not len(self.course_offering.letter_grades.all())
         context['letter_grade_promotion_enabled'] = bool(self.course_offering.get_letter_grade_promotion_criterion())
         return context
