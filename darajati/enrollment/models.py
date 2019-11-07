@@ -252,13 +252,24 @@ class CourseOffering(models.Model):
         help_text=_('Decimal places in the Total for rounding or truncating methods')
     )
     grade_promotion_borderline = models.DecimalField(
-        _('Letter Grade Promotion Borderline Difference'),
+        _('Letter Grade Promotion Borderline Difference For Criteria'),
         null=True,
         blank=True,
         default=0.0,
         max_digits=settings.MAX_DIGITS,
         decimal_places=settings.MAX_DECIMAL_POINT,
-        help_text=_('This will be used to check student''s eligibility for letter grade promotion.'),
+        help_text=_('This will be used to check student''s eligibility for letter grade promotion if the student is '
+                    'meeting promotion criterion in the grade fragment(s)'),
+    )
+    auto_grade_promotion_difference = models.DecimalField(
+        _('Auto Letter Grade Promotion Difference'),
+        null=True,
+        blank=True,
+        default=0.0,
+        max_digits=settings.MAX_DIGITS,
+        decimal_places=settings.MAX_DECIMAL_POINT,
+        help_text=_('This will be used to check student''s eligibility for letter grade promotion. A student will be '
+                    'considered for promotion if his total is within this difference'),
     )
 
     class Meta:
@@ -721,27 +732,51 @@ class Enrollment(models.Model):
                 return self.grades.get(grade_fragment=criterion).grade_quantity
             except:
                 return Decimal('0.00')
+            
+    def get_difference_to_next_letter_grade(self):
+        calculated_letter_grade = self.calculated_letter_grade()
+        calculated_letter_grade_instance = LetterGrade.get_letter_grade(self.section.course_offering, 
+                                                                        calculated_letter_grade)
+        if calculated_letter_grade_instance is None:
+            return
+
+        the_upper_letter_grade = calculated_letter_grade_instance.get_the_upper_letter_grade()
+        if the_upper_letter_grade is None:
+            return
+
+        return the_upper_letter_grade.cut_off_point - self.calculated_total()
+
+    def get_next_promotable_letter_grade(self):
+        calculated_letter_grade = self.calculated_letter_grade()
+
+        upper_letter_grade = LetterGrade.get_letter_grade(
+            self.section.course_offering,
+            calculated_letter_grade
+        ).get_the_upper_letter_grade()
+        if upper_letter_grade:
+            return upper_letter_grade.letter_grade
+
+    def is_an_auto_promotion_case(self):
+        auto_grade_promotion_difference = self.section.course_offering.auto_grade_promotion_difference
+
+        if auto_grade_promotion_difference:
+            diff = self.get_difference_to_next_letter_grade()
+            if diff is not None and diff <= auto_grade_promotion_difference:
+                return True
 
     def is_a_borderline_case(self):
         letter_grade_promotion_borderline = self.section.course_offering.grade_promotion_borderline
         if letter_grade_promotion_borderline is None:
             return False
-
-        calculated_letter_grade = self.calculated_letter_grade()
-        calculated_letter_grade_instance = LetterGrade.get_letter_grade(self.section.course_offering, calculated_letter_grade)
-        if calculated_letter_grade_instance is None:
-            return False
-
-        the_upper_letter_grade = calculated_letter_grade_instance.get_the_upper_letter_grade()
-        if the_upper_letter_grade is None:
-            return False
-
-        calculated_total = self.calculated_total()
-
-        if calculated_total:
-            return (the_upper_letter_grade.cut_off_point - calculated_total) <= letter_grade_promotion_borderline
+        else:
+            diff = self.get_difference_to_next_letter_grade()
+            if diff is not None and diff <= letter_grade_promotion_borderline:
+                return True
 
     def is_eligible_for_letter_grade_promotion(self):
+        if self.is_an_auto_promotion_case():
+            return self.get_next_promotable_letter_grade()
+
         letter_grade_promotion_borderline = self.section.course_offering.grade_promotion_borderline
 
         if letter_grade_promotion_borderline:
@@ -761,11 +796,16 @@ class Enrollment(models.Model):
                                                                              criterion_letter_grade.letter_grade,
                                                                              calculated_letter_grade)
                     if criterion_comparison > 0:
-                        upper_letter_grade = LetterGrade.get_letter_grade(
-                            self.section.course_offering,
-                            calculated_letter_grade).get_the_upper_letter_grade()
-                        if upper_letter_grade:
-                            return upper_letter_grade.letter_grade
+                        return self.get_next_promotable_letter_grade()
+
+    def promotion_type(self):
+        if self.is_an_auto_promotion_case():
+            return _('Total {total} is within auto promotion difference').format(total=self.calculated_total())
+        else:
+            return _('{grade_criterion} out of {promotion_criterion}').format(
+                grade_criterion=self.get_grade_in_letter_grade_promotion_criterion(),
+                promotion_criterion=self.section.course_offering.get_letter_grade_promotion_criterion().weight,
+            )
 
     def was_promoted(self):
         return self.comment.startswith('Letter grade got promoted from')
