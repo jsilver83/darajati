@@ -13,7 +13,7 @@
 					<p>{% trans 'Being Taught By: ' %}<span>{{ section.teachers }}</span></p>
 					<p>{% trans 'Grade Fragment Category: ' %}<span>{{ grade_fragment.category }}</span></p>
 					<p>{% trans 'Grade Fragment Description: ' %}<span>{{ grade_fragment.description }}</span></p>
-					<p>{% trans 'Grade Fragment Weight: ' %}<span>{{ grade_fragment.weight }}</span></p>
+					<p>{% trans 'Grade Fragment Weight: ' %}<span id="weight">{{ grade_fragment.weight }}</span></p>
 					<p>{% trans 'Grade Fragment Type: ' %}<span>{{ grade_fragment.get_boundary_type_display }}</span>
 					</p>
 					<div class="alert alert-warning">
@@ -43,6 +43,8 @@
 		<div class="cntnt-sec">
 			{% if formset.forms %}
 				<form method="post">
+					<div id="pasteComments" class="alert alert-danger" style="display: none"></div>
+					<span id="entryPercent" style="display: none">{{ grade_fragment.entry_in_percentages }}</span>
 					<div class="title-sec row">
 						<h2>{% trans 'Available Grades' %}</h2>
 					</div>
@@ -80,12 +82,12 @@
 												{{ form.non_field_errors }}{{ forloop.counter }}</div>
 										</div>
 									</td>
-									<td>{{ form.instance.enrollment.student.university_id }}</td>
+									<td><span class="kfupmid">{{ form.instance.enrollment.student.university_id }}</span></td>
 									<td>{{ form.instance.enrollment.student.english_name }}</td>
 									{% if grade_fragment.entry_in_percentages %}
 										<td>
 											<div class="row">
-												<div class="col-md-12">
+												<div class="col-md-12 grade">
 													{{ form.grade_percentage }}{{ form.grade_percentage.errors }}</div>
 											</div>
 										</td>
@@ -93,12 +95,12 @@
 									{% else %}
 										<td>
 											<div class="row">
-												<div class="col-md-12">
+												<div class="col-md-12 grade">
 													{{ form.grade_quantity }}{{ form.grade_quantity.errors }}</div>
 											</div>
 										</td>
 									{% endif %}
-									<td>{{ form.remarks }}</td>
+									<td class="notes">{{ form.remarks }}</td>
 									<td>{{ form.instance.updated_on|naturaltime }}</td>
 									<td>{{ form.instance.updated_by }}</td>
 									{{ form.id }}
@@ -125,33 +127,15 @@
 	</div>
 {% endblock %}
 {% block scripts %}
-	<script type="text/javascript">
-        $(document).ready(function () {
-            $('.grade_quantity').on('keyup paste', calculate_average);
-        });
-
-        function calculate_average() {
-            var total = 0.0;
-            var count = 0;
-            var average = 0.0;
-            var average_in_percent = 0.0;
-            $('.grade_quantity').each(function (index) {
-                if ($(this).val() != '') {
-                    var value = parseFloat($(this).val());
-                    total += value;
-                    count += 1;
-                }
-            });
-            {% if not grade_fragment.entry_in_percentages %}
-                average = total / count;
-                average_in_percent = average / {{ grade_fragment.weight }} * 100;
-            {% else %}
-                average_in_percent = total / count;
-                average = average_in_percent / 100 * {{ grade_fragment.weight }};
-            {% endif %}
-            $('.section_average').html(
-                "" + average.toFixed(4) + ",  (" + average_in_percent.toFixed(4) + "%)"
-            );
-        }
-	</script>
+	<script type="application/javascript" src="{% static 'js/pasteGrades.js' %}"></script>
 {% endblock %}
+{% block style %}
+	<style>
+		.table > tbody > tr.danger > td {
+			background-color: #f2dede!important;
+		}
+		.table > tbody > tr.success > td {
+			background-color: #dff0d8!important;
+		}
+	</style>
+{% endblock style %}
