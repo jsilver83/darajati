@@ -465,30 +465,6 @@ class StudentGrade(models.Model):
             enrollment__active=True
         )
 
-    @staticmethod
-    def get_section_average(section, grade_fragment):
-        """
-        :param section: 
-        :param grade_fragment: 
-        :return: get section average of a given grade fragment 
-        """
-        grades = StudentGrade.objects.filter(
-            grade_fragment=grade_fragment,
-            enrollment__section=section,
-            # grade_fragment__student_total_grading=True,
-            enrollment__active=True
-        ).exclude(grade_quantity=None).values().aggregate(
-            sum=Sum('grade_quantity'),
-            count=Count('id'),
-        )
-        if grades['sum']:
-            section_average = Decimal(grades['sum'] / grades['count'])
-            if grade_fragment.entry_in_percentages:
-                section_average = section_average * 100 / grade_fragment.weight
-            section_average = section_average
-            return section_average if not grades['sum'] is None else 0
-        return 0
-
     # TODO: rework and use view
     @staticmethod
     def get_section_objective_average(section, grade_fragment):
@@ -534,33 +510,6 @@ class StudentGrade(models.Model):
             if not grade_fragment.entry_in_percentages:
                 average = average * grade_fragment.weight / 100
             return decimal(average)
-
-    @staticmethod
-    def get_course_average(section, grade_fragment):
-        """        
-        :param section: 
-        :param grade_fragment: 
-        :return: course average for all sections of this grade fragment 
-        """
-        if section.course_offering.coordinated:
-            grades = StudentGrade.objects.filter(
-                grade_fragment=grade_fragment,
-                grade_fragment__course_offering=section.course_offering,
-                grade_fragment__student_total_grading=True,
-                enrollment__active=True
-            ).exclude(grade_quantity=None).values().aggregate(
-                sum=Sum('grade_quantity'),
-                count=Count('id'),
-            )
-
-            if grades['sum']:
-                course_average = Decimal(grades['sum'] / grades['count'])
-                if grade_fragment.entry_in_percentages:
-                    course_average = course_average * 100 / grade_fragment.weight
-                course_average = round(course_average, 2)
-                return course_average if not grades['sum'] is None else 0
-            return 0
-        return False
 
     @staticmethod
     def get_student_old_grade(fragment, student_id):
@@ -720,53 +669,47 @@ class StudentGrade(models.Model):
         return self.grade_quantity
 
     @staticmethod
+    def get_section_average(section, grade_fragment):
+        average = SectionsAveragesView.objects.filter(grade_fragment=grade_fragment, section=section)
+
+        return average.first() if average else Decimal('0.00')
+
+    @staticmethod
+    def get_course_average(grade_fragment):
+        average = CoursesAveragesView.objects.filter(grade_fragment=grade_fragment)
+
+        return average.first() if average else Decimal('0.00')
+
+    @staticmethod
     def display_section_average(section, grade_fragment):
         """
         :param section: 
         :param grade_fragment: 
-        :return: get section average of a given grade fragment 
+        :return: get section average of a given grade fragment formatted
         """
-        # TODO: refactor to use only 1 grades function in all averages functions
-        grades = StudentGrade.objects.filter(
-            grade_fragment=grade_fragment,
-            enrollment__section=section,
-            # grade_fragment__student_total_grading=True,
-            enrollment__active=True
-        ).exclude(grade_quantity=None).values().aggregate(
-            sum=Sum('grade_quantity'),
-            count=Count('id'),
-        )
-        if grades['sum']:
-            section_average = Decimal(grades['sum'] / grades['count'])
-            section_average_percent = section_average * 100 / grade_fragment.weight
-            display_average = '{}, ({}%)'.format(decimal(section_average), decimal(section_average_percent))
-            return display_average if not grades['sum'] is None else ''
-        return ''
+        averages = StudentGrade.get_section_average(section, grade_fragment)
+        if averages:
+            display_average = '{}, ({}%)'.format(decimal(averages.grades_average),
+                                                 decimal(averages.grades_average_percentage))
+            return display_average
+        else:
+            return ''
 
     @staticmethod
-    def display_course_average(section, grade_fragment):
+    def display_course_average(grade_fragment):
         """        
-                :param section: 
-                :param grade_fragment: 
-                :return: course average for all sections of this grade fragment 
-                """
-        if section.course_offering.coordinated:
-            grades = StudentGrade.objects.filter(
-                grade_fragment=grade_fragment,
-                grade_fragment__course_offering=section.course_offering,
-                grade_fragment__student_total_grading=True,
-                enrollment__active=True
-            ).exclude(grade_quantity=None).values().aggregate(
-                sum=Sum('grade_quantity'),
-                count=Count('id'),
-            )
+        :param section:
+        :param grade_fragment:
+        :return: course average for all sections of this grade fragment
+        """
 
-            if grades['sum']:
-                section_average = Decimal(grades['sum'] / grades['count'])
-                section_average_percent = section_average * 100 / grade_fragment.weight
-                display_average = '{}, ({}%)'.format(decimal(section_average), decimal(section_average_percent))
-                return display_average if not grades['sum'] is None else ''
-        return ''
+        averages = StudentGrade.get_course_average(grade_fragment)
+        if averages:
+            display_average = '{}, ({}%)'.format(decimal(averages.grades_average),
+                                                 decimal(averages.grades_average_percentage))
+            return display_average
+        else:
+            return ''
 
 
 # NOTE: followed this guide: https://blog.rescale.com/using-database-views-in-django-orm/

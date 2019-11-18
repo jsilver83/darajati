@@ -102,7 +102,7 @@ class GradesView(GradeBaseView, ModelFormSetView):
             'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'section': self.section,
             'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
-            'course_average': StudentGrade.display_course_average(self.section, self.grade_fragment),
+            'course_average': StudentGrade.display_course_average(self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'is_change_allowed': self.is_change_allowed,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
@@ -217,6 +217,7 @@ class GradeReportView(GradeBaseView, TemplateView):
 
         averages = SectionsAveragesView.objects.filter(
             grade_fragment__in=fragments,
+            section=self.section,
         ).values('grade_fragment', 'grades_average', 'grades_average_percentage')
 
         averages_list = []
