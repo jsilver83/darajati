@@ -339,7 +339,7 @@ class LetterGrade(models.Model):
                 if weight is not None:
                     summation += weight * letter_grades_count.get('entries')
                     count += letter_grades_count.get('entries')
-            return summation/count
+            return summation/count if count > 0 else Decimal('0.0000')
 
     course_offering = models.ForeignKey('enrollment.CourseOffering', on_delete=models.CASCADE,
                                         related_name="letter_grades", null=True,
