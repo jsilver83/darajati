@@ -21,44 +21,34 @@
 			</div>
 			<form class="form-horizontal">
 				{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
-                <input class="thm-btn small-btn" type="submit" value="{% trans 'Include' %}">
+				<input class="thm-btn small-btn" type="submit" value="{% trans 'Include' %}">
 			</form>
 			<br><br>
+
 			<table class="table table-bordered">
 				<thead>
-				<th>{% trans "Name" %}</th>
-				<th>{% trans "KFUPM ID" %}</th>
-				<th>{% trans "Missing Grade" %}</th>
-				<th>{% trans "Statistics" %}</th>
+				<tr>
+					<th>{% trans "Name" %}</th>
+					<th>{% trans "KFUPM ID" %}</th>
+					{% for fragment in fragments_to_be_included %}
+						<th>{{ fragment.short_name }}</th>
+					{% endfor %}
+				</tr>
 				</thead>
 				<tbody>
-				{% for missing_grade in missing_grades %}
-					<tr>
-						<td>{{ missing_grade.enrollment.student.name }}</td>
-						<td>{{ missing_grade.enrollment.student.university_id }}</td>
-						<td>{{ missing_grade.missing_grade.grade_fragment.short_name }}</td>
-						<td>
-							<table class="table">
-								<thead>
-								<th>{% trans "Fragment" %}</th>
-								<th>{% trans "Quantity" %}</th>
-								<th>{% trans "Section Average" %}</th>
-								<th>{% trans "Course Average" %}</th>
-								</thead>
-								<tbody>
-								{% for other_grade in missing_grade.other_grades %}
-									<tr>
-										<td>{{ other_grade.grade.grade_fragment.short_name }}</td>
-										<td>{{ other_grade.grade.grade_quantity }}</td>
-										<td>{{ other_grade.section_average }}</td>
-										<td>{{ other_grade.course_average }}</td>
-									</tr>
-								{% endfor %}
-								</tbody>
-							</table>
-						</td>
-					</tr>
-				{% endfor %}
+				<tr>
+					{% for grade in missing_grades %}
+						{% ifchanged grade.enrollment %}
+							</tr>
+							<tr>
+							<td>{{ grade.enrollment.student.name }}</td>
+							<td>{{ grade.enrollment.student.university_id }}</td>
+							<td>{{ grade.grade_quantity }}</td>
+						{% else %}
+							<td>{{ grade.grade_quantity }}</td>
+						{% endifchanged %}
+					{% endfor %}
+				<tr></tr>
 				</tbody>
 			</table>
 		</div>

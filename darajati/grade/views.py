@@ -430,5 +430,6 @@ class MissingGradesReportView(CoordinatorEditBaseView, FormView):
 
         fragments_to_be_included = self.request.GET.getlist('fragments_to_be_included')
 
+        context['fragments_to_be_included'] = GradeFragment.objects.filter(pk__in=fragments_to_be_included)
         context['missing_grades'] = StudentGrade.get_missing_grades(self.course_offering, fragments_to_be_included)
         return context
