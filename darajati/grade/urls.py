@@ -32,4 +32,7 @@ urlpatterns = [
 
     path('letter-grades/<int:course_offering_id>/import/', views.ImportLetterGradesView.as_view(),
          name='letter_grades_import'),
+
+    path('missing-grades-report/<int:course_offering_id>/', views.MissingGradesReportView.as_view(),
+         name='missing_grades_report'),
 ]

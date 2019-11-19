@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+
+	<div class="content-panel">
+		<br>
+		<div class="cntnt-sec">
+			<div class="title-sec text-center">
+				<h3>{% trans 'Missing Grades' %}</h3><br>
+			</div>
+			<div class="card card-outline-secondary mb-3">
+				<div class="card-block">
+					<blockquote class="card-blockquote">
+						<p>{% trans 'Semester: ' %}<span>{{ course_offering.semester.description }}</span></p>
+						<p>{% trans 'Course: ' %}<span>{{ course_offering.course }}</span></p>
+						<p>{% trans 'Coordinated: ' %}<span>{{ course_offering.coordinated }}</span>
+						</p>
+					</blockquote>
+				</div>
+			</div>
+			<form class="form-horizontal">
+				{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+				<input class="thm-btn small-btn" type="submit" value="{% trans 'Include' %}">
+			</form>
+			<br><br>
+
+			<table class="table table-bordered">
+				<thead>
+				<tr>
+					<th>{% trans "Name" %}</th>
+					<th>{% trans "KFUPM ID" %}</th>
+					{% for fragment in fragments_to_be_included %}
+						<th>{{ fragment.short_name }}</th>
+					{% endfor %}
+				</tr>
+				</thead>
+				<tbody>
+				<tr>
+					{% for grade in missing_grades %}
+						{% ifchanged grade.enrollment %}
+							</tr>
+							<tr>
+							<td>{{ grade.enrollment.student.name }}</td>
+							<td>{{ grade.enrollment.student.university_id }}</td>
+							<td>{{ grade.grade_quantity }}</td>
+						{% else %}
+							<td>{{ grade.grade_quantity }}</td>
+						{% endifchanged %}
+					{% endfor %}
+				<tr></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}

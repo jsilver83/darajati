@@ -15,7 +15,8 @@ from extra_views import ModelFormSetView
 
 from enrollment.models import Section, CourseOffering
 from enrollment.views import InstructorBaseView, CoordinatorEditBaseView
-from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet
+from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet, \
+    GradeFragmentsExclusionForm
 from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView, SectionsAveragesView
 
 
@@ -102,7 +103,7 @@ class GradesView(GradeBaseView, ModelFormSetView):
             'section_average': StudentGrade.display_section_average(self.section, self.grade_fragment),
             'section': self.section,
             'section_objective_average': StudentGrade.get_section_objective_average(self.section, self.grade_fragment),
-            'course_average': StudentGrade.display_course_average(self.section, self.grade_fragment),
+            'course_average': StudentGrade.display_course_average(self.grade_fragment),
             'grade_fragment': self.grade_fragment,
             'is_change_allowed': self.is_change_allowed,
             'boundary': self.grade_fragment.get_fragment_boundary(self.section)
@@ -217,6 +218,7 @@ class GradeReportView(GradeBaseView, TemplateView):
 
         averages = SectionsAveragesView.objects.filter(
             grade_fragment__in=fragments,
+            section=self.section,
         ).values('grade_fragment', 'grades_average', 'grades_average_percentage')
 
         averages_list = []
@@ -413,3 +415,21 @@ class ImportLetterGradesView(CoordinatorEditBaseView, View):
             messages.error(self.request,
                            _('There is no previous course offering or there are no letter grades there to be imported'))
         return redirect(reverse_lazy('grade:letter_grades', args=(self.course_offering_id, )))
+
+
+class MissingGradesReportView(CoordinatorEditBaseView, FormView):
+    template_name = 'grade/missing_grades_report.html'
+
+    def get_form(self, form_class=None):
+        return GradeFragmentsExclusionForm(course_offering=self.course_offering)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['course_offering'] = self.course_offering
+
+        fragments_to_be_included = self.request.GET.getlist('fragments_to_be_included')
+
+        context['fragments_to_be_included'] = GradeFragment.objects.filter(pk__in=fragments_to_be_included)
+        context['missing_grades'] = StudentGrade.get_missing_grades(self.course_offering, fragments_to_be_included)
+        return context

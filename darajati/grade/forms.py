@@ -8,7 +8,6 @@ from django.forms import BaseModelFormSet
 from django.utils.translation import ugettext_lazy as _
 
 from darajati.utils import decimal
-from enrollment.utils import today
 from .models import StudentGrade, GradeFragment, LetterGrade
 
 
@@ -220,3 +219,18 @@ class LetterGradeForm(forms.ModelForm):
 class LetterGradesFormSet(BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         super(LetterGradesFormSet, self).__init__(*args, **kwargs)
+
+
+class GradeFragmentsExclusionForm(forms.Form):
+    fragments_to_be_included = forms.MultipleChoiceField(
+        label=_('Included Fragments'),
+        help_text=_('Fragments to be included in the statistics')
+    )
+
+    def __init__(self, course_offering, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.course_offering = course_offering
+        self.fields['fragments_to_be_included'].choices = [(fragment.pk, fragment.short_name)
+                                                           for fragment in
+                                                           GradeFragment.objects.filter(
+                                                               course_offering=course_offering)]

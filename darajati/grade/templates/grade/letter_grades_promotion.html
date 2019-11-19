@@ -50,7 +50,7 @@
 									<td>{{ case.enrollment }}</td>
 									<td>{{ case.enrollment.calculated_total }}</td>
 									<td>{{ case.enrollment.calculated_letter_grade }}</td>
-									<td>{{ case.enrollment.get_grade_in_letter_grade_promotion_criterion }} {% trans "out of" %} {{ course_offering.get_letter_grade_promotion_criterion.weight }}</td>
+									<td>{{ case.enrollment.promotion_type }}</td>
 									<td>{{ case.promoted_letter_grade }}</td>
 								</tr>
 							{% endfor %}
