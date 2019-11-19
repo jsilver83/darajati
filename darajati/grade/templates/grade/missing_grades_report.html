@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+
+	<div class="content-panel">
+		<br>
+		<div class="cntnt-sec">
+			<div class="title-sec text-center">
+				<h3>{% trans 'Missing Grades' %}</h3><br>
+			</div>
+			<div class="card card-outline-secondary mb-3">
+				<div class="card-block">
+					<blockquote class="card-blockquote">
+						<p>{% trans 'Semester: ' %}<span>{{ course_offering.semester.description }}</span></p>
+						<p>{% trans 'Course: ' %}<span>{{ course_offering.course }}</span></p>
+						<p>{% trans 'Coordinated: ' %}<span>{{ course_offering.coordinated }}</span>
+						</p>
+					</blockquote>
+				</div>
+			</div>
+			<form class="form-horizontal">
+				{% include 'enrollment/snippet/bootstrap_form.html' with form=form %}
+                <input class="thm-btn small-btn" type="submit" value="{% trans 'Include' %}">
+			</form>
+			<br><br>
+			<table class="table table-bordered">
+				<thead>
+				<th>{% trans "Name" %}</th>
+				<th>{% trans "KFUPM ID" %}</th>
+				<th>{% trans "Missing Grade" %}</th>
+				<th>{% trans "Statistics" %}</th>
+				</thead>
+				<tbody>
+				{% for missing_grade in missing_grades %}
+					<tr>
+						<td>{{ missing_grade.enrollment.student.name }}</td>
+						<td>{{ missing_grade.enrollment.student.university_id }}</td>
+						<td>{{ missing_grade.missing_grade.grade_fragment.short_name }}</td>
+						<td>
+							<table class="table">
+								<thead>
+								<th>{% trans "Fragment" %}</th>
+								<th>{% trans "Quantity" %}</th>
+								<th>{% trans "Section Average" %}</th>
+								<th>{% trans "Course Average" %}</th>
+								</thead>
+								<tbody>
+								{% for other_grade in missing_grade.other_grades %}
+									<tr>
+										<td>{{ other_grade.grade.grade_fragment.short_name }}</td>
+										<td>{{ other_grade.grade.grade_quantity }}</td>
+										<td>{{ other_grade.section_average }}</td>
+										<td>{{ other_grade.course_average }}</td>
+									</tr>
+								{% endfor %}
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}

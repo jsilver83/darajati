@@ -449,6 +449,49 @@ class StudentGrade(models.Model):
     class Meta:
         unique_together = ('enrollment', 'grade_fragment')
 
+    @staticmethod
+    def get_missing_grades(course_offering, fragments_to_be_included):
+        missing_grades = StudentGrade.objects.filter(grade_quantity__isnull=True,
+                                                     grade_fragment__course_offering=course_offering,
+                                                     grade_fragment__in=fragments_to_be_included,
+                                                     enrollment__active=True)
+
+        data = []
+        for missing_grade in missing_grades:
+            all_other_student_grades = StudentGrade.objects.filter(
+                enrollment=missing_grade.enrollment,
+                grade_quantity__isnull=False,
+                grade_fragment__in=fragments_to_be_included).exclude(pk=missing_grade.pk)
+
+            if all_other_student_grades:
+                data_instance = {
+                    'enrollment': missing_grade.enrollment,
+                    'missing_grade': missing_grade,
+                }
+
+                other_grades = [
+                    {
+                        'grade': missing_grade,
+                        'section_average': StudentGrade.get_section_average(missing_grade.enrollment.section,
+                                                                            missing_grade.grade_fragment),
+                        'course_average': StudentGrade.get_course_average(missing_grade.grade_fragment),
+                    },
+                ]
+
+                for other_grade in all_other_student_grades:
+                    other_grades.append(
+                        {
+                            'grade': other_grade,
+                            'section_average': StudentGrade.get_section_average(other_grade.enrollment.section,
+                                                                                other_grade.grade_fragment),
+                            'course_average': StudentGrade.get_course_average(other_grade.grade_fragment),
+                        },
+                    )
+                data_instance['other_grades'] = other_grades
+                data.append(data_instance)
+
+        return data
+
     def __str__(self):
         return to_string(self.grade_fragment, self.remarks)
 

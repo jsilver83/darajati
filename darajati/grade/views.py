@@ -15,7 +15,8 @@ from extra_views import ModelFormSetView
 
 from enrollment.models import Section, CourseOffering
 from enrollment.views import InstructorBaseView, CoordinatorEditBaseView
-from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet
+from .forms import GradesForm, GradeFragmentForm, BaseGradesFormSet, LetterGradeForm, LetterGradesFormSet, \
+    GradeFragmentsExclusionForm
 from .models import GradeFragment, StudentGrade, LetterGrade, StudentFinalDataView, SectionsAveragesView
 
 
@@ -414,3 +415,20 @@ class ImportLetterGradesView(CoordinatorEditBaseView, View):
             messages.error(self.request,
                            _('There is no previous course offering or there are no letter grades there to be imported'))
         return redirect(reverse_lazy('grade:letter_grades', args=(self.course_offering_id, )))
+
+
+class MissingGradesReportView(CoordinatorEditBaseView, FormView):
+    template_name = 'grade/missing_grades_report.html'
+
+    def get_form(self, form_class=None):
+        return GradeFragmentsExclusionForm(course_offering=self.course_offering)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['course_offering'] = self.course_offering
+
+        fragments_to_be_included = self.request.GET.getlist('fragments_to_be_included')
+
+        context['missing_grades'] = StudentGrade.get_missing_grades(self.course_offering, fragments_to_be_included)
+        return context
