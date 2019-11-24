@@ -1,3 +1,4 @@
+'use strict';
 function handlePaste(e) {
     var clipboardData, pastedData;
 
@@ -15,6 +16,8 @@ function handlePaste(e) {
     pastedData = clipboardData.getData('Text');
 
     var allTrs = document.querySelectorAll('.grade');
+
+    var i, emptyGrades = 0;
     for (i = 0; i < allTrs.length; i++) {
         allTrs.item(i).parentElement.parentElement.parentElement.className = "danger";
     }
@@ -35,14 +38,14 @@ function handlePaste(e) {
                 continue;
             }
 
-            grade = data[1];
+            grade = data[1].trim();
             if (isNaN(grade)) {
                 pasteComments.innerHTML = pasteComments.innerHTML + "[" + kfupmid + "] does NOT have a valid grade (" + grade + ")<br>";
                 errorsFound = true;
                 continue;
             }
             if (data.length === 3) {
-                notes = data[2];
+                notes = data[2].trim();
             } else {
                 notes = "";
             }
@@ -61,7 +64,14 @@ function handlePaste(e) {
                         notesToBeChanged[0].querySelectorAll('input')[0].value = notes;
                     }
 
-                    students.item(j).parentElement.parentElement.className = "success";
+                    if (grade.length > 0) {
+                        students.item(j).parentElement.parentElement.className = "success";
+                    }
+                    else {
+                        emptyGrades++;
+                        errorsFound = true;
+                        pasteComments.innerHTML = pasteComments.innerHTML + "[" + kfupmid + "] has an empty score pasted in<br>";
+                    }
                     found = true;
                     break;
                 }
