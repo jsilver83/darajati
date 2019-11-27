@@ -261,7 +261,7 @@ class CourseOffering(models.Model):
         help_text=_('This will be used to check student''s eligibility for letter grade promotion if the student is '
                     'meeting promotion criterion in the grade fragment(s)'),
     )
-    auto_grade_promotion_difference = models.DecimalField(
+    auto_grade_promotion_delta = models.DecimalField(
         _('Auto Letter Grade Promotion Difference'),
         null=True,
         blank=True,
@@ -757,7 +757,7 @@ class Enrollment(models.Model):
             return upper_letter_grade.letter_grade
 
     def is_an_auto_promotion_case(self):
-        auto_grade_promotion_difference = self.section.course_offering.auto_grade_promotion_difference
+        auto_grade_promotion_difference = self.section.course_offering.auto_grade_promotion_delta
 
         if auto_grade_promotion_difference:
             diff = self.get_difference_to_next_letter_grade()
