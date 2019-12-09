@@ -240,7 +240,7 @@ class ExamRoom(models.Model):
                 hospitable = True
 
                 for marker in self.get_markers():
-                    if marker.order < number_of_markers:  # tiebreakers don't follow this rule
+                    if marker.order <= number_of_markers:  # tiebreakers don't follow this rule
                         hospitable = hospitable and marker.can_mark_enrollment(enrollment)
                 return hospitable
             else:
